@@ -408,6 +408,10 @@ class ClienteInternoImportService
             throw new \InvalidArgumentException('La cédula es obligatoria.');
         }
 
+        if ($correo !== '' && filter_var($correo, FILTER_VALIDATE_EMAIL) === false) {
+            throw new \InvalidArgumentException('El correo electrónico no es válido.');
+        }
+
         if ($solicitudRaw === '') {
             throw new \InvalidArgumentException('La solicitud (tipo) es obligatoria.');
         }

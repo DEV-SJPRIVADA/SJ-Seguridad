@@ -63,3 +63,4 @@ CA 1â€“17 cubiertos por Feature tests (permisos, gate, fecha futura, 4 colas, no
 
 1. Test cruzado de aislamiento `run_token` entre usuarios (cache keyed por user_id).
 2. Abrir Ficha: evitar `normalizeDocument` redundante si el id ya viene resuelto.
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) — [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

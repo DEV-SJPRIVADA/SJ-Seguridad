@@ -9,6 +9,7 @@ use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager;
 use App\Support\ColombiaHolidays;
+use App\Support\DocumentNumberListParser;
 use App\Support\WordTempDirectory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -27,6 +28,7 @@ class ClienteInternoCartasVacacionesGeneratorService
         private readonly LetterVariableBuilder $variableBuilder,
         private readonly TerminationLetterDocxRenderer $docxRenderer,
         private readonly ColombiaHolidays $colombiaHolidays,
+        private readonly DocumentNumberListParser $documentNumberListParser,
     ) {}
 
     /**
@@ -184,7 +186,7 @@ class ClienteInternoCartasVacacionesGeneratorService
 
     public function normalizeDocument(string $documentNumber): string
     {
-        return trim($documentNumber);
+        return $this->documentNumberListParser->normalize($documentNumber);
     }
 
     /**

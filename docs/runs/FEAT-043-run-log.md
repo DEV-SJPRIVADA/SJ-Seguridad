@@ -54,3 +54,5 @@
 - Decisiones previas del usuario (chat): plantilla en Plantillas Word tipo `cartas_vacaciones` (una sola); fecha inicio la ingresa usuario; nombre desde ficha por cédula; no encontrado/inactivo permite generar con aviso; solo generar/descargar; placeholders OK; migrar permisos desde `solicitudes.edit`; view+edit por pestaña; shell board sin cambio.
 - Cierre: PHPUnit 29 passed (Access + Generate + BoardAccess). Smoke DevTools MCP no ejecutado (bloqueo en `/login` sin credenciales locales) — pendiente validación manual del usuario.
 - Observaciones Revisor (no bloqueantes): validación UI previa, test tope 500, icono Generar, normalización cédula, assert placeholders en docx.
+- **2026-11-04 (cierre área GH):** lookup/generate normaliza cédula vía `DocumentNumberListParser`; acta [`cierre-operativo-gestion-humana-2026-11-04.md`](../informes/cierre-operativo-gestion-humana-2026-11-04.md).
+- **2026-11-04 (cierre observaciones):** smoke manual producción OK; observaciones Revisor cerradas — [`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

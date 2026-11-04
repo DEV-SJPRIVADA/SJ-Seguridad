@@ -63,3 +63,4 @@
 - Filtros: año, mes, categoría, curso, número ID, nombre.
 - Export Excel con `formacion.view`.
 - Confirmación UI antes del replace-all (destructivo).
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) � [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

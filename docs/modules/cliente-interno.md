@@ -2,7 +2,7 @@
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/cliente-interno.md`.
 > Features: FEAT-042 (solicitudes/dashboard/catálogos); FEAT-043 (pestaña Cartas Vacaciones).
-> Reviews: `docs/reviews/FEAT-042.md`, `docs/reviews/FEAT-043.md` (Aprobado con observaciones).
+> Reviews: FEAT-042/043 — observaciones **cerradas** 2026-11-04 ([`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md)).
 > Clave interna: `cliente_interno`. Label UI / sidebar: **Cliente interno**.
 
 ## Objetivo
@@ -214,6 +214,7 @@ Reutiliza stack Word: `TerminationLetterDocxRenderer`, `TerminationLetterTemplat
 
 15. Usuario elige año + mes + archivo; UI confirma con conteo de filas del periodo a borrar; `confirm_replace` requerido.
 16. Validar headers y **todas** las filas antes de cualquier DELETE. Errores → rechazo completo, dataset intacto.
+16b. Si la columna **Correo electrónico** viene informada, debe ser un email válido (`FILTER_VALIDATE_EMAIL`); fila inválida → rechazo completo sin DELETE.
 17. Match Solicitud/Estado por name o code (case-insensitive). Solicitud inexistente → error de fila (rechazo completo). Estado vacío OK.
 18. Transacción: `DELETE WHERE anio=? AND mes=?` → INSERT **todas** las filas válidas (también fuera de periodo → spillover).
 19. Audit `import_replace_period`: `{anio, mes, deleted_in_period, imported, accepted_outside_period, skipped_empty, tipos_created, estados_created}`.
@@ -296,13 +297,13 @@ Fechas texto `d/m/Y` (Colombia). Años mal tipados tipo `22026` se normalizan a 
 | Riesgo / observación review | Nota operativa |
 | --- | --- |
 | Seed SOLICITUD vacío | Alta manual requiere tipo; el **import** crea tipos (y estados) faltantes desde la columna Solicitud/Estado. |
-| Import no valida formato email (obs. review FEAT-042 #1) | CRUD sí valida email; en masivo un correo mal formado puede persistir. Hotfix recomendado. |
+| Import email inválido | **Resuelto** 2026-11-04: fila rechazada; periodo intacto. |
 | Import hace match de catálogos **incl. inactivos** (obs. #2) | Alta manual exige activos; import puede resolver code/name de ítems desactivados. |
-| Export materializa colección completa (obs. #3) | Filtro muy amplio puede tensionar memoria/timeout; preferir filtros año/mes acotados. |
+| Export Excel | Tope `cliente_interno.export.max_rows` (10 000); chunks `chunk_size` 500; redirect si excede. |
 | Controller monolítico (obs. #4) | Split opcional; no bloquea. |
 | 0 o >1 plantillas `cartas_vacaciones` | Bloqueo explícito en generate + empty-state UI; dejar solo una activa. |
 | Timeout / memoria ZIP grande | Tope 500 filas; cleanup temp; acotar lotes. |
-| Normalización cédula UI vs backend (obs. FEAT-043 #4) | Paste UI quita espacios internos; backend `trim` — posible miss de ficha si hay espacios internos. |
+| Normalización cédula en cartas | Lookup/generate usa `DocumentNumberListParser` (dígitos); alineado al pegado masivo de cédulas. |
 | Validación UI parcial (obs. FEAT-043 #1) | Alpine exige cédula; resto 422 Form Request. |
 | Festivos no restados | V1 solo lun–vie. |
 | Replace periodo destructivo | Mitigado con confirmación + conteo + validación previa + audit. |

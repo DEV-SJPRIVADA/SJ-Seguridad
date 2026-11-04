@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Support\PermissionCatalog;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
 class FormacionFormacionesTest extends TestCase
@@ -98,7 +99,7 @@ class FormacionFormacionesTest extends TestCase
         FormacionRegistro::factory()->create([
             'numero_id' => 'E2',
             'nombre_completo' => 'Reprobado Dos',
-            'calificacion' => '7.5',
+            'calificacion' => '7.4',
             'nombre_curso' => 'Curso B',
             'categoria' => 'Obligatoria',
             'anio' => 2026,
@@ -458,6 +459,30 @@ class FormacionFormacionesTest extends TestCase
             ->assertOk()
             ->assertSee('Filtrado desde Dashboard (ciclo)', false)
             ->assertSee('Incompleto', false);
+    }
+
+    public function test_export_rejects_when_row_count_exceeds_configured_max(): void
+    {
+        Config::set('formacion.export.max_rows', 2);
+
+        FormacionRegistro::factory()->count(3)->create([
+            'anio' => 2026,
+            'mes' => 3,
+            'categoria' => 'Obligatoria',
+        ]);
+
+        $viewer = $this->viewerUser();
+
+        $this->actingAs($viewer)
+            ->from(route('gestion-humana.formacion.formaciones'))
+            ->get(route('gestion-humana.formacion.formaciones.export', ['anio' => 2026]))
+            ->assertRedirect(route('gestion-humana.formacion.formaciones', ['anio' => 2026]))
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseMissing('audit_logs', [
+            'module' => 'formacion',
+            'action' => 'formaciones_excel',
+        ]);
     }
 
     public function test_export_respects_filters_and_audits(): void

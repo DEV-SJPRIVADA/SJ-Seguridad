@@ -190,7 +190,7 @@ Radio `mode` (`period` por defecto | `all`) + año/mes si period + checkbox `con
 
 Boton `<x-export-excel>`. Auth: `formacion.view`.
 
-> **Observacion review (FEAT-041 #1):** el export materializa `filteredQuery()->get()` en memoria. Con ~81k filas (o filtro amplio) puede agotar memoria/timeout en Hostinger. Follow-up: chunked/`fromQuery` o tope + aviso.
+> **Export Excel:** tope `config('formacion.export.max_rows')` (default 10 000); escritura por `chunkById` (`formacion.export.chunk_size`). Si supera el tope, redirect con mensaje de error (sin audit).
 
 ## Validacion local
 
@@ -231,7 +231,7 @@ Boton `<x-export-excel>`. Auth: `formacion.view`.
 ## Referencias
 
 - Feature Brief: [`docs/briefs/FEAT-041.md`](../briefs/FEAT-041.md)
-- Review: [`docs/reviews/FEAT-041.md`](../reviews/FEAT-041.md) (Aprobado con observaciones)
+- Review FEAT-041: observaciones **cerradas** 2026-11-04 ([`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md))
 - Doc usuario: [`docs/user/formacion.md`](../user/formacion.md)
 - Patron acceso: Cursos / `CursosAccessService`
 - Regla DT: [`.cursor/rules/datatables-server-side.mdc`](../../.cursor/rules/datatables-server-side.mdc)

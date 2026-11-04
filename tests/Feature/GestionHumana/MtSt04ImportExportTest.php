@@ -10,6 +10,7 @@ use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -211,6 +212,22 @@ class MtSt04ImportExportTest extends TestCase
                 'import_file' => new UploadedFile($path, 'mt_st_04.xlsx', null, null, true),
             ])
             ->assertForbidden();
+    }
+
+    public function test_export_rejects_when_row_count_exceeds_configured_max(): void
+    {
+        Config::set('mt_st_04.export.max_rows', 1);
+
+        MtSt04Registro::factory()->create(['document_number' => '1002003991', 'arma' => 'SI']);
+        MtSt04Registro::factory()->create(['document_number' => '1002003992', 'arma' => 'NO']);
+
+        $viewer = $this->viewerUser();
+
+        $this->actingAs($viewer)
+            ->from(route('gestion-humana.mt-st-04.matriz'))
+            ->get(route('gestion-humana.mt-st-04.matriz.export'))
+            ->assertRedirect(route('gestion-humana.mt-st-04.matriz', ['ficha_estado' => 'activo']))
+            ->assertSessionHas('error');
     }
 
     public function test_viewer_can_export_and_editor_export_ok(): void

@@ -26,6 +26,7 @@ use App\Services\GestionHumana\ClienteInternoDatatableService;
 use App\Services\GestionHumana\ClienteInternoFichaLookupService;
 use App\Services\GestionHumana\ClienteInternoImportService;
 use App\Support\ColombiaHolidays;
+use App\Support\ExportRowLimit;
 use App\Traits\HasClienteInternoTabs;
 use Carbon\Carbon;
 use Illuminate\Contracts\View\View;
@@ -305,18 +306,26 @@ class ClienteInternoController extends Controller
         );
     }
 
-    public function solicitudesExport(Request $request): StreamedResponse
+    public function solicitudesExport(Request $request): StreamedResponse|RedirectResponse
     {
         abort_unless($this->clienteInternoAccess->canViewSolicitudes(auth()->user()), 403);
 
         $filters = $this->solicitudFiltersFromRequest($request);
-        $rows = $this->datatableService->filteredQuery($filters)->get();
+        $query = $this->datatableService->filteredQuery($filters, ordered: false);
+        $maxRows = max(1, (int) config('cliente_interno.export.max_rows', 10000));
+        $rowCount = ExportRowLimit::count($query);
+
+        if ($rowCount > $maxRows) {
+            return redirect()
+                ->route('gestion-humana.cliente-interno.solicitudes', $this->exportRedirectQuery($filters))
+                ->with('error', ExportRowLimit::rejectionMessage($maxRows, $rowCount));
+        }
 
         $this->auditLogService->logEvent(
             eventType: 'export',
             action: 'solicitudes_excel',
             metadata: [
-                'row_count' => $rows->count(),
+                'row_count' => $rowCount,
                 'filters' => array_filter(
                     $filters,
                     static fn ($value): bool => $value !== null && $value !== '',
@@ -325,7 +334,7 @@ class ClienteInternoController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return ClienteInternoExport::downloadCollection($rows);
+        return ClienteInternoExport::downloadFilteredQuery($query);
     }
 
     public function storeSolicitud(StoreClienteInternoSolicitudRequest $request): RedirectResponse
@@ -677,6 +686,18 @@ class ClienteInternoController extends Controller
             'cedula' => trim((string) $request->query('cedula', '')),
             'nombre' => trim((string) $request->query('nombre', '')),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function exportRedirectQuery(array $filters): array
+    {
+        return array_filter(
+            $filters,
+            static fn ($value): bool => $value !== null && $value !== '',
+        );
     }
 
     /**

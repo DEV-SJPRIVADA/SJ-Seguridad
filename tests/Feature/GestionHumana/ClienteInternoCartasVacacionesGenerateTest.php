@@ -52,6 +52,20 @@ class ClienteInternoCartasVacacionesGenerateTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_lookup_normalizes_formatted_document_number(): void
+    {
+        $editor = $this->cartasEditorUser();
+        $this->createProfile('1098765432', 'Ana Activa', EmployeeFichaProfile::STATUS_ACTIVO);
+
+        $this->actingAs($editor)
+            ->postJson(route('gestion-humana.cliente-interno.cartas-vacaciones.lookup'), [
+                'document_numbers' => ['109.876.543-2'],
+            ])
+            ->assertOk()
+            ->assertJsonPath('results.0.status', 'activo')
+            ->assertJsonPath('results.0.nombre_completo', 'Ana Activa');
+    }
+
     public function test_edit_user_sees_grid_and_lookup_active_inactive_not_found(): void
     {
         $editor = $this->cartasEditorUser();

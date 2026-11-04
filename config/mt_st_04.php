@@ -59,6 +59,11 @@ return [
     | Columnas plantilla / import Excel (T3)
     |--------------------------------------------------------------------------
     */
+    'export' => [
+        'max_rows' => 10000,
+        'chunk_size' => 500,
+    ],
+
     'import' => [
         'columns' => [
             'document_number' => 'CEDULA',

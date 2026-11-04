@@ -334,6 +334,36 @@ class ClienteInternoImportTest extends TestCase
         $this->assertDatabaseHas('cliente_interno_solicitudes', ['cedula' => 'KEEP-EMPTY']);
     }
 
+    public function test_import_rejects_invalid_email_without_wipe(): void
+    {
+        ClienteInternoSolicitud::factory()->create([
+            'tipo_solicitud_id' => $this->tipo->id,
+            'cedula' => 'KEEP-EMAIL',
+            'anio' => 2026,
+            'mes' => 8,
+            'fecha_solicitud' => '2026-08-01',
+        ]);
+
+        $path = $this->makeImportFile([
+            ['2026-08-02', 'Persona', '8888888888', 'correo-invalido', 'Certificado laboral', '', '', '', ''],
+        ]);
+
+        $editor = $this->editorUser();
+
+        $this->actingAs($editor)
+            ->from(route('gestion-humana.cliente-interno.solicitudes'))
+            ->post(route('gestion-humana.cliente-interno.solicitudes.import'), [
+                'import_file' => new UploadedFile($path, 'bad-email.xlsx', null, null, true),
+                'anio' => 2026,
+                'mes' => 8,
+                'confirm_replace' => '1',
+            ])
+            ->assertRedirect(route('gestion-humana.cliente-interno.solicitudes'))
+            ->assertSessionHasErrors('import_file');
+
+        $this->assertDatabaseHas('cliente_interno_solicitudes', ['cedula' => 'KEEP-EMAIL']);
+    }
+
     public function test_import_requires_edit_permission(): void
     {
         $viewer = $this->viewerUser();

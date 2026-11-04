@@ -14,7 +14,7 @@
 | Brief | `docs/briefs/FEAT-046.md` |
 | Plan | `docs/briefs/FEAT-046-plan.md` |
 | Inicio | 2026-10-13 |
-| Cierre | 2026-10-13 — Aprobado con observaciones (smoke DevTools pendiente credencial local) |
+| Cierre | 2026-10-13 — entrega T1; observaciones **cerradas** 2026-11-04 (smoke prod OK) |
 
 ## Decisiones de negocio (usuario, 2026-10-13)
 
@@ -39,3 +39,5 @@
 | 7 | 2026-10-13 | AgentSj | AgentSj | Lanza Documentador | — | OK |
 | 8 | 2026-10-13 | Task Documentador | Documentador | Doc técnica + usuario (6 secciones); INDEX, DOCUMENTATION, ACCESS_CONTROL, ARCHITECTURE, user/README; fase TASKS → Documentador OK | `docs/modules/gestion-humana-dashboard.md`, `docs/user/gestion-humana-dashboard.md` | OK |
 | 9 | 2026-10-13 | Checklist cierre | AgentSj | Checklist OK; tests 7 passed; movido a Completadas; smoke DevTools queda pendiente de credencial local | `docs/TASKS.md` Completadas | OK |
+| 10 | 2026-11-04 | Cierre área GH | AgentSj | Acta operativa: producción en uso sin incidencias; supersede smoke pendiente | [`docs/informes/cierre-operativo-gestion-humana-2026-11-04.md`](../informes/cierre-operativo-gestion-humana-2026-11-04.md) | OK |
+| 11 | 2026-11-04 | Cierre observaciones GH | Usuario + AgentSj | Smoke manual producción sin errores; matriz FEAT-035…046 | [`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) | OK |

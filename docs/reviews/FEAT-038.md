@@ -92,3 +92,11 @@ Cobertura relevante: permisos view/edit, gate (sin carga / un origen / ambos), f
 ### Veredicto para AgentSj
 
 **Aprobado con observaciones.** Lanzar Documentador para alinear `docs/modules/acreditaciones.md`, `docs/user/acreditaciones.md` y notas de ACCESS (Validaciones = edit; deja de ser placeholder). Observaciones 1–2 son follow-up opcionales de calidad/test, no bloquean cierre.
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

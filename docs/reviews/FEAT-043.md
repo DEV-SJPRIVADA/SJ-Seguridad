@@ -101,3 +101,11 @@ Duration: ~90s
 1. **No** devolver a Feature por bloqueantes (no hay).
 2. Lanzar **Documentador** (`cliente-interno`, `plantillas-word`, `ACCESS_CONTROL`, INDEX si aplica).
 3. Observaciones 1–5 y 7 son mejoras opcionales / backlog o confirmación de smoke; no condicionan el Documentador.
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

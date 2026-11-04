@@ -1,7 +1,7 @@
 # Modulo Dashboard de área Gestión Humana
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/gestion-humana-dashboard.md`.
-> Feature: FEAT-046 (revisado 2026-10-13, aprobado con observaciones).
+> Feature: FEAT-046. Área GH: 🟢 Operativo; observaciones **cerradas** 2026-11-04 — [`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).
 
 ## Conceptos / áreas (gráfico Personal por concepto)
 
@@ -225,7 +225,7 @@ No aplica en V1.
 3. Cambiar ano/mes/ciudad/cargo/cliente; KPIs/graficos refrescan via metrics.
 4. Sin permiso → 403 en pagina y metrics.
 5. `php artisan test --compact --filter=GestionHumanaAreaDashboard`
-6. Smoke Chrome DevTools MCP (pagina + metrics 200 + consola limpia) cuando haya sesion local.
+6. Smoke UI: **cerrado** 2026-11-04 (validación manual producción, sin errores).
 
 ## Riesgos y pendientes
 
@@ -235,7 +235,7 @@ No aplica en V1.
 | Filtros parciales CI/Formacion/Archivo | Documentado en UI/`meta`; no inventar joins fragiles |
 | Ficha sin `hire_date` | Excluida del stock EOM |
 | Opciones cargo con espacios | Observacion Revisor: distinct/order podria trim; no bloqueante |
-| Smoke DevTools | Pendiente login local al cierre T1; no bloquea documentacion |
+| Smoke DevTools | **Cerrado** 2026-11-04 (producción) |
 | Acentos KPI border-left | Patron Formacion; opcional tokens `--brand-*` |
 
 ## Referencias

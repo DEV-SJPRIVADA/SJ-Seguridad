@@ -3,6 +3,7 @@
 namespace App\Exports;
 
 use App\Models\MtSt04Registro;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -34,6 +35,22 @@ class MtSt04Export extends BaseExport
     public static function downloadCollection(Collection $registros): StreamedResponse
     {
         return (new self($registros))->download();
+    }
+
+    /**
+     * @param  Builder<MtSt04Registro>  $query
+     */
+    public static function downloadFilteredQuery(Builder $query): StreamedResponse
+    {
+        return BaseExport::downloadFromQuery(
+            $query,
+            self::columnDefinitions(),
+            'mt_st_04_matriz_'.now()->format('Y-m-d').'.xlsx',
+            'MT-ST-04 Matriz — '.config('app.name'),
+            fn (MtSt04Registro $registro): array => self::mapRegistro($registro),
+            max(1, (int) config('mt_st_04.export.chunk_size', 500)),
+            (new MtSt04Registro)->getQualifiedKeyName(),
+        );
     }
 
     /**

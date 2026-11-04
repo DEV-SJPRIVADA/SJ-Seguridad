@@ -72,3 +72,4 @@
 - UI: calidad módulo desde el primer slice (referencia Formación / Acreditaciones / Cliente interno).
 - Nits Revisor (no bloquean): filtro cargo dedicado opcional; `$fillable` con derivados; hex KPI alineado a Cursos.
 - Permisos Spatie: asignación **manual** (`view.board…`, `mt_st_04.view`, `mt_st_04.edit`).
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) � [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

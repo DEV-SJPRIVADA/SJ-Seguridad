@@ -82,3 +82,11 @@ Exit:     0
 - [ ] Devolver a Agente Feature (si bloqueado)
 
 **Acción AgentSj:** lanzar Documentador (`docs/modules/formacion.md`, `docs/user/formacion.md`, ACCESS/INDEX). Observaciones 1–3 pueden ir a backlog post-cierre o hotfix menor; no bloquean V1.
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

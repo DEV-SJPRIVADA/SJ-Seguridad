@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\FormacionRegistro;
 use App\Services\GestionHumana\FormacionDatatableService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -32,6 +33,21 @@ class FormacionExport extends BaseExport
     public static function downloadCollection(Collection $registros): StreamedResponse
     {
         return (new self($registros))->download();
+    }
+
+    /**
+     * @param  Builder<FormacionRegistro>  $query
+     */
+    public static function downloadFilteredQuery(Builder $query): StreamedResponse
+    {
+        return BaseExport::downloadFromQuery(
+            $query,
+            self::columnDefinitions(),
+            'formacion_registros_'.now()->format('Y-m-d').'.xlsx',
+            'Formaciones — '.config('app.name'),
+            fn (FormacionRegistro $registro): array => self::mapRegistro($registro),
+            max(1, (int) config('formacion.export.chunk_size', 500)),
+        );
     }
 
     /**

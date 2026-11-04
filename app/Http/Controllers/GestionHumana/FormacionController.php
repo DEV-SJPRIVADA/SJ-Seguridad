@@ -12,6 +12,7 @@ use App\Services\GestionHumana\FormacionAuditLogService;
 use App\Services\GestionHumana\FormacionDashboardService;
 use App\Services\GestionHumana\FormacionDatatableService;
 use App\Services\GestionHumana\FormacionImportService;
+use App\Support\ExportRowLimit;
 use App\Traits\HasFormacionTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -140,18 +141,26 @@ class FormacionController extends Controller
         return response()->json($this->datatableService->filterSelectOptions($anio, $mes));
     }
 
-    public function formacionesExport(Request $request): StreamedResponse
+    public function formacionesExport(Request $request): StreamedResponse|RedirectResponse
     {
         abort_unless($this->formacionAccess->canView(auth()->user()), 403);
 
         $filters = $this->filtersFromRequest($request);
-        $rows = $this->datatableService->filteredQuery($filters)->get();
+        $query = $this->datatableService->filteredQuery($filters, ordered: false);
+        $maxRows = max(1, (int) config('formacion.export.max_rows', 10000));
+        $rowCount = ExportRowLimit::count($query);
+
+        if ($rowCount > $maxRows) {
+            return redirect()
+                ->route('gestion-humana.formacion.formaciones', $this->exportRedirectQuery($filters))
+                ->with('error', ExportRowLimit::rejectionMessage($maxRows, $rowCount));
+        }
 
         $this->auditLogService->logEvent(
             eventType: 'export',
             action: 'formaciones_excel',
             metadata: [
-                'row_count' => $rows->count(),
+                'row_count' => $rowCount,
                 'filters' => array_filter(
                     $filters,
                     static fn ($value): bool => $value !== null && $value !== '',
@@ -160,7 +169,7 @@ class FormacionController extends Controller
             userId: (int) auth()->id(),
         );
 
-        return FormacionExport::downloadCollection($rows);
+        return FormacionExport::downloadFilteredQuery($query);
     }
 
     public function importTemplate(): StreamedResponse
@@ -377,5 +386,17 @@ class FormacionController extends Controller
         $mes = (int) $raw;
 
         return ($mes >= 1 && $mes <= 12) ? $mes : null;
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, mixed>
+     */
+    private function exportRedirectQuery(array $filters): array
+    {
+        return array_filter(
+            $filters,
+            static fn ($value): bool => $value !== null && $value !== '',
+        );
     }
 }

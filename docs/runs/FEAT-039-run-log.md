@@ -108,3 +108,4 @@
 ### Ejemplo match curso (usuario)
 
 Supervisor con cursos supervisión + escolta: al exportar **ESCOLTA** validar F.ESCOLTA **o** R.ESCOLTA vigente (no mezclar con supervisión).
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) � [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

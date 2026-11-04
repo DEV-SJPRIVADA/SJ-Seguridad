@@ -1,5 +1,7 @@
 # Informe Gerencial — Plataforma SJ StatFlow
 
+> **Actualización 2026-11-04:** Gestión Humana pasa a **🟢 Operativo**; observaciones de entrega y smoke UI **cerradas** (validación manual en producción sin errores). Ver [`cierre-observaciones-gestion-humana-2026-11-04.md`](cierre-observaciones-gestion-humana-2026-11-04.md).
+
 **Preparado para:** Gerencia General / Dirección de Área
 **Fecha de corte:** 29 de octubre de 2026
 **Periodo analizado:** octubre 2026 (con contexto acumulado del proyecto)
@@ -38,7 +40,7 @@ El foco del mes estuvo en **Gestión Humana**, que ya representa el **53% del de
 
 | Área | Estado | Entregables principales | Valor para el negocio |
 |---|---|---|---|
-| **Gestión Humana** | 🟢 Operativo con observaciones | Ficha de empleados, Acreditaciones, Cursos, Formación, Selección, Desvinculaciones, Cliente interno, MT-ST-04, Cartas, Inasistencias, Reportes de Novedades, Dashboard GH | Digitaliza el ciclo laboral completo y elimina planillas manuales |
+| **Gestión Humana** | 🟢 Operativo *(hist. oct: con observaciones; vigente nov-2026: cerradas)* | Ficha de empleados, Acreditaciones, Cursos, Formación, Selección, Desvinculaciones, Cliente interno, MT-ST-04, Cartas, Inasistencias, Reportes de Novedades, Dashboard GH | Digitaliza el ciclo laboral completo y elimina planillas manuales |
 | **Compras** | 🟡 En evolución | Solicitudes de compra, proveedores, órdenes de compra, evaluaciones, FO-AD-07 y FO-AD-44 | Trazabilidad de la compra y control de proveedores |
 | **Requisiciones** | 🟢 Operativo | Solicitud, aprobación de gerencia, gestión GH, notificaciones, exportaciones | Agiliza la solicitud y aprobación de personal |
 | **Operaciones / Indicadores** | 🟢 Operativo | Captura mensual de indicadores FT-OP, dashboard, consolidado, informes PDF/Excel/PPTX | Seguimiento gerencial del desempeño operativo |
@@ -85,7 +87,7 @@ El foco del mes estuvo en **Gestión Humana**, que ya representa el **53% del de
 
 | Riesgo | Nivel | Impacto | Decisión solicitada |
 |---|---|---|---|
-| Observaciones de smoke UI pendientes en features de GH y Compras | 🟡 Medio | Puede aparecer un defecto visual o de flujo en producción | Autorizar una ventana de validación con usuarios clave |
+| Observaciones de smoke UI pendientes en features de GH y Compras | 🟡 Medio *(GH: **cerrado** 2026-11-04)* | Puede aparecer un defecto visual o de flujo en producción | Autorizar una ventana de validación con usuarios clave *(GH cumplida)* |
 | Concentración del 53% del código en Gestión Humana | 🟡 Medio | Un cambio transversal impacta principalmente esa área | Aprobar refactorización gradual de los controladores más grandes |
 | Hoja de estilos monolítica (15.232 líneas) | 🟡 Medio | Dificulta cambios visuales y aumenta el riesgo de regresión | Priorizar la separación por módulo en el próximo ciclo |
 | Tablero de tareas desactualizado | 🟢 Bajo | Distorsiona el reporte de avance | Instruir la limpieza de `docs/TASKS.md` al cierre de cada feature |

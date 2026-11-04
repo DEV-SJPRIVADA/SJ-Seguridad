@@ -93,3 +93,11 @@ Ninguno.
 - [ ] Devolver a Agente Feature — no aplica
 
 **Mensaje a AgentSj:** FEAT-036 **Aprobado con observaciones**. Puede lanzar Documentador (`docs/modules/acreditaciones.md`, `docs/user/acreditaciones.md`, INDEX / ACCESS_CONTROL / ARCHITECTURE). Observaciones #1–#4 son follow-up opcional, no bloquean cierre. Evitar incluir en el commit de Acreditaciones archivos ajenos (Plantillas Word) del working tree.
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

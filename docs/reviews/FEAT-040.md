@@ -87,3 +87,11 @@ Cobertura alineada al brief: board/403, edit⇒view, review⇒view/export/no-sto
 - [ ] Devolver a Agente Feature (solo si hubiera blockers)
 
 **Listo Documentador:** crear `docs/modules/reportes-novedades.md` + `docs/user/reportes-novedades.md`, actualizar ACCESS / INDEX / audit-log / nota en desvinculaciones; mencionar obs. #1 (unique vs soft-delete) y destino=cliente en la doc técnica.
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

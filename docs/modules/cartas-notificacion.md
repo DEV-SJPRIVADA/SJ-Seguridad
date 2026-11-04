@@ -1,7 +1,7 @@
 # Modulo Cartas Notificación
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/cartas-notificacion.md`.
-> Area: Gestion humana. Feature: FEAT-044. Review: `docs/reviews/FEAT-044.md` (Aprobado con observaciones).
+> Area: Gestion humana. Feature: FEAT-044. Observaciones **cerradas** 2026-11-04 ([`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md)).
 
 ## Objetivo
 
@@ -159,7 +159,7 @@ Columnas: `CEDULA` (obligatoria), `NOMBRE_COMPLETO`, `DURACION_CONTRATO` (6|12),
 ## JavaScript / assets (si aplica)
 
 - Alpine en `index.blade.php`: grilla, filtros memoria, modal multi-cédula, merge Excel, `generateBatch` (blob download), searchable-select firma.
-- Observaciones review (no bloqueantes): validación cliente parcial (cédula); estilos inline toolbar; normalización cédula UI (quita espacios internos) vs backend (`trim`).
+- Normalización cédula en lookup/generate: `DocumentNumberListParser` (2026-11-04). Resto de nits UI: backlog.
 
 ## Export Excel (si aplica)
 
@@ -172,7 +172,7 @@ Solo **plantilla de carga** (`CartasNotificacionImportTemplateExport` / `BaseExp
 3. Probar grilla: elegir preforma, pegar cédulas, Excel, avisos, filtros, Limpiar=vaciar (conserva preforma), generar 1 y N; bloqueo solo con 0 plantillas.
 4. Usuario solo board: 403 al entrar.
 5. `php artisan test --compact tests/Feature/GestionHumana/CartasNotificacionAccessTest.php tests/Feature/GestionHumana/CartasNotificacionGenerateTest.php`
-6. Smoke UI en navegador: lo realiza el usuario (tablero + selección de preforma + generate + import).
+6. Smoke UI: **cerrado** 2026-11-04 (producción, sin errores).
 
 ## Riesgos y pendientes
 
@@ -187,7 +187,8 @@ Solo **plantilla de carga** (`CartasNotificacionImportTemplateExport` / `BaseExp
 | Solo board sin edit | Mensaje 403; docs usuario: asignar ambos |
 | Match FIRMA Excel ambiguo | Match exacto name/code; sin match → aviso |
 | Obs. review #1 | Test Feature 501 filas pendiente (opcional) |
-| Obs. review #2–5 | Validación UI, estilos inline, icon Generar, normalización cédula — mejoras post-cierre |
+| Normalización cédula | Lookup/generate usa `DocumentNumberListParser` (2026-11-04, cierre GH). |
+| Obs. review #2–5 | Validación UI, estilos inline, icon Generar — mejoras post-cierre |
 
 ## Tests
 

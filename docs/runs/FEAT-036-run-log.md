@@ -66,3 +66,4 @@
 | 10 | Revisor | Aprobado con observaciones | FEAT-036.md review | OK |
 | 11 | Documentador | Docs t√©cnica + usuario | modules/user acreditaciones | OK |
 | 12 | AgentSj | Checklist cierre | Completadas | OK |
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) ó [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

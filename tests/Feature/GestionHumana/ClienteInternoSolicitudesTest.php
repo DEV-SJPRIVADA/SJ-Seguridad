@@ -12,6 +12,7 @@ use App\Support\PermissionCatalog;
 use Carbon\Carbon;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
 class ClienteInternoSolicitudesTest extends TestCase
@@ -317,6 +318,27 @@ class ClienteInternoSolicitudesTest extends TestCase
         $this->assertStringContainsString('Incluida Filtro', $rowText);
         $this->assertStringContainsString('FEBRERO', $rowText);
         $this->assertStringNotContainsString('900200', $rowText);
+    }
+
+    public function test_export_rejects_when_row_count_exceeds_configured_max(): void
+    {
+        Config::set('cliente_interno.export.max_rows', 1);
+
+        $tipo = ClienteInternoTipoSolicitud::factory()->create();
+        ClienteInternoSolicitud::factory()->count(2)->create([
+            'tipo_solicitud_id' => $tipo->id,
+            'anio' => 2026,
+            'mes' => 4,
+            'fecha_solicitud' => '2026-04-01',
+        ]);
+
+        $viewer = $this->viewerUser();
+
+        $this->actingAs($viewer)
+            ->from(route('gestion-humana.cliente-interno.solicitudes'))
+            ->get(route('gestion-humana.cliente-interno.solicitudes.export', ['anio' => 2026]))
+            ->assertRedirect(route('gestion-humana.cliente-interno.solicitudes', ['anio' => 2026]))
+            ->assertSessionHas('error');
     }
 
     public function test_export_respects_filters_and_audits(): void

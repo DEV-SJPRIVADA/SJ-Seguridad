@@ -39,3 +39,4 @@
 - `.review` aparece en Admin bajo Gestión humana → Reportes-Novedades.
 - Unique `employee_termination_followup_id` en retiros: índice único simple (MySQL admite varios NULL); unicidad entre no-deleted reforzada en servicio T4. Riesgo residual documentado (obs. review #1): create tras soft-delete manual + ensure con mismo followup.
 - Documentador: destino=cliente en path entry; fallback perfil usa `work_center_name` (obs. #3).
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) � [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

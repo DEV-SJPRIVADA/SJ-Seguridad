@@ -6,6 +6,17 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 
 ---
 
+## Estado por área (operativo)
+
+| Área | Estado | Referencia |
+| --- | --- | --- |
+| **Gestión Humana** | 🟢 Operativo (observaciones cerradas) | [`cierre-operativo`](informes/cierre-operativo-gestion-humana-2026-11-04.md) · [`cierre-observaciones`](informes/cierre-observaciones-gestion-humana-2026-11-04.md) |
+| Compras | 🟡 En evolución | FEAT-047 en progreso; ver informe octubre |
+| Comercial | 🟡 Operativo con pendientes | FEAT-014–016 en progreso |
+| Resto de áreas | 🟢 Operativo | [`informe-gerencial-2026-10.md`](informes/informe-gerencial-2026-10.md) |
+
+---
+
 ## En progreso
 
 | ID | Feature | Modo | Fase actual | AgentSj chat | Rama | Brief | Run log | shared-files |
@@ -34,18 +45,18 @@ Workflow: [`docs/AGENT_WORKFLOW.md`](AGENT_WORKFLOW.md)
 | ID | Feature | Modo | Validado | Run log | Fecha cierre |
 | --- | --- | --- | --- | --- | --- |
 | FEAT-048 | Compras: estados automáticos, FO-AD-07 oficial, Comodato/Activo | orquestado | Si (Aprobado con observaciones; smoke UI pendiente, app local apagada) | [`docs/runs/FEAT-048-run-log.md`](runs/FEAT-048-run-log.md) | 2026-10-20 |
-| FEAT-046 | Dashboard de área GH (informe mensual KPI + gráficos) | orquestado | Si (Aprobado con observaciones; smoke DevTools pendiente login) | [`docs/runs/FEAT-046-run-log.md`](runs/FEAT-046-run-log.md) | 2026-10-13 |
-| FEAT-045 | Tablero GH MT-ST-04 (psicofísicos / psicosensométricos) | orquestado | Si (GO-with-nits) | [`docs/runs/FEAT-045-run-log.md`](runs/FEAT-045-run-log.md) | 2026-10-09 |
-| FEAT-044 | Tablero GH Cartas Notificación (solo edit, lote Word sin BD) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-044-run-log.md`](runs/FEAT-044-run-log.md) | 2026-10-08 |
-| FEAT-043 | Cliente interno — pestaña Cartas Vacaciones (lote cédulas → Word/ZIP) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-043-run-log.md`](runs/FEAT-043-run-log.md) | 2026-10-07 |
-| FEAT-042 | Tablero Cliente interno GH (Dashboard + Solicitudes + Catálogos) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-042-run-log.md`](runs/FEAT-042-run-log.md) | 2026-10-05 |
-| FEAT-041 | Tablero Formación GH (Dashboard + Formaciones: import replace-all) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-041-run-log.md`](runs/FEAT-041-run-log.md) | 2026-10-01 |
-| FEAT-040 | Reportes-Novedades GH→Nómina (4 hojas + review + retiros auto) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-040-run-log.md`](runs/FEAT-040-run-log.md) | 2026-09-30 |
-| FEAT-039 | Export Apo SuperVigilancia (.xls) + Dashboard Acreditaciones | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-039-run-log.md`](runs/FEAT-039-run-log.md) | 2026-09-28 |
-| FEAT-038 | Validaciones Acreditaciones (cruces Ficha / Acreditados / Reporte Diario) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-038-run-log.md`](runs/FEAT-038-run-log.md) | 2026-09-25 |
-| FEAT-037 | Reporte Diario APO (carga diaria 2 Excel + histórico) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-037-run-log.md`](runs/FEAT-037-run-log.md) | 2026-09-24 |
-| FEAT-036 | Tablero Acreditaciones GH (shell + Acreditados + catalogo cargos) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-036-run-log.md`](runs/FEAT-036-run-log.md) | 2026-09-23 |
-| FEAT-035 | Tablero Selección GH (Dashboard, Ingreso, Examen ocupacional, Catálogos) | orquestado | Si (Aprobado con observaciones) | [`docs/runs/FEAT-035-run-log.md`](runs/FEAT-035-run-log.md) | 2026-09-22 |
+| FEAT-046 | Dashboard de área GH (informe mensual KPI + gráficos) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-046-run-log.md`](runs/FEAT-046-run-log.md) | 2026-10-13 |
+| FEAT-045 | Tablero GH MT-ST-04 (psicofísicos / psicosensométricos) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-045-run-log.md`](runs/FEAT-045-run-log.md) | 2026-10-09 |
+| FEAT-044 | Tablero GH Cartas Notificación (solo edit, lote Word sin BD) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-044-run-log.md`](runs/FEAT-044-run-log.md) | 2026-10-08 |
+| FEAT-043 | Cliente interno — pestaña Cartas Vacaciones (lote cédulas → Word/ZIP) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-043-run-log.md`](runs/FEAT-043-run-log.md) | 2026-10-07 |
+| FEAT-042 | Tablero Cliente interno GH (Dashboard + Solicitudes + Catálogos) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-042-run-log.md`](runs/FEAT-042-run-log.md) | 2026-10-05 |
+| FEAT-041 | Tablero Formación GH (Dashboard + Formaciones: import replace-all) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-041-run-log.md`](runs/FEAT-041-run-log.md) | 2026-10-01 |
+| FEAT-040 | Reportes-Novedades GH→Nómina (4 hojas + review + retiros auto) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-040-run-log.md`](runs/FEAT-040-run-log.md) | 2026-09-30 |
+| FEAT-039 | Export Apo SuperVigilancia (.xls) + Dashboard Acreditaciones | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-039-run-log.md`](runs/FEAT-039-run-log.md) | 2026-09-28 |
+| FEAT-038 | Validaciones Acreditaciones (cruces Ficha / Acreditados / Reporte Diario) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-038-run-log.md`](runs/FEAT-038-run-log.md) | 2026-09-25 |
+| FEAT-037 | Reporte Diario APO (carga diaria 2 Excel + histórico) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-037-run-log.md`](runs/FEAT-037-run-log.md) | 2026-09-24 |
+| FEAT-036 | Tablero Acreditaciones GH (shell + Acreditados + catalogo cargos) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-036-run-log.md`](runs/FEAT-036-run-log.md) | 2026-09-23 |
+| FEAT-035 | Tablero Selección GH (Dashboard, Ingreso, Examen ocupacional, Catálogos) | orquestado | Si — observaciones cerradas 2026-11-04 | [`docs/runs/FEAT-035-run-log.md`](runs/FEAT-035-run-log.md) | 2026-09-22 |
 | FEAT-031 | Tablero Desvinculaciones (Masivos + Seguimientos) en GH | orquestado | Si | [`docs/runs/FEAT-031-run-log.md`](runs/FEAT-031-run-log.md) | 2026-09-14 |
 | FEAT-030 | Adjuntos multiples opcionales en solicitud de compra (detalle plataforma) | orquestado | Si | [`docs/runs/FEAT-030-run-log.md`](runs/FEAT-030-run-log.md) | 2026-08-28 |
 | FEAT-029 | Tablero plantillas Word (tipo documento) + modal generar cartas (1/N → docx/zip) | orquestado | Si | [`docs/runs/FEAT-029-run-log.md`](runs/FEAT-029-run-log.md) | 2026-08-21 |

@@ -84,3 +84,11 @@ Ninguno.
 - [x] Pasar a Documentador (veredicto aprobado con observaciones; **sin blockers**)
 - [ ] Devolver a Agente Feature — **no aplica**
 - [ ] Follow-up opcional: obs. #1–#3 (dashboard SQL, eager export, test administrador)
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

@@ -21,6 +21,7 @@ use App\Services\GestionHumana\MtSt04ImportService;
 use App\Services\GestionHumana\MtSt04ListService;
 use App\Services\GestionHumana\MtSt04ValidacionesDatatableService;
 use App\Services\GestionHumana\MtSt04ValidacionesService;
+use App\Support\ExportRowLimit;
 use App\Traits\HasMtSt04Tabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -170,24 +171,32 @@ class MtSt04Controller extends Controller
         ]);
     }
 
-    public function exportMatriz(Request $request): StreamedResponse
+    public function exportMatriz(Request $request): StreamedResponse|RedirectResponse
     {
         abort_unless($this->mtSt04Access->canView(auth()->user()), 403);
 
         $filters = $this->matrizFiltersFromRequest($request);
-        $registros = $this->listService->all($filters);
+        $query = $this->listService->filteredQuery($filters, ordered: false);
+        $maxRows = max(1, (int) config('mt_st_04.export.max_rows', 10000));
+        $rowCount = ExportRowLimit::count($query);
+
+        if ($rowCount > $maxRows) {
+            return redirect()
+                ->route('gestion-humana.mt-st-04.matriz', $this->activeMatrizFilterQuery($filters))
+                ->with('error', ExportRowLimit::rejectionMessage($maxRows, $rowCount));
+        }
 
         $this->auditLogService->logEvent(
             eventType: 'export',
             action: 'export',
             metadata: [
-                'rows' => $registros->count(),
+                'rows' => $rowCount,
                 'filters' => $filters,
             ],
             userId: (int) auth()->id(),
         );
 
-        return MtSt04Export::downloadCollection($registros);
+        return MtSt04Export::downloadFilteredQuery($query);
     }
 
     public function importTemplate(): StreamedResponse

@@ -2,6 +2,7 @@
 
 namespace App\Exports;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
@@ -34,18 +35,80 @@ class BaseExport
         $spreadsheet = new Spreadsheet;
         $this->writeTo($spreadsheet->getActiveSheet());
 
-        return response()->streamDownload(function () use ($spreadsheet): void {
-            $writer = new Xlsx($spreadsheet);
-            $writer->save('php://output');
-        }, $this->fileName, [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
+        return $this->streamSpreadsheet($spreadsheet);
+    }
+
+    /**
+     * Export por chunks (chunkById) sin cargar toda la query en memoria.
+     *
+     * @template TModel of \Illuminate\Database\Eloquent\Model
+     *
+     * @param  Builder<TModel>  $query
+     * @param  callable(TModel): array<string, mixed>  $mapRow
+     */
+    public static function downloadFromQuery(
+        Builder $query,
+        array $columns,
+        string $fileName,
+        string $title,
+        callable $mapRow,
+        int $chunkSize = 500,
+        ?string $chunkColumn = null,
+    ): StreamedResponse {
+        $chunkSize = max(1, $chunkSize);
+        $model = $query->getModel();
+        $chunkColumn ??= $model->getQualifiedKeyName();
+        $chunkAlias = $model->getKeyName();
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $export = new self(collect(), $columns, $fileName, $title);
+
+        $dataStartRow = $export->writeHeaderBlock($sheet);
+        $headerRow = $dataStartRow - 1;
+        $row = $dataStartRow;
+
+        $chunkQuery = clone $query;
+        $chunkQuery->reorder();
+
+        $chunkQuery->chunkById(
+            $chunkSize,
+            function ($records) use ($export, $sheet, $mapRow, &$row): void {
+                foreach ($records as $record) {
+                    $mapped = $mapRow($record);
+                    $export->writeDataRowAt($sheet, $row, $mapped);
+                    $row++;
+                }
+            },
+            $chunkColumn,
+            $chunkAlias,
+        );
+
+        $export->applySheetChrome($sheet, $headerRow, max($row - 1, $headerRow));
+
+        return $export->streamSpreadsheet($spreadsheet);
     }
 
     /**
      * Escribe título, encabezados y filas en una hoja. Permite armar libros con varias hojas con el mismo formato.
      */
     public function writeTo(Worksheet $sheet): void
+    {
+        $dataStartRow = $this->writeHeaderBlock($sheet);
+        $row = $dataStartRow;
+
+        foreach ($this->data as $dataRow) {
+            $this->writeDataRowAt($sheet, $row, $dataRow);
+            $row++;
+        }
+
+        $this->applySheetChrome($sheet, $dataStartRow - 1, max($row - 1, $dataStartRow - 1));
+    }
+
+    /**
+     * @return int Primera fila de datos (debajo de encabezados).
+     */
+    protected function writeHeaderBlock(Worksheet $sheet): int
     {
         $row = 1;
 
@@ -68,18 +131,23 @@ class BaseExport
             $sheet->getStyle($cell)->getFont()->getColor()->setARGB('FFFFFFFF');
             $sheet->getStyle($cell)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         }
-        $row++;
 
-        foreach ($this->data as $dataRow) {
-            foreach ($this->columns as $index => $column) {
-                $cell = $this->columnLetter($index).$row;
-                $value = $this->extractValue($dataRow, $column);
-                $sheet->setCellValue($cell, $value);
-            }
-            $row++;
+        return $headerRow + 1;
+    }
+
+    /**
+     * @param  array<string, mixed>|object  $dataRow
+     */
+    protected function writeDataRowAt(Worksheet $sheet, int $row, array|object $dataRow): void
+    {
+        foreach ($this->columns as $index => $column) {
+            $cell = $this->columnLetter($index).$row;
+            $sheet->setCellValue($cell, $this->extractValue($dataRow, $column));
         }
+    }
 
-        $lastRow = max($row - 1, $headerRow);
+    protected function applySheetChrome(Worksheet $sheet, int $headerRow, int $lastRow): void
+    {
         $lastColumn = $this->columnLetter(count($this->columns) - 1);
         $sheet->getStyle('A'.$headerRow.':'.$lastColumn.$lastRow)
             ->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
@@ -90,7 +158,17 @@ class BaseExport
         }
     }
 
-    private function columnLetter(int $index): string
+    protected function streamSpreadsheet(Spreadsheet $spreadsheet): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($spreadsheet): void {
+            $writer = new Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, $this->fileName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    protected function columnLetter(int $index): string
     {
         $letter = '';
         $index++;
@@ -104,7 +182,7 @@ class BaseExport
         return $letter;
     }
 
-    private function extractValue($dataRow, array $column): mixed
+    protected function extractValue($dataRow, array $column): mixed
     {
         $key = $column['key'] ?? null;
 

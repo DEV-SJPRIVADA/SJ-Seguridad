@@ -4,6 +4,7 @@ namespace App\Exports;
 
 use App\Models\ClienteInternoSolicitud;
 use App\Services\GestionHumana\ClienteInternoDatatableService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -32,6 +33,21 @@ class ClienteInternoExport extends BaseExport
     public static function downloadCollection(Collection $solicitudes): StreamedResponse
     {
         return (new self($solicitudes))->download();
+    }
+
+    /**
+     * @param  Builder<ClienteInternoSolicitud>  $query
+     */
+    public static function downloadFilteredQuery(Builder $query): StreamedResponse
+    {
+        return BaseExport::downloadFromQuery(
+            $query,
+            self::columnDefinitions(),
+            'cliente_interno_solicitudes_'.now()->format('Y-m-d').'.xlsx',
+            'Cliente interno — Solicitudes — '.config('app.name'),
+            fn (ClienteInternoSolicitud $solicitud): array => self::mapSolicitud($solicitud),
+            max(1, (int) config('cliente_interno.export.chunk_size', 500)),
+        );
     }
 
     /**

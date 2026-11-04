@@ -1,7 +1,7 @@
 # Modulo Selección
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/seleccion.md`.
-> Feature: FEAT-035 (revisado 2026-09-22, aprobado con observaciones).
+> Feature: FEAT-035. Observaciones **cerradas** 2026-11-04 ([`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md)).
 
 ## Objetivo
 

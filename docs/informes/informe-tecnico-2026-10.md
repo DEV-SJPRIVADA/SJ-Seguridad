@@ -1,5 +1,7 @@
 # Informe Técnico — SJ StatFlow
 
+> **Actualización 2026-11-04:** Gestión Humana — estado vigente **🟢 Operativo** (observaciones cerradas). Ver [`cierre-observaciones-gestion-humana-2026-11-04.md`](cierre-observaciones-gestion-humana-2026-11-04.md). Las tablas de este informe conservan el corte histórico de octubre 2026.
+
 **Proyecto:** Plataforma web modular SJ Seguridad (`SJ StatFlow`)
 **Fecha de corte:** 29 de octubre de 2026
 **Commit de referencia:** `a1adff4` — «ajuste en logica para que las colas de ficha pasen a ficha»

@@ -1,7 +1,7 @@
 # Modulo Acreditaciones
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/acreditaciones.md`.
-> Features: FEAT-036 (fase 1) + FEAT-037 (Reporte Diario APO) + FEAT-038 (Validaciones) + FEAT-039 (Export Apo SuperVigilancia + Dashboard, 2026-09-28, aprobado con observaciones).
+> Features: FEAT-036–039. Observaciones **cerradas** 2026-11-04 ([`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md)).
 
 ## Objetivo
 

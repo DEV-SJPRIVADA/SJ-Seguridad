@@ -83,3 +83,4 @@ CEDULA, APELLIDOS Y NOMBRES, CARGO, SERVICIO/SECTOR, CLIENTE, EPS, PENSION (AFP)
 
 - shared-files previstos: `config/access.php`, rutas GH, nav, `config/employee_ficha.php` (catalog_types), posible CSS.
 - Patron de referencia: tablero Cursos (FEAT-032).
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) — [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

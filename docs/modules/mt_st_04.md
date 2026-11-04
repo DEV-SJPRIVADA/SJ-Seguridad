@@ -1,7 +1,7 @@
 # Modulo MT-ST-04
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/mt_st_04.md`.  
-> Feature: **FEAT-045** (2026-10-09). Brief: [`docs/briefs/FEAT-045.md`](../briefs/FEAT-045.md). Review: [`docs/reviews/FEAT-045.md`](../reviews/FEAT-045.md).
+> Feature: **FEAT-045**. Observaciones **cerradas** 2026-11-04 ([`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md)).
 
 ## Objetivo
 
@@ -196,7 +196,7 @@ Sea `hoy` = inicio del día Bogotá.
 Plantilla fila 1 = keys, fila 2 = labels; columnas: `document_number`, `full_name` (ignorado), `arma`, `fecha_examen_1`, `apto`, `observaciones_1`, `fecha_examen_2`, `observaciones_2`.  
 **No** aceptar override de ESTADO / FECHA VENCIMIENTO.  
 Upsert por cédula; filas vacías skip; duplicados en archivo → última gana + `duplicates_collapsed`.  
-Export: cédula + ficha live + editables + vencimientos/estados; respeta filtros del listado. Carga colección filtrada en memoria (mismo patrón otros GH; riesgo volumen alto).
+Export: cédula + ficha live + editables + vencimientos/estados; respeta filtros. Tope `mt_st_04.export.max_rows` (10 000) y escritura por chunks (`chunk_size` 500).
 
 ### Dashboard
 
@@ -273,7 +273,7 @@ php artisan test --compact ^
 | Duplicados en archivo | Última gana + reporte |
 | Job no programado en deploy | Schedule en `bootstrap/app.php` + [`PROCEDURES.md`](../PROCEDURES.md) |
 | Permisos sin assign manual | Doc Admin |
-| Export en memoria | Documentado; chunk/stream si crece volumen |
+| Export volumen alto | Tope configurable + `BaseExport::downloadFromQuery` (chunkById) |
 | Filtro cargo dedicado | Nit review opcional post-cierre |
 | Smoke DevTools | Recomendado en checklist AgentSj |
 

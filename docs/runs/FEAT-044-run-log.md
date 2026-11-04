@@ -48,3 +48,4 @@
 7. Generar 1→docx / N→zip; sin ficha/inactivo: aviso + nombre editable.
 8. Filtros en memoria; limpiar = vaciar grilla.
 9. Audit solo al generate/descargar.
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) � [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

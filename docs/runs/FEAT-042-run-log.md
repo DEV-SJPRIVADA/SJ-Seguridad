@@ -66,3 +66,4 @@
 ### Pendiente confirmar (Analista)
 
 - Masivo: si Excel trae `fecha_solicitud` fuera del año/mes seleccionado → A rechazar / B aceptar (replace solo borra periodo) / C forzar anio/mes al filtro.
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) � [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

@@ -89,3 +89,11 @@ Nota: el glob `tests/Feature/GestionHumana/ClienteInterno` no resolvió como dir
 - [ ] Devolver a Agente Feature (si bloqueado)
 
 Observaciones 1–2 (email + catálogos inactivos en import) son mejoras recomendadas para un hotfix corto si AgentSj lo prioriza; **no** bloquean Documentador.
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

@@ -45,3 +45,4 @@
 - Contexto previo (Ask): dos Excel APO revisados — En Proceso (`Estado`) y Acreditados (`Vigen.Acr`); propuesta de cabecera+filas, replace por fecha, DT server-side, export.
 - Placeholders FEAT-036: Reporte Diario sigue como «Próximamente» hasta esta feature.
 - Decisiones de negocio a validar con el usuario (no asumir): obligatoriedad de los 2 archivos, significado de fecha, alcance vs Ficha/Acreditados.
+- **2026-11-04:** Observaciones GH cerradas (smoke prod OK) � [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md).

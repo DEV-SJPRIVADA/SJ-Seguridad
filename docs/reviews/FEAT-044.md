@@ -97,3 +97,11 @@ php artisan test --compact tests/Feature/GestionHumana/CartasNotificacionAccessT
 - [ ] Devolver a Agente Feature (si bloqueado)
 
 **Para AgentSj:** veredicto **Aprobado con observaciones** — lanzar Documentador (`docs/modules/cartas-notificacion.md`, `docs/user/cartas-notificacion.md`, plantillas-word, ACCESS_CONTROL, ARCHITECTURE). Observaciones 1–5 son mejoras opcionales post-cierre; ninguna bloquea.
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

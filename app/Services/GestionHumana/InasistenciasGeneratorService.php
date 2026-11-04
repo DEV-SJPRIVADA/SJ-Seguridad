@@ -10,6 +10,7 @@ use App\Models\WordDocumentType;
 use App\Services\GestionHumana\Letter\LetterVariableBuilder;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterDocxRenderer;
 use App\Services\GestionHumana\TerminationLetter\TerminationLetterTemplateManager;
+use App\Support\DocumentNumberListParser;
 use App\Support\SpreadsheetCellReader;
 use App\Support\WordTempDirectory;
 use Carbon\Carbon;
@@ -34,6 +35,7 @@ class InasistenciasGeneratorService
         private readonly TerminationLetterTemplateManager $templateManager,
         private readonly LetterVariableBuilder $variableBuilder,
         private readonly TerminationLetterDocxRenderer $docxRenderer,
+        private readonly DocumentNumberListParser $documentNumberListParser,
     ) {}
 
     /**
@@ -371,7 +373,7 @@ class InasistenciasGeneratorService
 
     public function normalizeDocument(string $documentNumber): string
     {
-        return trim($documentNumber);
+        return $this->documentNumberListParser->normalize($documentNumber);
     }
 
     public function resolveExactlyOneTemplate(): TerminationLetterDocumentTemplate

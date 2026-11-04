@@ -102,3 +102,11 @@ Ninguno.
 - [ ] Devolver a Agente Feature — no aplica
 
 **Mensaje a AgentSj:** FEAT-037 / T1 **Aprobado con observaciones**. Sin blockers. Lanzar Documentador (`docs/modules/acreditaciones.md`, `docs/user/acreditaciones.md`, INDEX / ACCESS_CONTROL si describen placeholder). Observaciones #1–#5 son follow-up opcionales (test dual-header + audit assert recomendados). Separar del commit archivos ajenos (requisitions / CSS no usado por esta pestaña).
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

@@ -96,3 +96,11 @@ Cobertura CA relevante: permisos view/edit, universo (excluye ACREDITADO fresco 
 - [ ] Devolver a Agente Feature (si bloqueado) — N/A
 
 AgentSj: registrar review en run log; lanzar Documentador; observaciones 1–3 pueden ir como follow-up opcional o nota en docs (no bloquean cierre).
+
+## Cierre de observaciones (Gestión Humana)
+
+| Campo | Valor |
+| --- | --- |
+| Fecha | 2026-11-04 |
+| Estado | **Cerrado** — smoke manual en producción sin errores; sin bloqueantes abiertos |
+| Consolidado | [cierre-observaciones-gestion-humana-2026-11-04.md](../informes/cierre-observaciones-gestion-humana-2026-11-04.md) |

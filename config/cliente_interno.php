@@ -39,6 +39,11 @@ return [
     | Dashboard — bins distribución días (T5)
     |--------------------------------------------------------------------------
     */
+    'export' => [
+        'max_rows' => 10000,
+        'chunk_size' => 500,
+    ],
+
     'dashboard' => [
         'dias_bins' => [
             ['max' => 2, 'label' => '0–2'],

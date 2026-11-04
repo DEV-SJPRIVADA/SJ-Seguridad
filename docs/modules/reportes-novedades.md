@@ -1,7 +1,7 @@
 # Modulo MT-GH-04 Novedades
 
 > Documentacion tecnica para IAs y desarrolladores. Ubicacion: `docs/modules/reportes-novedades.md`.
-> Feature: FEAT-040. Review: `docs/reviews/FEAT-040.md` (Aprobado con observaciones).
+> Feature: FEAT-040. Observaciones **cerradas** 2026-11-04 ([`cierre-observaciones-gestion-humana-2026-11-04.md`](../informes/cierre-observaciones-gestion-humana-2026-11-04.md)).
 > Clave interna: `reportes_novedades`. Label UI / sidebar: **MT-GH-04 Novedades**.
 
 ## Objetivo

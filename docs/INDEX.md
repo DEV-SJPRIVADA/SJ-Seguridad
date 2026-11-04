@@ -65,6 +65,7 @@ Serie mensual en [`docs/informes/`](c:/laragon/www/SJSEGURIDAD/docs/informes/).
 | Periodo | Informe tecnico | Informe gerencial |
 | --- | --- | --- |
 | Octubre 2026 | [`informe-tecnico-2026-10.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-tecnico-2026-10.md) · [`DOCX`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-tecnico-statflow-2026-10.docx) | [`informe-gerencial-2026-10.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-2026-10.md) · [`DOCX`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-statflow-2026-10.docx) |
+| Cierre área GH (nov 2026) | [`cierre-observaciones-gestion-humana-2026-11-04.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/cierre-observaciones-gestion-humana-2026-11-04.md) | [`cierre-operativo-gestion-humana-2026-11-04.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/cierre-operativo-gestion-humana-2026-11-04.md) |
 | Septiembre 2026 | — | [`informe-gerencial-statflow-2026-09.docx`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-statflow-2026-09.docx) |
 
 El informe tecnico incluye el conteo de lineas de codigo por area y estado, el detalle de Gestion Humana, la deuda tecnica y las recomendaciones priorizadas. El gerencial resume cifras clave, avance por area, valor de negocio y decisiones requeridas.

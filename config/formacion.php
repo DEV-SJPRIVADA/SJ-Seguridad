@@ -38,6 +38,8 @@ return [
             'calificacion',
             'categoria',
         ],
+        'max_rows' => 10000,
+        'chunk_size' => 500,
     ],
 
     /*
