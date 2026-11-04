@@ -168,7 +168,7 @@ El estado **no se elige**. Cambia solo:
 
 Una orden emitida no se edita ni se borra. Si quedó mal (proveedor, precio, cantidad o pedido equivocado), pida su anulación. Solo se puede pedir mientras la orden no tenga fecha de recibido.
 
-1. **Compras:** abra la orden en **Órdenes** y, en **Solicitar anulación**, elija el **director que aprueba** y escriba el motivo. Pulse **Solicitar anulación**.
+1. **Compras:** abra la orden en **Órdenes** y use el icono **Solicitar anulación** (junto a **Evaluar entrega**). En el modal elija el **director que aprueba** y escriba el motivo. Pulse **Solicitar anulación**.
 2. La orden queda **Anulación pendiente**. Mientras tanto no se puede evaluar y su cantidad sigue apartada, para no emitir otra orden por lo mismo antes de la respuesta.
 3. Si se equivocó al pedirla, pulse **Retirar solicitud de anulación** y la orden vuelve a **Emitida**.
 4. **Director:** recibe un correo con el botón **Revisar anulación** (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Anulaciones de órdenes** (muestra entre paréntesis cuántas tiene pendientes). Solo el director elegido puede decidir.
@@ -182,7 +182,7 @@ El sistema no envía las órdenes al proveedor; si ya se la había entregado, av
 
 Es **opcional**. Sin pedirla, la orden sigue **Emitida** y se puede descargar como siempre.
 
-1. **Compras:** abra la orden en **Órdenes** y, en **Solicitar aprobación**, elija quién aprueba (en la lista salen directores y administradores). Puede escribir una nota. Pulse **Solicitar aprobación**.
+1. **Compras:** abra la orden en **Órdenes** y use el icono **Solicitar aprobación** (junto a **Evaluar entrega**). En el modal elija quién aprueba (directores y administradores) y, si quiere, una nota. Pulse **Solicitar aprobación**.
 2. La orden muestra **Aprobación pendiente**. Mientras espera se puede descargar, pero no se puede pedir su anulación.
 3. Si se equivocó de aprobador, pulse **Retirar solicitud de aprobación** y pídala de nuevo.
 4. **Aprobador:** recibe un correo con el botón para revisar la orden (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Órdenes de Compra** (muestra entre paréntesis cuántas tiene pendientes). Solo la persona elegida puede decidir.

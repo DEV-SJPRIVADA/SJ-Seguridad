@@ -6,6 +6,10 @@
     @php
         $subtotal = $order->items->sum(fn ($item) => ((float) $item->cantidad) * ((float) $item->valor_unidad));
         $ivaTotal = $order->items->sum(fn ($item) => (float) $item->iva);
+        $showApprovalRequestModal = $canRequestApproval
+            && ($errors->has('aprobacion_aprobador_id') || $errors->has('aprobacion_nota'));
+        $showCancellationRequestModal = $canRequestCancellation
+            && ($errors->has('anulacion_aprobador_id') || $errors->has('motivo_anulacion'));
     @endphp
 
     <div class="page-section purchase-requests-page purchase-requests-page--detail purchase-orders-page">
@@ -34,6 +38,30 @@
                             >
                                 <x-lucide-clipboard-check width="18" height="18" aria-hidden="true" />
                             </a>
+                        @endif
+                        @if ($canRequestApproval)
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Solicitar aprobación"
+                                aria-label="Solicitar aprobación"
+                                x-data
+                                x-on:click.prevent="$dispatch('open-modal', 'purchase-order-request-approval')"
+                            >
+                                <x-lucide-badge-check width="18" height="18" aria-hidden="true" />
+                            </button>
+                        @endif
+                        @if ($canRequestCancellation)
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Solicitar anulación"
+                                aria-label="Solicitar anulación"
+                                x-data
+                                x-on:click.prevent="$dispatch('open-modal', 'purchase-order-request-cancellation')"
+                            >
+                                <x-lucide-ban width="18" height="18" aria-hidden="true" />
+                            </button>
                         @endif
                         @if ($sourceUrl)
                             <a
@@ -286,5 +314,17 @@
                 </aside>
             </div>
         </div>
+
+        @if ($canRequestApproval)
+            @include('modules.purchase-requests.orders.partials.approval-request-modal', [
+                'show' => $showApprovalRequestModal,
+            ])
+        @endif
+
+        @if ($canRequestCancellation)
+            @include('modules.purchase-requests.orders.partials.cancellation-request-modal', [
+                'show' => $showCancellationRequestModal,
+            ])
+        @endif
     </div>
 </x-app-layout>
