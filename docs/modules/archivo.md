@@ -121,7 +121,11 @@ Filtros: busqueda, mes (por defecto el mes calendario actual al abrir la pagina;
 
 ## Controlador
 
-`App\Http\Controllers\GestionHumana\ArchivoController` — `laborHistories()` pinta layout, filtros y tabla vacia. El listado llega por AJAX (`laborHistoriesDatatable()` + `EmployeeArchiveLaborHistoryDatatableService`): paginacion, busqueda y orden en MySQL (mismo patron que Ficha empleados). Edicion inline de `archive_shelf` / `archive_box` via PATCH por fila (HTML de inputs/formulario en el JSON). Si el empleado no tiene perfil persistido, se crea uno minimo al guardar.
+`App\Http\Controllers\GestionHumana\ArchivoController` — `laborHistories()` pinta layout, filtros y tabla vacia. El listado llega por AJAX (`laborHistoriesDatatable()` + `EmployeeArchiveLaborHistoryDatatableService`): paginacion, busqueda y orden en MySQL (mismo patron que Ficha empleados).
+
+Filtros GET de Historias laborales: `q` (cédula, nombre o código de requisición), `cargo`, `cliente` y `ciudad`. Cargo, cliente y ciudad comparan el texto visible de la columna: primero el perfil (`position_name`, `work_center_name`, `residence_city_name`) y, si ese texto está vacío, el catálogo de la requisición (`position`, `client`, `city`). Los selects se arman con esos mismos textos. Cambiar un select recarga la página; la X de **Limpiar filtros** quita `q`, cargo, cliente y ciudad y conserva `consultation`. El PATCH de estante/caja reenvía esos filtros para no perderlos al guardar.
+
+Edicion inline de `archive_shelf` / `archive_box` via PATCH por fila (HTML de inputs/formulario en el JSON). Si el empleado no tiene perfil persistido, se crea uno minimo al guardar.
 
 ## Tests
 

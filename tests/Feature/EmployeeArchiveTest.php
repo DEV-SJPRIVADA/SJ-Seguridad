@@ -706,6 +706,55 @@ class EmployeeArchiveTest extends TestCase
         $this->assertStringNotContainsString('Otro Empleado Archivo', $this->datatableRowTexts($byName->json()));
     }
 
+    public function test_archivo_labor_histories_datatable_filters_by_displayed_cargo(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $match = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '7070707070',
+            'hired_full_name' => 'Cargo Vigilante Archivo',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $match->id,
+            'document_number' => $match->hired_document,
+            'full_name' => $match->hired_full_name,
+            'position_name' => 'VIGILANTE',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $other = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '8080808080',
+            'hired_full_name' => 'Cargo Auxiliar Archivo',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $other->id,
+            'document_number' => $other->hired_document,
+            'full_name' => $other->hired_full_name,
+            'position_name' => 'AUXILIAR',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $filtered = $this->getArchivoLaborHistoriesDatatable($viewer, [
+            'cargo' => 'VIGILANTE',
+        ]);
+
+        $filtered->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $rowText = $this->datatableRowTexts($filtered->json());
+        $this->assertStringContainsString('Cargo Vigilante Archivo', $rowText);
+        $this->assertStringNotContainsString('Cargo Auxiliar Archivo', $rowText);
+    }
+
     public function test_archivo_labor_histories_datatable_includes_inline_edit_for_managers(): void
     {
         $manager = User::factory()->create(['must_change_password' => false]);

@@ -14,7 +14,7 @@ final class EmployeeArchiveLaborHistoryDatatableService
 {
     /**
      * @param  Builder<PersonalRequisitionFichaEntry>  $query
-     * @param  array{q: string, consultation: int|null}  $filters
+     * @param  array{q: string, cargo: string, cliente: string, ciudad: string, consultation: int|null}  $filters
      */
     public function respond(
         Request $request,
@@ -168,7 +168,7 @@ final class EmployeeArchiveLaborHistoryDatatableService
     }
 
     /**
-     * @param  array{q: string, consultation: int|null}  $filters
+     * @param  array{q: string, cargo: string, cliente: string, ciudad: string, consultation: int|null}  $filters
      * @return array<int, string>
      */
     private function formatRow(PersonalRequisitionFichaEntry $entry, array $filters, bool $canManage): array
@@ -228,7 +228,7 @@ final class EmployeeArchiveLaborHistoryDatatableService
     }
 
     /**
-     * @param  array{q: string, consultation: int|null}  $filters
+     * @param  array{q: string, cargo: string, cliente: string, ciudad: string, consultation: int|null}  $filters
      */
     private function formatActionsCell(PersonalRequisitionFichaEntry $entry, string $rowFormId, array $filters): string
     {
@@ -245,6 +245,20 @@ final class EmployeeArchiveLaborHistoryDatatableService
             $hiddenFilters .= sprintf(
                 '<input type="hidden" name="consultation" value="%s">',
                 e((string) $filters['consultation']),
+            );
+        }
+
+        foreach (['cargo', 'cliente', 'ciudad'] as $filterKey) {
+            $filterValue = trim((string) ($filters[$filterKey] ?? ''));
+
+            if ($filterValue === '') {
+                continue;
+            }
+
+            $hiddenFilters .= sprintf(
+                '<input type="hidden" name="%s" value="%s">',
+                e($filterKey),
+                e($filterValue),
             );
         }
 

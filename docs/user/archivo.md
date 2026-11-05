@@ -24,7 +24,8 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 
 1. Entre al area **Gestion Humana** → **Archivo** → pestaña **Historias Laborales**.
 2. Use la busqueda por cedula, nombre o codigo de requisicion (el listado se pagina en el servidor; no carga todos los empleados de una vez).
-3. Revise columnas **Estantes** y **Cajas**.
+3. Filtre por **Cargo**, **Cliente** o **Ciudad**. Al elegir un valor la lista se actualiza sola. La **X** junto a Buscar limpia la busqueda y esos tres filtros. La consulta multiple, si esta activa, se mantiene.
+4. Revise columnas **Estantes** y **Cajas**.
 
 ### Consultar varias cedulas a la vez
 
@@ -76,6 +77,7 @@ La reimportacion **no modifica** datos de nomina ni otros campos del empleado.
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.10 | 2026-11-05 | Archivo | Historias laborales: filtros por cargo, cliente y ciudad. Se aplican al cambiar el select y se conservan al guardar estante o caja. |
 | 1.9 | 2026-10-15 | Agent | Al crear empleado en Ficha (nuevo / Gestionar) se puede capturar estante y caja; aparece en Historias laborales. |
 | 1.8 | 2026-10-05 | Archivo | Historial de consultas: export Excel, botón Actualizar como icono, filtro mes actual por defecto. |
 | 1.7 | 2026-09-18 | Archivo | Import: basta con estante o caja (uno de los dos) para actualizar la fila. |

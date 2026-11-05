@@ -459,6 +459,9 @@ class ArchivoController extends Controller
         return redirect()
             ->route('gestion-humana.archivo.labor-histories.index', array_filter([
                 'q' => $request->string('q')->toString() ?: null,
+                'cargo' => $request->string('cargo')->toString() ?: null,
+                'cliente' => $request->string('cliente')->toString() ?: null,
+                'ciudad' => $request->string('ciudad')->toString() ?: null,
                 'consultation' => $request->integer('consultation') ?: null,
             ]))
             ->with('status', 'Ubicacion actualizada correctamente.');
@@ -605,87 +608,88 @@ class ArchivoController extends Controller
             ->all();
     }
 
-  /**
- * @return Builder<PersonalRequisitionFichaEntry>
- */
-private function laborHistoriesQuery(
-    string $q,
-    ?EmployeeArchiveConsultation $activeConsultation,
-    string $cargo = '',
-    string $cliente = '',
-    string $ciudad = '',
-): Builder {
-    return PersonalRequisitionFichaEntry::query()
-        ->inFicha()
-        ->when($q !== '', function (Builder $query) use ($q): void {
-            $query->where(function (Builder $inner) use ($q): void {
-                $inner->where('hired_document', 'like', "%{$q}%")
-                    ->orWhere('hired_full_name', 'like', "%{$q}%")
-                    ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
+    /**
+     * @return Builder<PersonalRequisitionFichaEntry>
+     */
+    private function laborHistoriesQuery(
+        string $q,
+        ?EmployeeArchiveConsultation $activeConsultation,
+        string $cargo = '',
+        string $cliente = '',
+        string $ciudad = '',
+    ): Builder {
+        return PersonalRequisitionFichaEntry::query()
+            ->inFicha()
+            ->when($q !== '', function (Builder $query) use ($q): void {
+                $query->where(function (Builder $inner) use ($q): void {
+                    $inner->where('hired_document', 'like', "%{$q}%")
+                        ->orWhere('hired_full_name', 'like', "%{$q}%")
+                        ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
+                });
+            })
+            ->when($cargo !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
+                $query,
+                $cargo,
+                'position_name',
+                'position',
+            ))
+            ->when($cliente !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
+                $query,
+                $cliente,
+                'work_center_name',
+                'client',
+            ))
+            ->when($ciudad !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
+                $query,
+                $ciudad,
+                'residence_city_name',
+                'city',
+            ))
+            ->when($activeConsultation !== null, function (Builder $query) use ($activeConsultation): void {
+                $normalizedDocuments = $this->normalizedConsultationDocuments($activeConsultation);
+
+                if ($normalizedDocuments === []) {
+                    $query->whereRaw('1 = 0');
+
+                    return;
+                }
+
+                $query->where(function (Builder $inner) use ($normalizedDocuments): void {
+                    $inner->whereIn('hired_document', $normalizedDocuments)
+                        ->orWhereHas('profile', fn (Builder $profileQuery) => $profileQuery->whereIn('document_number', $normalizedDocuments));
+                });
             });
-        })
-        ->when($cargo !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
-            $query,
-            $cargo,
-            'position_name',
-            'position',
-        ))
-        ->when($cliente !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
-            $query,
-            $cliente,
-            'work_center_name',
-            'client',
-        ))
-        ->when($ciudad !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
-            $query,
-            $ciudad,
-            'residence_city_name',
-            'city',
-        ))
-        ->when($activeConsultation !== null, function (Builder $query) use ($activeConsultation): void {
-            $normalizedDocuments = $this->normalizedConsultationDocuments($activeConsultation);
+    }
 
-            if ($normalizedDocuments === []) {
-                $query->whereRaw('1 = 0');
-
-                return;
-            }
-
-            $query->where(function (Builder $inner) use ($normalizedDocuments): void {
-                $inner->whereIn('hired_document', $normalizedDocuments)
-                    ->orWhereHas('profile', fn (Builder $profileQuery) => $profileQuery->whereIn('document_number', $normalizedDocuments));
-            });
-        });
-}
-
-/**
- * Filtra por el texto visible de la columna: perfil primero, requisición si el perfil está vacío.
- */
-private function whereDisplayedLaborValue(
-    Builder $query,
-    string $value,
-    string $profileColumn,
-    string $requisitionRelation,
-): void {
-    $query->where(function (Builder $inner) use ($value, $profileColumn, $requisitionRelation): void {
-        $inner->whereHas('profile', fn (Builder $profile) => $profile->where($profileColumn, $value))
-            ->orWhere(function (Builder $fallback) use ($value, $profileColumn, $requisitionRelation): void {
-                $fallback
-                    ->where(function (Builder $withoutText) use ($profileColumn): void {
-                        $withoutText->whereDoesntHave('profile')
-                            ->orWhereHas('profile', function (Builder $profile) use ($profileColumn): void {
-                                $profile->where(function (Builder $empty) use ($profileColumn): void {
-                                    $empty->whereNull($profileColumn)->orWhere($profileColumn, '');
+    /**
+     * Filtra por el texto visible de la columna: perfil primero, requisición si el perfil está vacío.
+     */
+    private function whereDisplayedLaborValue(
+        Builder $query,
+        string $value,
+        string $profileColumn,
+        string $requisitionRelation,
+    ): void {
+        $query->where(function (Builder $inner) use ($value, $profileColumn, $requisitionRelation): void {
+            $inner->whereHas('profile', fn (Builder $profile) => $profile->where($profileColumn, $value))
+                ->orWhere(function (Builder $fallback) use ($value, $profileColumn, $requisitionRelation): void {
+                    $fallback
+                        ->where(function (Builder $withoutText) use ($profileColumn): void {
+                            $withoutText->whereDoesntHave('profile')
+                                ->orWhereHas('profile', function (Builder $profile) use ($profileColumn): void {
+                                    $profile->where(function (Builder $empty) use ($profileColumn): void {
+                                        $empty->whereNull($profileColumn)->orWhere($profileColumn, '');
+                                    });
                                 });
-                            });
-                    })
-                    ->whereHas(
-                        'requisition.'.$requisitionRelation,
-                        fn (Builder $catalog) => $catalog->where('name', $value),
-                    );
-            });
-    });
-}
+                        })
+                        ->whereHas(
+                            'requisition.'.$requisitionRelation,
+                            fn (Builder $catalog) => $catalog->where('name', $value),
+                        );
+                });
+        });
+    }
+
     private function authorizeView(): void
     {
         abort_unless($this->archivoAccess->canView(auth()->user()), 403);
