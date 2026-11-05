@@ -70,6 +70,10 @@ Serie mensual en [`docs/informes/`](c:/laragon/www/SJSEGURIDAD/docs/informes/).
 
 El informe tecnico incluye el conteo de lineas de codigo por area y estado, el detalle de Gestion Humana, la deuda tecnica y las recomendaciones priorizadas. El gerencial resume cifras clave, avance por area, valor de negocio y decisiones requeridas.
 
+### Informe de reconstruccion y presupuesto (nov 2026)
+
+Analisis del costo de construir la plataforma desde cero sin inteligencia artificial (ni en el proceso ni en el producto), con mercado colombiano: [`INFORME_TECNICO_PRESUPUESTO_SJ_STATFLOW_2026.md`](c:/laragon/www/SJSEGURIDAD/docs/INFORME_TECNICO_PRESUPUESTO_SJ_STATFLOW_2026.md) y libro editable [`PRESUPUESTO_SJ_STATFLOW_2026.xlsx`](c:/laragon/www/SJSEGURIDAD/docs/PRESUPUESTO_SJ_STATFLOW_2026.xlsx). Escenario base: 202 persona-mes, 18 meses, $ 4.616.933.750 COP sin IVA.
+
 ## Modulos documentados
 
 - [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)

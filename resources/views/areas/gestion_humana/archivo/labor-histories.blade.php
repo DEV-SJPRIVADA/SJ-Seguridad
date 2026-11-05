@@ -40,7 +40,10 @@
                 <div class="panel__body panel__body--compact req-manage-shell">
                     @php
                         $hasActiveFilters = ($filters['q'] ?? '') !== ''
-                            || ($filters['consultation'] ?? null);
+                            || ($filters['consultation'] ?? null)
+                            || ($filters['cargo'] ?? '') !== ''
+                            || ($filters['cliente'] ?? '') !== ''
+                            || ($filters['ciudad'] ?? '') !== '';
                     @endphp
                     <details class="req-manage-filters req-manage-filters__panel archivo-page__filters" @if ($hasActiveFilters) open @endif>
                         <summary class="req-manage-filters__panel-toggle">
@@ -65,6 +68,46 @@
                                         value="{{ $filters['q'] }}"
                                         placeholder="Cédula, nombre o código de requisición"
                                     >
+                                    {{-- Filtros por el texto que muestran las columnas Cargo, Cliente y Ciudad --}}
+                                    <div class="form-field archivo-page__filter-field">
+                                        <label class="form-label" for="archivo-filter-cargo">Cargo</label>
+                                        <x-searchable-select
+                                            id="archivo-filter-cargo"
+                                            name="cargo"
+                                            :options="$cargoOptions ?? []"
+                                            :value="$filters['cargo'] ?? ''"
+                                            placeholder="Todos"
+                                            search-placeholder="Buscar cargo…"
+                                            :allow-clear="true"
+                                            x-on:change="$el.closest('form').requestSubmit()"
+                                        />
+                                    </div>
+                                    <div class="form-field archivo-page__filter-field">
+                                        <label class="form-label" for="archivo-filter-cliente">Cliente</label>
+                                        <x-searchable-select
+                                            id="archivo-filter-cliente"
+                                            name="cliente"
+                                            :options="$clienteOptions ?? []"
+                                            :value="$filters['cliente'] ?? ''"
+                                            placeholder="Todos"
+                                            search-placeholder="Buscar cliente…"
+                                            :allow-clear="true"
+                                            x-on:change="$el.closest('form').requestSubmit()"
+                                        />
+                                    </div>
+                                    <div class="form-field archivo-page__filter-field">
+                                        <label class="form-label" for="archivo-filter-ciudad">Ciudad</label>
+                                        <x-searchable-select
+                                            id="archivo-filter-ciudad"
+                                            name="ciudad"
+                                            :options="$ciudadOptions ?? []"
+                                            :value="$filters['ciudad'] ?? ''"
+                                            placeholder="Todas"
+                                            search-placeholder="Buscar ciudad…"
+                                            :allow-clear="true"
+                                            x-on:change="$el.closest('form').requestSubmit()"
+                                        />
+                                    </div>
                                     <button
                                         type="submit"
                                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -73,6 +116,16 @@
                                     >
                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
                                     </button>
+                                    <a
+                                        href="{{ route('gestion-humana.archivo.labor-histories.index', array_filter([
+                                            'consultation' => $filters['consultation'] ?? null,
+                                        ])) }}"
+                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                        title="Limpiar filtros"
+                                        aria-label="Limpiar filtros"
+                                    >
+                                        <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                    </a>
                                 </form>
                                 <button
                                     type="button"
@@ -96,6 +149,15 @@
                                 <span id="archivo-entries-count-label">empleados</span>
                                 @if ($filters['q'] ?? '')
                                     · Búsqueda: <strong>{{ $filters['q'] }}</strong>
+                                @endif
+                                @if ($filters['cargo'] ?? '')
+                                    · Cargo: <strong>{{ $filters['cargo'] }}</strong>
+                                @endif
+                                @if ($filters['cliente'] ?? '')
+                                    · Cliente: <strong>{{ $filters['cliente'] }}</strong>
+                                @endif
+                                @if ($filters['ciudad'] ?? '')
+                                    · Ciudad: <strong>{{ $filters['ciudad'] }}</strong>
                                 @endif
                                 @if ($activeConsultation ?? null)
                                     · Consulta #{{ $activeConsultation->id }}
@@ -160,7 +222,12 @@
                                 <a href="{{ route('gestion-humana.archivo.consultation-history.index') }}" class="btn btn--secondary btn--sm">
                                     Ver historial
                                 </a>
-                                <a href="{{ route('gestion-humana.archivo.labor-histories.index', array_filter(['q' => $filters['q'] ?? null])) }}" class="btn btn--secondary btn--sm">
+                                <a href="{{ route('gestion-humana.archivo.labor-histories.index', array_filter([
+                                    'q' => $filters['q'] ?? null,
+                                    'cargo' => $filters['cargo'] ?? null,
+                                    'cliente' => $filters['cliente'] ?? null,
+                                    'ciudad' => $filters['ciudad'] ?? null,
+                                ])) }}" class="btn btn--secondary btn--sm">
                                     Quitar filtro
                                 </a>
                             </div>
@@ -272,6 +339,9 @@
                             url: $table.data('dt-url'),
                             data: function (data) {
                                 data.q = @json($filters['q'] ?? '');
+                                data.cargo = @json($filters['cargo'] ?? '');
+                                data.cliente = @json($filters['cliente'] ?? '');
+                                data.ciudad = @json($filters['ciudad'] ?? '');
                                 @if ($filters['consultation'] ?? null)
                                 data.consultation = @json($filters['consultation']);
                                 @endif

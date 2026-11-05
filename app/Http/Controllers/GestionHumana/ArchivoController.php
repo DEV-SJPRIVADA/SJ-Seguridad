@@ -52,16 +52,23 @@ class ArchivoController extends Controller
         $this->authorizeView();
 
         $q = trim($request->string('q')->toString());
+        $cargo = trim($request->string('cargo')->toString());
+        $cliente = trim($request->string('cliente')->toString());
+        $ciudad = trim($request->string('ciudad')->toString());
         $consultationId = $request->integer('consultation') ?: null;
         $importResult = session('import_result');
         $importHasFailures = is_array($importResult) && (($importResult['failures_count'] ?? 0) > 0 || ! empty($importResult['report_token']));
 
         $activeConsultation = $this->resolveActiveConsultation($consultationId);
+        $filtersOptions = $this->laborHistoryFilterOptions();
 
         return view('areas.gestion_humana.archivo.labor-histories', [
             'datatableUrl' => route('gestion-humana.archivo.labor-histories.datatable', $request->query()),
             'filters' => [
                 'q' => $q,
+                'cargo' => $cargo,
+                'cliente' => $cliente,
+                'ciudad' => $ciudad,
                 'consultation' => $consultationId,
             ],
             'subTabs' => $this->getArchivoSubTabs('historias-laborales'),
@@ -71,6 +78,9 @@ class ArchivoController extends Controller
             'importHasFailures' => $importHasFailures,
             'activeConsultation' => $activeConsultation,
             'consultationTypes' => config('employee_ficha.archive_consultation_types', []),
+            'cargoOptions' => $filtersOptions['cargo'],
+            'clienteOptions' => $filtersOptions['cliente'],
+            'ciudadOptions' => $filtersOptions['ciudad'],
         ]);
     }
 
@@ -79,16 +89,22 @@ class ArchivoController extends Controller
         $this->authorizeView();
 
         $q = trim($request->string('q')->toString());
+        $cargo = trim($request->string('cargo')->toString());
+        $cliente = trim($request->string('cliente')->toString());
+        $ciudad = trim($request->string('ciudad')->toString());
         $consultationId = $request->integer('consultation') ?: null;
         $activeConsultation = $this->resolveActiveConsultation($consultationId);
         $filters = [
             'q' => $q,
+            'cargo' => $cargo,
+            'cliente' => $cliente,
+            'ciudad' => $ciudad,
             'consultation' => $consultationId,
         ];
 
         return $this->laborHistoryDatatable->respond(
             $request,
-            $this->laborHistoriesQuery($q, $activeConsultation),
+            $this->laborHistoriesQuery($q, $activeConsultation, $cargo, $cliente, $ciudad),
             $filters,
             $this->canManage(),
         );
@@ -514,35 +530,162 @@ class ArchivoController extends Controller
     }
 
     /**
-     * @return Builder<PersonalRequisitionFichaEntry>
+     * Listas de los selects: el mismo texto que muestran las columnas Cargo, Cliente y Ciudad.
+     *
+     * @return array{
+     *     cargo: list<array{value: string, label: string}>,
+     *     cliente: list<array{value: string, label: string}>,
+     *     ciudad: list<array{value: string, label: string}>
+     * }
      */
-    private function laborHistoriesQuery(string $q, ?EmployeeArchiveConsultation $activeConsultation): Builder
+    private function laborHistoryFilterOptions(): array
     {
-        return PersonalRequisitionFichaEntry::query()
-            ->inFicha()
-            ->when($q !== '', function (Builder $query) use ($q): void {
-                $query->where(function (Builder $inner) use ($q): void {
-                    $inner->where('hired_document', 'like', "%{$q}%")
-                        ->orWhere('hired_full_name', 'like', "%{$q}%")
-                        ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
-                });
-            })
-            ->when($activeConsultation !== null, function (Builder $query) use ($activeConsultation): void {
-                $normalizedDocuments = $this->normalizedConsultationDocuments($activeConsultation);
-
-                if ($normalizedDocuments === []) {
-                    $query->whereRaw('1 = 0');
-
-                    return;
-                }
-
-                $query->where(function (Builder $inner) use ($normalizedDocuments): void {
-                    $inner->whereIn('hired_document', $normalizedDocuments)
-                        ->orWhereHas('profile', fn (Builder $profileQuery) => $profileQuery->whereIn('document_number', $normalizedDocuments));
-                });
-            });
+        return [
+            'cargo' => $this->laborHistorySelectOptions('position_name', 'requisition_positions', 'position_id'),
+            'cliente' => $this->laborHistorySelectOptions('work_center_name', 'requisition_clients', 'client_id'),
+            'ciudad' => $this->laborHistorySelectOptions('residence_city_name', 'requisition_cities', 'city_id'),
+        ];
     }
 
+    /**
+     * Texto del perfil si existe; si el perfil no lo tiene, el nombre del catálogo de la requisición.
+     *
+     * @return list<array{value: string, label: string}>
+     */
+    private function laborHistorySelectOptions(string $profileColumn, string $catalogTable, string $requisitionForeignKey): array
+    {
+        $fromProfile = EmployeeFichaProfile::query()
+            ->whereHas('fichaEntry', fn (Builder $entry) => $entry->inFicha())
+            ->whereNotNull($profileColumn)
+            ->where($profileColumn, '!=', '')
+            ->distinct()
+            ->pluck($profileColumn);
+
+        $fromRequisition = PersonalRequisitionFichaEntry::query()
+            ->inFicha()
+            ->leftJoin(
+                'employee_ficha_profiles as archive_profile',
+                'archive_profile.personal_requisition_ficha_entry_id',
+                '=',
+                'personal_requisition_ficha_entries.id',
+            )
+            ->where(function (Builder $empty) use ($profileColumn): void {
+                $empty->whereNull('archive_profile.id')
+                    ->orWhereNull('archive_profile.'.$profileColumn)
+                    ->orWhere('archive_profile.'.$profileColumn, '');
+            })
+            ->join(
+                'personal_requisitions',
+                'personal_requisitions.id',
+                '=',
+                'personal_requisition_ficha_entries.personal_requisition_id',
+            )
+            ->join(
+                $catalogTable,
+                $catalogTable.'.id',
+                '=',
+                'personal_requisitions.'.$requisitionForeignKey,
+            )
+            ->whereNotNull($catalogTable.'.name')
+            ->where($catalogTable.'.name', '!=', '')
+            ->distinct()
+            ->pluck($catalogTable.'.name');
+
+        return $fromProfile
+            ->merge($fromRequisition)
+            ->map(fn ($name): string => trim((string) $name))
+            ->filter(fn (string $name): bool => $name !== '')
+            ->unique()
+            ->sort()
+            ->values()
+            ->map(fn (string $name): array => [
+                'value' => $name,
+                'label' => $name,
+            ])
+            ->all();
+    }
+
+  /**
+ * @return Builder<PersonalRequisitionFichaEntry>
+ */
+private function laborHistoriesQuery(
+    string $q,
+    ?EmployeeArchiveConsultation $activeConsultation,
+    string $cargo = '',
+    string $cliente = '',
+    string $ciudad = '',
+): Builder {
+    return PersonalRequisitionFichaEntry::query()
+        ->inFicha()
+        ->when($q !== '', function (Builder $query) use ($q): void {
+            $query->where(function (Builder $inner) use ($q): void {
+                $inner->where('hired_document', 'like', "%{$q}%")
+                    ->orWhere('hired_full_name', 'like', "%{$q}%")
+                    ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
+            });
+        })
+        ->when($cargo !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
+            $query,
+            $cargo,
+            'position_name',
+            'position',
+        ))
+        ->when($cliente !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
+            $query,
+            $cliente,
+            'work_center_name',
+            'client',
+        ))
+        ->when($ciudad !== '', fn (Builder $query) => $this->whereDisplayedLaborValue(
+            $query,
+            $ciudad,
+            'residence_city_name',
+            'city',
+        ))
+        ->when($activeConsultation !== null, function (Builder $query) use ($activeConsultation): void {
+            $normalizedDocuments = $this->normalizedConsultationDocuments($activeConsultation);
+
+            if ($normalizedDocuments === []) {
+                $query->whereRaw('1 = 0');
+
+                return;
+            }
+
+            $query->where(function (Builder $inner) use ($normalizedDocuments): void {
+                $inner->whereIn('hired_document', $normalizedDocuments)
+                    ->orWhereHas('profile', fn (Builder $profileQuery) => $profileQuery->whereIn('document_number', $normalizedDocuments));
+            });
+        });
+}
+
+/**
+ * Filtra por el texto visible de la columna: perfil primero, requisición si el perfil está vacío.
+ */
+private function whereDisplayedLaborValue(
+    Builder $query,
+    string $value,
+    string $profileColumn,
+    string $requisitionRelation,
+): void {
+    $query->where(function (Builder $inner) use ($value, $profileColumn, $requisitionRelation): void {
+        $inner->whereHas('profile', fn (Builder $profile) => $profile->where($profileColumn, $value))
+            ->orWhere(function (Builder $fallback) use ($value, $profileColumn, $requisitionRelation): void {
+                $fallback
+                    ->where(function (Builder $withoutText) use ($profileColumn): void {
+                        $withoutText->whereDoesntHave('profile')
+                            ->orWhereHas('profile', function (Builder $profile) use ($profileColumn): void {
+                                $profile->where(function (Builder $empty) use ($profileColumn): void {
+                                    $empty->whereNull($profileColumn)->orWhere($profileColumn, '');
+                                });
+                            });
+                    })
+                    ->whereHas(
+                        'requisition.'.$requisitionRelation,
+                        fn (Builder $catalog) => $catalog->where('name', $value),
+                    );
+            });
+    });
+}
     private function authorizeView(): void
     {
         abort_unless($this->archivoAccess->canView(auth()->user()), 403);
