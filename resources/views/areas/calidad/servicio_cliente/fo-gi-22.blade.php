@@ -1,9 +1,10 @@
 <x-app-layout>
     @php
         $eficaciaActiva = (string) ($filters['eficacia'] ?? 'abierto');
+        $vencidosActivo = ($filters['vencidos'] ?? '') === '1';
         $hasActiveFilters = collect($filters)->except(['recurrencia', 'eficacia'])->contains(fn ($value) => $value !== null && $value !== '')
             || ! in_array($eficaciaActiva, ['', 'abierto'], true);
-        $queryBase = collect($filters)->except(['eficacia', 'recurrencia'])->filter(fn ($value) => $value !== null && $value !== '')->all();
+        $queryBase = collect($filters)->except(['eficacia', 'recurrencia', 'vencidos'])->filter(fn ($value) => $value !== null && $value !== '')->all();
     @endphp
 
     <x-slot name="header">
@@ -57,6 +58,9 @@
                         <div class="req-manage-filters__panel-body">
                             <form method="GET" action="{{ route('calidad.servicio-cliente.fo-gi-22.index') }}" class="req-manage-filters">
                                 <input type="hidden" name="eficacia" value="{{ $eficaciaActiva }}">
+                                @if ($vencidosActivo)
+                                    <input type="hidden" name="vencidos" value="1">
+                                @endif
                                 <div class="cursos-registros-page__filters">
                                     <div class="form-field">
                                         <label class="form-label" for="filter_tipo_cliente">Tipo de cliente</label>
@@ -116,10 +120,11 @@
                                 </div>
                             </form>
                             <div class="servicio-cliente-page__eficacia" role="group" aria-label="Eficacia del seguimiento">
-                                <a href="{{ route('calidad.servicio-cliente.fo-gi-22.index', array_merge($queryBase, ['eficacia' => 'todos'])) }}" class="module-tab {{ $eficaciaActiva === 'todos' ? 'module-tab--active' : '' }}">Todos</a>
+                                <a href="{{ route('calidad.servicio-cliente.fo-gi-22.index', array_merge($queryBase, ['eficacia' => 'todos'])) }}" class="module-tab {{ ! $vencidosActivo && $eficaciaActiva === 'todos' ? 'module-tab--active' : '' }}">Todos</a>
                                 @foreach ($options['eficacia'] as $option)
-                                    <a href="{{ route('calidad.servicio-cliente.fo-gi-22.index', array_merge($queryBase, ['eficacia' => $option['value']])) }}" class="module-tab {{ $eficaciaActiva === $option['value'] ? 'module-tab--active' : '' }}">{{ $option['label'] }}</a>
+                                    <a href="{{ route('calidad.servicio-cliente.fo-gi-22.index', array_merge($queryBase, ['eficacia' => $option['value']])) }}" class="module-tab {{ ! $vencidosActivo && $eficaciaActiva === $option['value'] ? 'module-tab--active' : '' }}">{{ $option['label'] }}</a>
                                 @endforeach
+                                <a href="{{ route('calidad.servicio-cliente.fo-gi-22.index', array_merge($queryBase, ['eficacia' => 'todos', 'vencidos' => '1'])) }}" class="module-tab {{ $vencidosActivo ? 'module-tab--active' : '' }}">Vencidos</a>
                             </div>
                         </div>
                     </details>

@@ -82,6 +82,7 @@ class ServicioClienteController extends Controller
             'filters' => $filters,
             'metrics' => $metrics,
             'options' => $this->filterOptions(),
+            'kpiLinks' => $this->foGi22KpiLinks($filters),
         ]);
     }
 
@@ -455,6 +456,55 @@ class ServicioClienteController extends Controller
         return redirect()
             ->route('calidad.servicio-cliente.catalogos', ['catalog' => $type])
             ->with('status', 'Valor eliminado del catálogo.');
+    }
+
+    /**
+     * Enlaces de los KPI al listado, conservando los filtros del dashboard.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{abiertos: string, en_proceso: string, cerrados: string, vencidos: string}
+     */
+    private function foGi22KpiLinks(array $filters): array
+    {
+        $eficacia = (string) ($filters['eficacia'] ?? '');
+
+        return [
+            'abiertos' => $this->foGi22KpiUrl($filters, [
+                'eficacia' => ServicioClienteCaso::EFICACIA_ABIERTO,
+            ]),
+            'en_proceso' => $this->foGi22KpiUrl($filters, [
+                'eficacia' => ServicioClienteCaso::EFICACIA_EN_PROCESO,
+            ]),
+            'cerrados' => $this->foGi22KpiUrl($filters, [
+                'eficacia' => ServicioClienteCaso::EFICACIA_CERRADO,
+            ]),
+            'vencidos' => $this->foGi22KpiUrl($filters, [
+                'eficacia' => $eficacia !== '' ? $eficacia : 'todos',
+                'vencidos' => '1',
+            ]),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @param  array<string, string>  $override
+     */
+    private function foGi22KpiUrl(array $filters, array $override): string
+    {
+        $shared = array_filter([
+            'tipo_cliente' => (string) ($filters['tipo_cliente'] ?? ''),
+            'tipologia_id' => (string) ($filters['tipologia_id'] ?? ''),
+            'fuente_id' => (string) ($filters['fuente_id'] ?? ''),
+            'responsable_id' => (string) ($filters['responsable_id'] ?? ''),
+            'recepcion_desde' => (string) ($filters['recepcion_desde'] ?? ''),
+            'recepcion_hasta' => (string) ($filters['recepcion_hasta'] ?? ''),
+            'verificacion_desde' => (string) ($filters['verificacion_desde'] ?? ''),
+            'verificacion_hasta' => (string) ($filters['verificacion_hasta'] ?? ''),
+            'plazo_desde' => (string) ($filters['plazo_desde'] ?? ''),
+            'plazo_hasta' => (string) ($filters['plazo_hasta'] ?? ''),
+        ], static fn (string $value): bool => $value !== '');
+
+        return route('calidad.servicio-cliente.fo-gi-22.index', array_merge($shared, $override));
     }
 
     /**

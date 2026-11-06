@@ -51,6 +51,7 @@ final class ServicioClienteDatatableService
             'plazo_desde' => $request->string('plazo_desde')->toString(),
             'plazo_hasta' => $request->string('plazo_hasta')->toString(),
             'recurrencia' => $request->string('recurrencia')->toString() ?: 'mes',
+            'vencidos' => $request->string('vencidos')->toString() === '1' ? '1' : '',
         ];
     }
 
@@ -94,6 +95,11 @@ final class ServicioClienteDatatableService
         $eficacia = (string) ($filters['eficacia'] ?? '');
         if ($eficacia !== 'todos' && array_key_exists($eficacia, config('servicio_cliente.eficacia', []))) {
             $query->where('eficacia', $eficacia);
+        }
+
+        if (($filters['vencidos'] ?? '') === '1') {
+            $query->where('eficacia', '!=', ServicioClienteCaso::EFICACIA_CERRADO)
+                ->whereDate('fecha_plazo_respuesta', '<', now()->toDateString());
         }
 
         $this->applyDateRange($query, 'fecha_recepcion', $filters['recepcion_desde'] ?? '', $filters['recepcion_hasta'] ?? '');

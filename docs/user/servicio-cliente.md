@@ -53,7 +53,7 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 4. Para cerrar, adjunte la evidencia en el mismo formulario o después, en la sección Adjuntos, y pase la eficacia a **Cerrado**.
 5. Agregue observaciones cada vez que haya seguimiento.
 6. Filtre el listado y exporte a Excel si necesita el archivo. Al entrar, el listado muestra los casos **Abiertos**. Los botones de eficacia están debajo de los demás filtros.
-7. En el dashboard, elija el grano de **Recurrencia** (mes, trimestre, semestre o año) y el rango de recepción.
+7. En el dashboard, elija el grano de **Recurrencia** (mes, trimestre, semestre o año) y el rango de recepción. **Abiertos**, **En proceso**, **Cerrados** y **Vencidos** abren el listado FO-GI-22 ya filtrado.
 
 ## Control de cambios
 
@@ -64,3 +64,4 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 | 2026-11-06 | Nuevo caso: mismo esquema visual que Solicitar personal. |
 | 2026-11-06 | El formulario no muestra ejecución ni días hábiles; esos datos quedan en el listado. |
 | 2026-11-06 | Al crear un caso se vuelve al listado. Las observaciones se editan y eliminan con registro en el log. |
+| 2026-11-06 | El dashboard sigue el informe de Gestión Humana. Esos cuatro indicadores abren FO-GI-22 filtrado. |

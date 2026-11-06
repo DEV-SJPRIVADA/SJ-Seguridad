@@ -18236,6 +18236,73 @@ a.req-dashboard-kpi:focus-visible {
     margin-top: 0.85rem;
 }
 
+/* Dashboard Servicio al cliente: 6 KPI en fila y gráficos 3+2, como el informe de GH. */
+.servicio-cliente-dashboard-page.gh-area-dashboard-page .servicio-cliente-dashboard-page__kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.servicio-cliente-dashboard-page a.cursos-dashboard-page__kpi {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.servicio-cliente-dashboard-page a.cursos-dashboard-page__kpi:hover {
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.servicio-cliente-dashboard-page a.cursos-dashboard-page__kpi:focus-visible {
+    outline: 2px solid #0369a1;
+    outline-offset: 2px;
+}
+
+.servicio-cliente-dashboard-page__charts-row--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+}
+
+.servicio-cliente-dashboard-page__charts-row--two .cursos-dashboard-page__chart {
+    min-height: 240px;
+    height: 260px;
+}
+
+.servicio-cliente-dashboard-page__recurrencia {
+    width: 100%;
+    margin-top: 0.65rem;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+
+.servicio-cliente-dashboard-page__recurrencia th,
+.servicio-cliente-dashboard-page__recurrencia td {
+    padding: 0.35rem 0.4rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.servicio-cliente-dashboard-page__recurrencia th:last-child,
+.servicio-cliente-dashboard-page__recurrencia td:last-child {
+    text-align: right;
+    width: 4.5rem;
+}
+
+@media (max-width: 959px) {
+    .servicio-cliente-dashboard-page.gh-area-dashboard-page .servicio-cliente-dashboard-page__kpi-grid,
+    .servicio-cliente-dashboard-page__charts-row--two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .servicio-cliente-dashboard-page.gh-area-dashboard-page .servicio-cliente-dashboard-page__kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .servicio-cliente-dashboard-page__charts-row--two {
+        grid-template-columns: 1fr;
+    }
+}
+
 .servicio-cliente-page__timeline {
     list-style: none;
     margin: 0 0 1rem;

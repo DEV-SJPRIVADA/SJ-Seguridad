@@ -94,7 +94,24 @@ class ServicioClienteDashboardTest extends TestCase
             ]))
             ->assertOk()
             ->assertSee('Vencidos')
-            ->assertSee('Cantidad por tipo de solicitud');
+            ->assertSee('Cantidad por tipo de solicitud')
+            ->assertSee('recepcion_desde=2026-01-01', false)
+            ->assertSee('eficacia=abierto', false)
+            ->assertSee('eficacia=en_proceso', false)
+            ->assertSee('eficacia=cerrado', false)
+            ->assertSee('eficacia=todos', false)
+            ->assertSee('vencidos=1', false);
+
+        $this->actingAs($user)
+            ->getJson(route('calidad.servicio-cliente.fo-gi-22.datatable', [
+                'draw' => 1,
+                'eficacia' => 'todos',
+                'vencidos' => '1',
+                'recepcion_desde' => '2026-01-01',
+                'recepcion_hasta' => '2026-12-31',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 2);
 
         $this->assertSame(3, ServicioClienteCaso::query()->count());
     }
