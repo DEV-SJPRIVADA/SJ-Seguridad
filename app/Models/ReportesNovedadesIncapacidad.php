@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
 class ReportesNovedadesIncapacidad extends Model
@@ -68,6 +69,21 @@ class ReportesNovedadesIncapacidad extends Model
     public function updater(): BelongsTo
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function adjuntos(): HasMany
+    {
+        return $this->hasMany(ReportesNovedadesIncapacidadAdjunto::class, 'incapacidad_id');
+    }
+
+    protected static function booted(): void
+    {
+        // Borrar archivos en disco antes del cascade SQL, que no dispara eventos Eloquent.
+        static::deleting(function (ReportesNovedadesIncapacidad $row): void {
+            $row->adjuntos()->get()->each(function (ReportesNovedadesIncapacidadAdjunto $adjunto): void {
+                $adjunto->delete();
+            });
+        });
     }
 
     /**

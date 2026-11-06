@@ -40,6 +40,10 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | PATCH | `/{hoja}/{row}/review` | `{hoja}.review` | cols Nómina. review |
 | DELETE | `/{hoja}/{row}` | `{hoja}.destroy` | edit (Retiros: soft-delete) |
 | GET | `/vacaciones/{vacacion}/carta-word` | `vacaciones.carta-word` | Descarga .docx carta vacaciones (plantilla `cartas_vacaciones`). **edit** vacaciones |
+| GET | `/incapacidades/{incapacidad}/adjuntos` | `incapacidades.attachments.index` | JSON de adjuntos. view∨edit∨review |
+| POST | `/incapacidades/{incapacidad}/adjuntos` | `incapacidades.attachments.store` | Sube PDF/JPG (lote). **edit** |
+| GET | `/incapacidades/{incapacidad}/adjuntos/{adjunto}` | `incapacidades.attachments.download` | Descarga. view∨edit∨review. 404 si el archivo no es de esa fila |
+| DELETE | `/incapacidades/{incapacidad}/adjuntos/{adjunto}` | `incapacidades.attachments.destroy` | Borra archivo. **edit** |
 
 Hojas: `vacaciones`, `incapacidades`, `retiros`, `permisos`. Parametros de ruta: `{vacacion}`, `{incapacidad}`, `{retiro}`, `{permiso}`.
 
@@ -120,7 +124,8 @@ Namespace requests: `App\Http\Requests\GestionHumana\ReportesNovedades\`.
 | Modelo | Tabla | Notas |
 | --- | --- | --- |
 | `ReportesNovedadesVacacion` | `reportes_novedades_vacaciones` | Col Nómina: `observacion_nomina`. Campos fecha: `fecha_inicio` + `fecha_fin` (obligatorios en formulario; backfill legacy = inicio + días − 1). |
-| `ReportesNovedadesIncapacidad` | `reportes_novedades_incapacidades` | Col Nómina: `observacion_nomina`. `dias_entrega` **calculado** (no editable): si hay `fecha_envio_final` → envío−inicio; si no → hoy−inicio (`diasEntregaCalculados()`). |
+| `ReportesNovedadesIncapacidad` | `reportes_novedades_incapacidades` | Col Nómina: `observacion_nomina`. `dias_entrega` **calculado** (no editable): si hay `fecha_envio_final` → envío−inicio; si no → hoy−inicio (`diasEntregaCalculados()`). Al borrar la fila, `deleting` elimina sus adjuntos (archivo en disco) antes del cascade SQL. |
+| `ReportesNovedadesIncapacidadAdjunto` | `reportes_novedades_incapacidad_adjuntos` | PDF/JPG privados (`config reportes_novedades.incapacidades_adjuntos`, disco `local`). `uploaded_by` nullable. El nombre original no se pasa a mayúsculas (es nombre de archivo). |
 | `ReportesNovedadesRetiro` | `reportes_novedades_retiros` | SoftDeletes; FK `employee_termination_followup_id` unique; col Nómina `observacion_nomina` |
 | `ReportesNovedadesPermiso` | `reportes_novedades_permisos` | Col Nómina: `observacion_nomina`; `marca_gh` boolean |
 
@@ -141,6 +146,7 @@ Convenciones: `created_by` / `updated_by` (FK users `nullOnDelete`), timestamps,
 | `ReportesNovedadesFichaLookupService` | Cedula → prefill |
 | `ReportesNovedadesHistorialService` | Lectura `audit_logs` filtrada por modulo + hoja/fila |
 | `ReportesNovedades*DatatableService` | Query + format row por hoja (tope length 100) |
+| `ReportesNovedadesIncapacidadAdjuntoService` | Guarda PDF/JPG de una incapacidad en disco privado con nombre UUID |
 | `ReportesNovedadesPeriodFilter` | Resuelve mes/quincena (default actuales) vs `fecha_desde`/`fecha_hasta` (priman si hay al menos uno); aplica a `fecha_inicio` o `fecha_retiro` |
 | `ReportesNovedadesRetiroSyncService` | `ensureFromFollowup` / `annulFromFollowup` |
 
@@ -159,6 +165,7 @@ Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultReportesNov
 | Evento / action | Cuando |
 | --- | --- |
 | `{sheet}_novedad` / `create`\|`update`\|`delete`\|`review` | Mutaciones CRUD/review |
+| `incapacidades_adjunto` / `create`\|`delete` | Alta o borrado de adjuntos de una incapacidad |
 | `export` / `{sheet}_excel` | Export Excel |
 | `retiro_auto` / `create`\|`annul` | Hook desvinculacion |
 
@@ -183,6 +190,7 @@ Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja
 10. `observacion_nomina` con valor: celda del listado en pill verde (`status-pill--success`); input del modal con fondo verde (`.rn-novedad-form__input--nomina-filled`).
 11. Vacaciones (alta/edición GH): al ingresar **días** y **fecha inicio**, el modal sugiere `fecha_fin` = inicio + N días hábiles (sin domingos ni festivos CO) y `fecha_reintegro` = día siguiente a fin; el usuario puede editar ambas. También persisten **períodos** y **firma** (`signatory_id`, catálogo `firmas`) para regenerar la carta Word; no se muestran en el listado.
 12. Vacaciones: acción **Descargar carta Word** por fila (solo `reportes_novedades.vacaciones.edit`); usa `ClienteInternoCartasVacacionesGeneratorService` + plantilla activa `cartas_vacaciones`.
+13. Incapacidades: acción **Adjuntos** en cada fila. Quien ve la hoja (ver, editar o revisar) consulta y descarga. Solo **edit** sube (PDF o JPG, en lote o en varios envíos; máx. 10 por envío y 10 MB c/u) o elimina un archivo. Borrar la incapacidad borra sus archivos. No van al Excel.
 
 ## JavaScript / assets
 

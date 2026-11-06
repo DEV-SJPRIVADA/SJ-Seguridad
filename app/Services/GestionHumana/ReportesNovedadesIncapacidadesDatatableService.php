@@ -180,7 +180,9 @@ final class ReportesNovedadesIncapacidadesDatatableService
             'can_review' => $canReview,
         ], JSON_UNESCAPED_UNICODE));
 
-        $buttons = sprintf(
+        $buttons = $this->formatAdjuntosButton($row);
+
+        $buttons .= sprintf(
             '<button type="button" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--edit js-rn-incapacidad-edit" '.
             'data-row-edit="%s" title="Editar" aria-label="Editar">%s</button>',
             $payload,
@@ -214,10 +216,25 @@ final class ReportesNovedadesIncapacidadesDatatableService
     {
         return sprintf(
             '<div class="table-actions">'.
+            '%s'.
             '<button type="button" class="cursos-catalogo-page__icon-btn js-rn-historial" '.
             'data-historial-url="%s" title="Historial" aria-label="Historial">%s</button></div>',
+            $this->formatAdjuntosButton($row),
             e(route('gestion-humana.reportes-novedades.incapacidades.historial', ['id' => $row->id])),
             $this->historySvg(),
+        );
+    }
+
+    private function formatAdjuntosButton(ReportesNovedadesIncapacidad $row): string
+    {
+        return sprintf(
+            '<button type="button" class="cursos-catalogo-page__icon-btn js-rn-incapacidad-adjuntos" '.
+            'data-adjuntos-url="%s" data-adjuntos-store-url="%s" data-adjuntos-label="%s" '.
+            'title="Adjuntos" aria-label="Adjuntos">%s</button>',
+            e(route('gestion-humana.reportes-novedades.incapacidades.attachments.index', $row)),
+            e(route('gestion-humana.reportes-novedades.incapacidades.attachments.store', $row)),
+            e(trim($row->document_number.' — '.$row->employee_name)),
+            $this->paperclipSvg(),
         );
     }
 
@@ -242,6 +259,13 @@ final class ReportesNovedadesIncapacidadesDatatableService
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
             '<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/>'.
             '<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>';
+    }
+
+    private function paperclipSvg(): string
+    {
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" '.
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+            '<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>';
     }
 
     private function historySvg(): string

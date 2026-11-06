@@ -387,6 +387,10 @@ Route::middleware(['password.changed'])
         Route::patch('/incapacidades/{incapacidad}', [ReportesNovedadesIncapacidadesController::class, 'update'])->name('incapacidades.update');
         Route::patch('/incapacidades/{incapacidad}/review', [ReportesNovedadesIncapacidadesController::class, 'review'])->name('incapacidades.review');
         Route::delete('/incapacidades/{incapacidad}', [ReportesNovedadesIncapacidadesController::class, 'destroy'])->name('incapacidades.destroy');
+        Route::get('/incapacidades/{incapacidad}/adjuntos', [ReportesNovedadesIncapacidadesController::class, 'attachments'])->name('incapacidades.attachments.index');
+        Route::post('/incapacidades/{incapacidad}/adjuntos', [ReportesNovedadesIncapacidadesController::class, 'storeAttachments'])->name('incapacidades.attachments.store');
+        Route::get('/incapacidades/{incapacidad}/adjuntos/{adjunto}', [ReportesNovedadesIncapacidadesController::class, 'downloadAttachment'])->name('incapacidades.attachments.download');
+        Route::delete('/incapacidades/{incapacidad}/adjuntos/{adjunto}', [ReportesNovedadesIncapacidadesController::class, 'destroyAttachment'])->name('incapacidades.attachments.destroy');
 
         Route::get('/retiros', [ReportesNovedadesRetirosController::class, 'index'])->name('retiros');
         Route::get('/retiros/datatable', [ReportesNovedadesRetirosController::class, 'datatable'])->name('retiros.datatable');

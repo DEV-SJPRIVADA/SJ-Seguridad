@@ -17,6 +17,7 @@
         })"
         @rn-incapacidad-open-edit.window="openEdit($event.detail)"
         @rn-open-historial.window="openHistorial($event.detail)"
+        @rn-incapacidad-open-adjuntos.window="openAdjuntos($event.detail)"
     >
         <div class="app-container">
             @if (session('status'))
@@ -231,6 +232,85 @@
             @include('areas.gestion_humana.reportes_novedades.partials.historial-modal', [
                 'sheetLabel' => 'Incapacidades',
             ])
+
+            {{-- Adjuntos de la fila: consulta para quien ve la hoja; alta y borrado solo con Editar. --}}
+            <x-modal name="rn-incapacidad-adjuntos" maxWidth="2xl" focusable>
+                <div class="modal-card ficha-empleados-masivos-modal rn-novedad-modal rn-adjuntos-modal">
+                    <div class="ficha-empleados-masivos-modal__header rn-novedad-modal__header">
+                        <div class="ficha-empleados-masivos-modal__heading">
+                            <span class="ficha-empleados-masivos-modal__heading-icon rn-novedad-modal__icon" aria-hidden="true">
+                                <x-lucide-paperclip width="18" height="18" aria-hidden="true" />
+                            </span>
+                            <div>
+                                <p class="rn-novedad-modal__eyebrow">Incapacidades</p>
+                                <h3 class="ficha-empleados-masivos-modal__title">Adjuntos</h3>
+                                <p class="ficha-empleados-masivos-modal__lead" x-text="adjuntosLabel">Soportes de la incapacidad.</p>
+                            </div>
+                        </div>
+                        <button type="button" class="ficha-empleados-masivos-modal__close" aria-label="Cerrar" x-on:click="$dispatch('close-modal', 'rn-incapacidad-adjuntos')">
+                            <x-lucide-x width="18" height="18" aria-hidden="true" />
+                        </button>
+                    </div>
+
+                    <div class="rn-adjuntos-modal__body">
+                        <p class="rn-adjuntos-modal__status" x-show="adjuntosLoading" x-cloak>Cargando adjuntos…</p>
+                        <div class="alert alert--danger" x-show="adjuntosError" x-cloak x-text="adjuntosError"></div>
+                        <div class="alert alert--success" x-show="adjuntosMessage && !adjuntosError" x-cloak x-text="adjuntosMessage"></div>
+
+                        <p class="rn-adjuntos-modal__empty" x-show="!adjuntosLoading && adjuntosItems.length === 0" x-cloak>
+                            Esta incapacidad no tiene archivos adjuntos.
+                        </p>
+
+                        <ul class="rn-adjuntos-modal__list" x-show="adjuntosItems.length > 0" x-cloak>
+                            <template x-for="item in adjuntosItems" :key="item.id">
+                                <li class="rn-adjuntos-modal__item">
+                                    <div class="rn-adjuntos-modal__item-copy">
+                                        <a class="rn-adjuntos-modal__name" :href="item.download_url" x-text="item.original_name"></a>
+                                        <p class="rn-adjuntos-modal__meta">
+                                            <span x-text="item.uploaded_at"></span>
+                                            <span aria-hidden="true">·</span>
+                                            <span x-text="item.uploaded_by"></span>
+                                            <span aria-hidden="true">·</span>
+                                            <span x-text="item.size_label"></span>
+                                        </p>
+                                    </div>
+                                    <div class="rn-adjuntos-modal__item-actions">
+                                        <a class="cursos-catalogo-page__icon-btn" :href="item.download_url" title="Descargar" aria-label="Descargar">
+                                            <x-lucide-download width="16" height="16" aria-hidden="true" />
+                                        </a>
+                                        <button
+                                            type="button"
+                                            class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger"
+                                            title="Eliminar adjunto"
+                                            aria-label="Eliminar adjunto"
+                                            x-show="adjuntosCanEdit && item.delete_url"
+                                            x-on:click="deleteAdjunto(item.delete_url)"
+                                        >
+                                            <x-lucide-trash-2 width="16" height="16" aria-hidden="true" />
+                                        </button>
+                                    </div>
+                                </li>
+                            </template>
+                        </ul>
+
+                        <form class="rn-adjuntos-modal__upload" x-show="adjuntosCanEdit" x-cloak x-on:submit.prevent="uploadAdjuntos($event)">
+                            <label class="rn-adjuntos-modal__upload-label" for="rn-incapacidad-adjuntos-input">Agregar archivos</label>
+                            <p class="rn-adjuntos-modal__hint">PDF o JPG. Hasta {{ (int) config('reportes_novedades.incapacidades_adjuntos.max_files_per_upload', 10) }} archivos por envío y {{ (int) config('reportes_novedades.incapacidades_adjuntos.max_kilobytes', 10240) / 1024 }} MB cada uno. Puede agregar más después.</p>
+                            <input
+                                id="rn-incapacidad-adjuntos-input"
+                                class="form-input"
+                                type="file"
+                                name="attachments[]"
+                                accept=".pdf,.jpg,.jpeg,application/pdf,image/jpeg"
+                                multiple
+                            >
+                            <div class="rn-adjuntos-modal__upload-actions">
+                                <button type="submit" class="btn btn--primary" :disabled="adjuntosSaving" x-text="adjuntosSaving ? 'Adjuntando…' : 'Adjuntar'">Adjuntar</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </x-modal>
         </div>
     </div>
 
@@ -292,6 +372,15 @@
                     lookupLoading: false,
                     historialLoading: false,
                     historialItems: [],
+                    adjuntosLoading: false,
+                    adjuntosSaving: false,
+                    adjuntosError: '',
+                    adjuntosMessage: '',
+                    adjuntosItems: [],
+                    adjuntosCanEdit: false,
+                    adjuntosLabel: '',
+                    adjuntosIndexUrl: '',
+                    adjuntosStoreUrl: '',
                     historialFilterable: false,
                     historialBaseUrl: '',
                     historialFilters: {
@@ -530,6 +619,116 @@
                         }
                         this.fetchHistorial();
                     },
+                    csrfToken() {
+                        return document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    },
+                    async fetchAdjuntos() {
+                        const url = this.adjuntosIndexUrl || '';
+                        if (! url) {
+                            return;
+                        }
+                        this.adjuntosLoading = true;
+                        this.adjuntosError = '';
+                        try {
+                            const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+                            const data = await response.json();
+                            if (! response.ok) {
+                                this.adjuntosItems = [];
+                                this.adjuntosError = data.message || 'No se pudieron cargar los adjuntos.';
+                                return;
+                            }
+                            this.adjuntosItems = data.data || [];
+                            this.adjuntosCanEdit = !!data.can_edit;
+                        } catch (e) {
+                            this.adjuntosItems = [];
+                            this.adjuntosError = 'No se pudieron cargar los adjuntos.';
+                        } finally {
+                            this.adjuntosLoading = false;
+                        }
+                    },
+                    async openAdjuntos(detail) {
+                        this.adjuntosIndexUrl = detail?.url || '';
+                        this.adjuntosStoreUrl = detail?.storeUrl || '';
+                        this.adjuntosLabel = detail?.label || 'Soportes de la incapacidad.';
+                        this.adjuntosError = '';
+                        this.adjuntosMessage = '';
+                        this.adjuntosItems = [];
+                        this.adjuntosCanEdit = !!this.canEdit;
+                        window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-incapacidad-adjuntos' }));
+                        await this.fetchAdjuntos();
+                    },
+                    adjuntosErrorFromResponse(data) {
+                        const errors = data?.errors || {};
+                        const first = Object.values(errors).flat()[0];
+                        return first || data?.message || 'No se pudieron adjuntar los archivos.';
+                    },
+                    async uploadAdjuntos(event) {
+                        const input = event.target.querySelector('input[type="file"]');
+                        const files = input?.files;
+                        if (! files || files.length === 0) {
+                            this.adjuntosError = 'Seleccione al menos un archivo.';
+                            this.adjuntosMessage = '';
+                            return;
+                        }
+                        this.adjuntosSaving = true;
+                        this.adjuntosError = '';
+                        this.adjuntosMessage = '';
+                        const body = new FormData();
+                        Array.from(files).forEach((file) => body.append('attachments[]', file));
+                        try {
+                            const response = await fetch(this.adjuntosStoreUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': this.csrfToken(),
+                                },
+                                body,
+                            });
+                            const data = await response.json().catch(() => ({}));
+                            if (! response.ok) {
+                                this.adjuntosError = this.adjuntosErrorFromResponse(data);
+                                return;
+                            }
+                            this.adjuntosItems = data.data || [];
+                            this.adjuntosCanEdit = !!data.can_edit;
+                            this.adjuntosMessage = data.message || 'Archivos adjuntados correctamente.';
+                            if (input) {
+                                input.value = '';
+                            }
+                        } catch (e) {
+                            this.adjuntosError = 'No se pudieron adjuntar los archivos.';
+                        } finally {
+                            this.adjuntosSaving = false;
+                        }
+                    },
+                    async deleteAdjunto(url) {
+                        if (! url || ! window.confirm('¿Eliminar este adjunto?')) {
+                            return;
+                        }
+                        this.adjuntosSaving = true;
+                        this.adjuntosError = '';
+                        this.adjuntosMessage = '';
+                        try {
+                            const response = await fetch(url, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': this.csrfToken(),
+                                },
+                            });
+                            const data = await response.json().catch(() => ({}));
+                            if (! response.ok) {
+                                this.adjuntosError = data.message || 'No se pudo eliminar el adjunto.';
+                                return;
+                            }
+                            this.adjuntosItems = data.data || [];
+                            this.adjuntosMessage = data.message || 'Adjunto eliminado.';
+                        } catch (e) {
+                            this.adjuntosError = 'No se pudo eliminar el adjunto.';
+                        } finally {
+                            this.adjuntosSaving = false;
+                        }
+                    },
                     clearHistorialFilters() {
                         this.historialFilters = {
                             q: '',
@@ -582,6 +781,16 @@
                         const row = JSON.parse(this.getAttribute('data-row-edit') || '{}');
                         window.dispatchEvent(new CustomEvent('rn-incapacidad-open-edit', { detail: row }));
                     } catch (e) {}
+                });
+
+                $table.on('click', '.js-rn-incapacidad-adjuntos', function () {
+                    window.dispatchEvent(new CustomEvent('rn-incapacidad-open-adjuntos', {
+                        detail: {
+                            url: this.getAttribute('data-adjuntos-url') || '',
+                            storeUrl: this.getAttribute('data-adjuntos-store-url') || '',
+                            label: this.getAttribute('data-adjuntos-label') || '',
+                        },
+                    }));
                 });
 
                 $table.on('click', '.js-rn-historial', function () {

@@ -16782,6 +16782,99 @@ a.req-dashboard-kpi:focus-visible {
     background: #f8fafc;
 }
 
+/* Adjuntos de incapacidades: lista consultable y carga múltiple. */
+.rn-adjuntos-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-height: 0;
+    overflow: auto;
+    padding: 0.95rem 1.25rem 1.2rem;
+    background: #f8fafc;
+}
+
+.rn-adjuntos-modal__status,
+.rn-adjuntos-modal__empty,
+.rn-adjuntos-modal__hint {
+    margin: 0;
+    color: #64748b;
+    font-size: 0.875rem;
+}
+
+.rn-adjuntos-modal__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.rn-adjuntos-modal__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 0.85rem;
+    background: #fff;
+}
+
+.rn-adjuntos-modal__item-copy {
+    min-width: 0;
+}
+
+.rn-adjuntos-modal__name {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    color: var(--brand-primary, #003366);
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rn-adjuntos-modal__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.2rem 0 0;
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.rn-adjuntos-modal__item-actions {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.rn-adjuntos-modal__upload {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.85rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 0.85rem;
+    background: #fff;
+}
+
+.rn-adjuntos-modal__upload-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.rn-adjuntos-modal__upload-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
 .rn-historial-modal__filters {
     margin: 0;
     padding: 0.75rem 0.85rem;

@@ -41,4 +41,16 @@ return [
     ],
 
     'retiros_novedad_default' => 'RETIRO',
+
+    /*
+    | Adjuntos de la hoja Incapacidades (disco privado; consulta vía ruta autenticada).
+    | Se pueden ir sumando lotes; el tope es por envío, no un máximo histórico.
+    */
+    'incapacidades_adjuntos' => [
+        'max_files_per_upload' => 10,
+        'max_kilobytes' => 10240,
+        'mimes' => ['pdf', 'jpg', 'jpeg'],
+        'disk' => 'local',
+        'directory' => 'reportes-novedades/incapacidades',
+    ],
 ];

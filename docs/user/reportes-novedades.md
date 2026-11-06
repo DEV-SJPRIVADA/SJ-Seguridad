@@ -12,7 +12,7 @@ Reemplazar el Excel de novedades de Gestion Humana (vacaciones, incapacidades, r
 Aplica al tablero **MT-GH-04 Novedades** en el area **Gestion Humana**, con cuatro pestanas:
 
 - **Vacaciones** — registrar disfrute o compensacion, dias, fechas (inicio, fin, reintegro), periodos y firma para la carta Word; Nómina deja su observacion.
-- **Incapacidades** — tipo, dias, fechas de control y devolucion; **días entrega** se calcula solo (hoy − inicio, o envío final − inicio); Nómina solo completa su observación.
+- **Incapacidades** — tipo, dias, fechas de control y devolucion; **días entrega** se calcula solo (hoy − inicio, o envío final − inicio); Nómina solo completa su observación. Cada fila tiene **Adjuntos** (PDF o JPG) para consultar y descargar; quien edita puede agregarlos o quitarlos.
 - **Retiros** — altas manuales o automaticas al desvincular; motivo y fechas; Nómina observa.
 - **Permisos** — licencias, sanciones, permisos remunerados y demas novedades de la hoja de permisos/licencia.
 
@@ -36,7 +36,7 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
 | --- | --- |
 | Gestion Humana | Crea, edita y elimina filas en las columnas GH de la(s) hoja(s) asignada(s). Filtra, exporta y consulta historial. |
 | Nómina | Ve las hojas asignadas, completa solo las columnas de review, filtra, exporta y consulta historial. No crea ni borra filas ni cambia datos GH. |
-| Solo consulta | Con permiso de ver: filtra, exporta y ve historial; no edita. |
+| Solo consulta | Con permiso de ver: filtra, exporta, ve historial y descarga adjuntos de incapacidades; no edita ni sube archivos. |
 | Administrador de usuarios | Asigna permisos de tablero y por hoja (ver / editar / revisar) en Admin. |
 
 ## Desarrollo
@@ -46,9 +46,9 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
 1. En **Admin → Usuarios**, edite el usuario.
 2. En **Gestion humana**, marque **Ver tablero MT-GH-04 Novedades** si debe verlo en el menu.
 3. En el subgrupo **MT-GH-04 Novedades**:
-   - **Ver**: listar, filtrar, exportar e historial.
-   - **Editar**: crear, corregir y eliminar filas (columnas GH).
-   - **Revisar (Nomina)**: editar solo columnas Nómina (tambien permite ver y exportar esa hoja).
+   - **Ver**: listar, filtrar, exportar, historial y, en Incapacidades, consultar y descargar adjuntos.
+   - **Editar**: crear, corregir y eliminar filas (columnas GH). En Incapacidades también adjunta y elimina archivos.
+   - **Revisar (Nomina)**: editar solo columnas Nómina (tambien permite ver, exportar y descargar adjuntos de incapacidades). No sube ni borra archivos.
 4. Tipico: una persona de GH con Ver+Editar en una o varias hojas; usuarios de Nómina con Revisar en las cuatro.
 
 ### Usar el tablero
@@ -64,6 +64,7 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
    - Con permiso, use también **Exportar** o **Historial**. En el Historial de la hoja puede filtrar por cédula/usuario, tipo de acción y rango de fechas.
 4. Con **Editar**: cree o corrija filas. En el alta, escriba la **cédula** y pulse buscar (o Enter / salga del campo): se precargan nombre, cargo y destino desde Ficha. En **Vacaciones**, al completar **días** y **fecha inicio** se sugieren **fecha fin** y **fecha reintegro** (sin domingos ni festivos; reintegro = dia siguiente a fin); complete **periodos** y **firma** como en Cartas Vacaciones. En acciones, use **Descargar carta Word** para generar el .docx del registro (requiere plantilla activa en Plantillas Word).
 5. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
+6. En **Incapacidades**, el icono de clip abre **Adjuntos**. Ahí se ven el nombre, la fecha, quién lo subió y el tamaño, y se descarga el archivo. Con **Editar** puede agregar varios PDF o JPG (de una vez o en otro momento) y eliminar uno. Al eliminar la incapacidad se borran también sus archivos. Nómina y quien solo consulta pueden ver y descargar, no subir ni borrar.
 
 ### Retiros automaticos
 
@@ -73,6 +74,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.8 | 2026-11-06 | Agent | Incapacidades: adjuntos PDF/JPG por fila (subir y eliminar con Editar; ver y descargar con Ver o Nómina). |
 | 1.7 | 2026-11-04 | Agent | Vacaciones: fecha reintegro, periodos y firma en alta/edición; descarga carta Word por fila (permiso editar). |
 | 1.6 | 2026-11-03 | Agent | Vacaciones: la fecha fin se sugiere al ingresar días y fecha inicio (sin domingos ni festivos); el campo sigue editable. |
 | 1.5 | 2026-10-05 | Agent | Vacaciones: columna **Fecha fin** (tras Inicio) en formulario, listado y export. |
