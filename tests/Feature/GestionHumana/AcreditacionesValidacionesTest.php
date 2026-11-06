@@ -74,7 +74,9 @@ class AcreditacionesValidacionesTest extends TestCase
             ->assertSee('Validaciones', false)
             ->assertSee('validaciones_fecha_reporte', false)
             ->assertSee($today, false)
-            ->assertSee('Ejecutar validaciones', false);
+            ->assertSee('Ejecutar validaciones', false)
+            ->assertSee('editActionUrl()', false)
+            ->assertSee("return this.editForm.update_url || ''", false);
     }
 
     public function test_day_without_carga_shows_gate_message_and_reporte_link(): void

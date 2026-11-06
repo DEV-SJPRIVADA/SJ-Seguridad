@@ -697,6 +697,11 @@
                     closeEdit() {
                         this.editOpen = false;
                     },
+                    // El modal compartido (partials/edit-modal) publica el PATCH en esta URL.
+                    // Sin ella el action queda vacío y el navegador envía el formulario a esta misma pantalla (solo GET).
+                    editActionUrl() {
+                        return this.editForm.update_url || '';
+                    },
                     unlockEditIdentity() {
                         this.editIdentityLocked = false;
                         this.editForm.document_number = '';

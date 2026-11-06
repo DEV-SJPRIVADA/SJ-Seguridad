@@ -82,9 +82,18 @@ class FichaEmpleadosController extends Controller
 
         $q = trim($request->string('q')->toString());
         $estado = $this->resolveEstadoFilter($request);
+        $cargo = trim($request->string('cargo')->toString());
+        $cliente = trim($request->string('cliente')->toString());
+        $ciudad = trim($request->string('ciudad')->toString());
+        $fechaDesde = $request->date('fecha_desde')?->toDateString();
+        $fechaHasta = $request->date('fecha_hasta')?->toDateString();
         [$employmentStatus, $employmentStatusMode] = $this->resolveEmploymentStatusFilter($request, $estado);
 
         $pendingCount = PersonalRequisitionFichaEntry::query()->pending()->count();
+
+        $filterOptions = $estado === 'pendientes'
+            ? $this->pendingFilterOptions()
+            : ['cargo' => [], 'cliente' => [], 'ciudad' => []];
 
         return view('areas.gestion_humana.ficha-empleados.employees.index', [
             'datatableUrl' => route('gestion-humana.ficha-empleados.employees.datatable', $request->query()),
@@ -93,7 +102,15 @@ class FichaEmpleadosController extends Controller
                 'estado' => $estado,
                 'employment_status' => $employmentStatus,
                 'employment_status_mode' => $employmentStatusMode,
+                'cargo' => $cargo,
+                'cliente' => $cliente,
+                'ciudad' => $ciudad,
+                'fecha_desde' => $fechaDesde ?? '',
+                'fecha_hasta' => $fechaHasta ?? '',
             ],
+            'cargoOptions' => $filterOptions['cargo'],
+            'clienteOptions' => $filterOptions['cliente'],
+            'ciudadOptions' => $filterOptions['ciudad'],
             'employmentStatusLabels' => self::employmentStatusFilterLabels(),
             'pendingCount' => $pendingCount,
             'canManage' => $this->canManage(),
@@ -110,8 +127,22 @@ class FichaEmpleadosController extends Controller
         $q = trim($request->string('q')->toString());
         $estado = $this->resolveEstadoFilter($request);
         [$employmentStatus] = $this->resolveEmploymentStatusFilter($request, $estado);
+        $cargo = trim($request->string('cargo')->toString());
+        $cliente = trim($request->string('cliente')->toString());
+        $ciudad = trim($request->string('ciudad')->toString());
+        $fechaDesde = $request->date('fecha_desde')?->toDateString();
+        $fechaHasta = $request->date('fecha_hasta')?->toDateString();
 
-        $query = $this->entryListQuery($q, $estado, $employmentStatus);
+        $query = $this->entryListQuery(
+            $q,
+            $estado,
+            $employmentStatus,
+            $cargo,
+            $cliente,
+            $ciudad,
+            $fechaDesde,
+            $fechaHasta,
+        );
 
         return $this->entryDatatableService->respond(
             $request,
@@ -165,15 +196,37 @@ class FichaEmpleadosController extends Controller
         $this->authorizeView();
 
         $q = trim($request->string('q')->toString());
+        $cargo = trim($request->string('cargo')->toString());
+        $cliente = trim($request->string('cliente')->toString());
+        $ciudad = trim($request->string('ciudad')->toString());
+        $fechaDesde = $request->date('fecha_desde')?->toDateString();
+        $fechaHasta = $request->date('fecha_hasta')?->toDateString();
 
-        $entries = $this->entryListQuery($q, 'pendientes')
+        $entries = $this->entryListQuery(
+            $q,
+            'pendientes',
+            null,
+            $cargo,
+            $cliente,
+            $ciudad,
+            $fechaDesde,
+            $fechaHasta,
+        )
             ->with(PersonalRequisitionFichaEntryExport::relationNames())
             ->orderByDesc('created_at')
             ->get();
 
         if ($entries->isEmpty()) {
             return redirect()
-                ->route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes'])
+                ->route('gestion-humana.ficha-empleados.employees.index', array_filter([
+                    'estado' => 'pendientes',
+                    'q' => $q !== '' ? $q : null,
+                    'cargo' => $cargo !== '' ? $cargo : null,
+                    'cliente' => $cliente !== '' ? $cliente : null,
+                    'ciudad' => $ciudad !== '' ? $ciudad : null,
+                    'fecha_desde' => $fechaDesde,
+                    'fecha_hasta' => $fechaHasta,
+                ]))
                 ->withErrors(['export' => 'No hay pendientes para exportar con los filtros seleccionados.']);
         }
 
@@ -183,6 +236,11 @@ class FichaEmpleadosController extends Controller
             metadata: [
                 'row_count' => $entries->count(),
                 'q' => $q !== '' ? $q : null,
+                'cargo' => $cargo !== '' ? $cargo : null,
+                'cliente' => $cliente !== '' ? $cliente : null,
+                'ciudad' => $ciudad !== '' ? $ciudad : null,
+                'fecha_desde' => $fechaDesde,
+                'fecha_hasta' => $fechaHasta,
             ],
         );
 
@@ -959,8 +1017,16 @@ class FichaEmpleadosController extends Controller
     /**
      * @return Builder<PersonalRequisitionFichaEntry>
      */
-    private function entryListQuery(string $q, string $estado, ?string $employmentStatus = null): Builder
-    {
+    private function entryListQuery(
+        string $q,
+        string $estado,
+        ?string $employmentStatus = null,
+        string $cargo = '',
+        string $cliente = '',
+        string $ciudad = '',
+        ?string $fechaDesde = null,
+        ?string $fechaHasta = null,
+    ): Builder {
         return PersonalRequisitionFichaEntry::query()
             ->with(['requisition.position', 'requisition.client', 'requisition.city', 'movedBy', 'profile'])
             ->when(
@@ -978,7 +1044,90 @@ class FichaEmpleadosController extends Controller
                         ->orWhere('hired_full_name', 'like', "%{$q}%")
                         ->orWhereHas('requisition', fn (Builder $r) => $r->where('code', 'like', "%{$q}%"));
                 });
-            });
+            })
+            ->when($cargo !== '', function (Builder $query) use ($cargo): void {
+                $query->where(function (Builder $inner) use ($cargo): void {
+                    $inner->whereHas('profile', fn (Builder $p) => $p->where('position_name', $cargo))
+                        ->orWhereHas('requisition.position', fn (Builder $p) => $p->where('name', $cargo));
+                });
+            })
+            ->when($cliente !== '', function (Builder $query) use ($cliente): void {
+                // Misma lógica de visualización: work_center del perfil o cliente de la RQ.
+                $query->where(function (Builder $inner) use ($cliente): void {
+                    $inner->whereHas('profile', fn (Builder $p) => $p->where('work_center_name', $cliente))
+                        ->orWhereHas('requisition.client', fn (Builder $c) => $c->where('name', $cliente));
+                });
+            })
+            ->when($ciudad !== '', function (Builder $query) use ($ciudad): void {
+                $query->where(function (Builder $inner) use ($ciudad): void {
+                    $inner->whereHas('profile', fn (Builder $p) => $p->where('residence_city_name', $ciudad))
+                        ->orWhereHas('requisition.city', fn (Builder $c) => $c->where('name', $ciudad));
+                });
+            })
+            ->when(
+                $fechaDesde !== null && $fechaHasta !== null,
+                fn (Builder $query) => $query->hireDateBetween($fechaDesde, $fechaHasta)
+            );
+    }
+
+    /**
+     * Opciones de select para filtros de Pendientes (valores presentes en RQ).
+     *
+     * @return array{cargo: list<array{value: string, label: string}>, cliente: list<array{value: string, label: string}>, ciudad: list<array{value: string, label: string}>}
+     */
+    private function pendingFilterOptions(): array
+    {
+        return [
+            'cargo' => $this->pendingCatalogOptions('position'),
+            'cliente' => $this->pendingCatalogOptions('client'),
+            'ciudad' => $this->pendingCatalogOptions('city'),
+        ];
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function pendingCatalogOptions(string $relation): array
+    {
+        [$catalogTable, $foreignKey] = match ($relation) {
+            'position' => ['requisition_positions', 'position_id'],
+            'client' => ['requisition_clients', 'client_id'],
+            'city' => ['requisition_cities', 'city_id'],
+            default => ['', ''],
+        };
+
+        if ($catalogTable === '') {
+            return [];
+        }
+
+        return PersonalRequisitionFichaEntry::query()
+            ->pending()
+            ->join(
+                'personal_requisitions',
+                'personal_requisitions.id',
+                '=',
+                'personal_requisition_ficha_entries.personal_requisition_id',
+            )
+            ->join(
+                $catalogTable,
+                $catalogTable.'.id',
+                '=',
+                'personal_requisitions.'.$foreignKey,
+            )
+            ->whereNotNull($catalogTable.'.name')
+            ->where($catalogTable.'.name', '!=', '')
+            ->distinct()
+            ->orderBy($catalogTable.'.name')
+            ->pluck($catalogTable.'.name')
+            ->map(fn ($name): string => trim((string) $name))
+            ->filter(fn (string $name): bool => $name !== '')
+            ->unique()
+            ->values()
+            ->map(fn (string $name): array => [
+                'value' => $name,
+                'label' => $name,
+            ])
+            ->all();
     }
 
     private function authorizeView(): void

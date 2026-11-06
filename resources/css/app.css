@@ -1292,6 +1292,85 @@ button.module-tab {
 .ficha-empleados-filters__search {
     flex: 0 0 auto;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+/* Pendientes: buscador, cargo, cliente, ciudad e ingreso en una sola fila. */
+.ficha-empleados-filters__bar--pending {
+    align-items: flex-end;
+}
+
+.ficha-empleados-filters__search--pending {
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 0.45rem 0.55rem;
+    min-width: 0;
+}
+
+.ficha-empleados-filters__search--pending .ficha-empleados-filters__advanced {
+    flex: 1 1 auto;
+    flex-wrap: nowrap;
+    gap: 0.45rem 0.5rem;
+}
+
+.ficha-empleados-filters__search--pending .ficha-empleados-filters__field {
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 6.25rem;
+}
+
+.ficha-empleados-filters__search--pending .ficha-empleados-filters__field--search {
+    flex: 1.35 1 9rem;
+}
+
+.ficha-empleados-filters__search--pending .ficha-empleados-filters__field--date {
+    flex: 0 1 8.75rem;
+    min-width: 8.25rem;
+    max-width: 9.75rem;
+}
+
+.ficha-empleados-filters__apply {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+}
+
+.ficha-empleados-filters__bar--pending .ficha-empleados-filters__status {
+    flex: 0 0 auto;
+}
+
+.ficha-empleados-filters__bar--pending .ficha-empleados-filters__pending-link {
+    height: var(--control-height-chrome);
+    min-height: var(--control-height-chrome);
+}
+
+.ficha-empleados-filters__advanced {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.55rem 0.75rem;
+    min-width: 0;
+}
+
+.ficha-empleados-filters__field {
+    margin: 0;
+    min-width: 9.5rem;
+    max-width: 14rem;
+    flex: 1 1 9.5rem;
+}
+
+.ficha-empleados-filters__field .form-label {
+    margin-bottom: 0.2rem;
+    font-size: 0.75rem;
+}
+
+.ficha-empleados-filters__field .form-input {
+    height: var(--control-height-chrome);
+    min-height: var(--control-height-chrome);
 }
 
 .ficha-empleados-filters__search-group {
@@ -1424,6 +1503,15 @@ button.module-tab {
     .ficha-empleados-filters__bar {
         flex-wrap: wrap;
         align-items: center;
+    }
+
+    .ficha-empleados-filters__bar--pending {
+        align-items: flex-end;
+    }
+
+    .ficha-empleados-filters__search--pending,
+    .ficha-empleados-filters__search--pending .ficha-empleados-filters__advanced {
+        flex-wrap: wrap;
     }
 
     .ficha-empleados-filters__actions {

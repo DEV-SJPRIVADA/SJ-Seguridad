@@ -12,25 +12,42 @@
             'activo' => 'activo',
             default => null,
         };
+        $hasAdvancedFilters = ($filters['cargo'] ?? '') !== ''
+            || ($filters['cliente'] ?? '') !== ''
+            || ($filters['ciudad'] ?? '') !== ''
+            || ($filters['fecha_desde'] ?? '') !== ''
+            || ($filters['fecha_hasta'] ?? '') !== '';
         $hasActiveFilters = ($filters['q'] ?? '') !== ''
             || ($currentEstado !== 'en_ficha')
-            || in_array($employmentStatusMode, ['todos', 'desvinculado'], true);
+            || in_array($employmentStatusMode, ['todos', 'desvinculado'], true)
+            || $hasAdvancedFilters;
 
         $entriesQuery = fn (array $overrides = []) => array_filter([
             'q' => array_key_exists('q', $overrides) ? $overrides['q'] : ($filters['q'] ?: null),
             'estado' => array_key_exists('estado', $overrides) ? $overrides['estado'] : ($filters['estado'] ?: null),
             'employment_status' => array_key_exists('employment_status', $overrides) ? $overrides['employment_status'] : $employmentStatusQueryParam,
-            'fecha_desde' => array_key_exists('fecha_desde', $overrides) ? $overrides['fecha_desde'] : null,
-            'fecha_hasta' => array_key_exists('fecha_hasta', $overrides) ? $overrides['fecha_hasta'] : null,
+            'cargo' => array_key_exists('cargo', $overrides) ? $overrides['cargo'] : (($filters['cargo'] ?? '') ?: null),
+            'cliente' => array_key_exists('cliente', $overrides) ? $overrides['cliente'] : (($filters['cliente'] ?? '') ?: null),
+            'ciudad' => array_key_exists('ciudad', $overrides) ? $overrides['ciudad'] : (($filters['ciudad'] ?? '') ?: null),
+            'fecha_desde' => array_key_exists('fecha_desde', $overrides) ? $overrides['fecha_desde'] : (($filters['fecha_desde'] ?? '') ?: null),
+            'fecha_hasta' => array_key_exists('fecha_hasta', $overrides) ? $overrides['fecha_hasta'] : (($filters['fecha_hasta'] ?? '') ?: null),
         ], fn ($value) => $value !== null && $value !== '');
 
         $pendingActive = $currentEstado === 'pendientes';
         $pendingHref = $pendingActive
-            ? route('gestion-humana.ficha-empleados.employees.index', array_filter([
-                'q' => $filters['q'] ?: null,
-                'employment_status' => $employmentStatusQueryParam,
-            ]))
-            : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery(['estado' => 'pendientes', 'employment_status' => null]));
+            ? route('gestion-humana.ficha-empleados.employees.index')
+            : route('gestion-humana.ficha-empleados.employees.index', $entriesQuery([
+                'estado' => 'pendientes',
+                'employment_status' => null,
+                'cargo' => null,
+                'cliente' => null,
+                'ciudad' => null,
+                'fecha_desde' => null,
+                'fecha_hasta' => null,
+            ]));
+        $clearFiltersHref = $pendingActive
+            ? route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes'])
+            : route('gestion-humana.ficha-empleados.employees.index');
     @endphp
 
     <div class="page-section ficha-empleados-page req-manage-page">
@@ -60,16 +77,17 @@
             <div class="panel ficha-empleados-panel">
                 <div class="panel__body panel__body--compact req-manage-shell">
                     <div class="req-manage-filters ficha-empleados-filters">
-                        <div class="ficha-empleados-filters__bar">
-                            <form method="GET" class="ficha-empleados-filters__search">
+                        <div class="ficha-empleados-filters__bar {{ $pendingActive ? 'ficha-empleados-filters__bar--pending' : '' }}">
+                            <form method="GET" class="ficha-empleados-filters__search {{ $pendingActive ? 'ficha-empleados-filters__search--pending' : '' }}">
                                 @if ($currentEstado !== 'en_ficha')
                                     <input type="hidden" name="estado" value="{{ $currentEstado }}">
                                 @endif
                                 @if ($employmentStatusQueryParam !== null)
                                     <input type="hidden" name="employment_status" value="{{ $employmentStatusQueryParam }}">
                                 @endif
-                                <label class="sr-only" for="ficha-search-input">Buscar</label>
-                                <div class="ficha-empleados-filters__search-group">
+                                {{-- En Pendientes el buscador va en la misma fila que cargo, cliente, ciudad e ingreso. --}}
+                                <div class="{{ $pendingActive ? 'form-field ficha-empleados-filters__field ficha-empleados-filters__field--search' : 'ficha-empleados-filters__search-group' }}">
+                                    <label class="{{ $pendingActive ? 'form-label' : 'sr-only' }}" for="ficha-search-input">Buscar</label>
                                     <input
                                         id="ficha-search-input"
                                         type="search"
@@ -78,25 +96,109 @@
                                         value="{{ $filters['q'] }}"
                                         placeholder="Cédula, nombre o código de requisición"
                                     >
-                                    <button
-                                        type="submit"
-                                        class="ficha-empleados-filters__icon-btn ficha-empleados-filters__icon-btn--ghost"
-                                        title="Buscar"
-                                        aria-label="Buscar"
-                                    >
-                                        <x-lucide-search width="30" height="30" aria-hidden="true" />
-                                    </button>
-                                    @if ($hasActiveFilters)
-                                        <a
-                                            href="{{ route('gestion-humana.ficha-empleados.employees.index') }}"
+                                    @unless ($pendingActive)
+                                        <button
+                                            type="submit"
                                             class="ficha-empleados-filters__icon-btn ficha-empleados-filters__icon-btn--ghost"
-                                            title="Limpiar filtros"
-                                            aria-label="Limpiar filtros"
+                                            title="Buscar"
+                                            aria-label="Buscar"
                                         >
-                                            <x-lucide-filter-x width="18" height="18" aria-hidden="true" />
-                                        </a>
-                                    @endif
+                                            <x-lucide-search width="30" height="30" aria-hidden="true" />
+                                        </button>
+                                        @if ($hasActiveFilters)
+                                            <a
+                                                href="{{ $clearFiltersHref }}"
+                                                class="ficha-empleados-filters__icon-btn ficha-empleados-filters__icon-btn--ghost"
+                                                title="Limpiar filtros"
+                                                aria-label="Limpiar filtros"
+                                            >
+                                                <x-lucide-filter-x width="18" height="18" aria-hidden="true" />
+                                            </a>
+                                        @endif
+                                    @endunless
                                 </div>
+
+                                {{-- Pendientes: una sola fila. Filtrar y limpiar quedan entre Ingreso hasta y volver a la ficha. --}}
+                                @if ($pendingActive)
+                                    <div class="ficha-empleados-filters__advanced">
+                                        <div class="form-field ficha-empleados-filters__field">
+                                            <label class="form-label" for="ficha-filter-cargo">Cargo</label>
+                                            <x-searchable-select
+                                                id="ficha-filter-cargo"
+                                                name="cargo"
+                                                :options="$cargoOptions ?? []"
+                                                :value="$filters['cargo'] ?? ''"
+                                                placeholder="Todos"
+                                                search-placeholder="Buscar cargo…"
+                                                :allow-clear="true"
+                                            />
+                                        </div>
+                                        <div class="form-field ficha-empleados-filters__field">
+                                            <label class="form-label" for="ficha-filter-cliente">Cliente</label>
+                                            <x-searchable-select
+                                                id="ficha-filter-cliente"
+                                                name="cliente"
+                                                :options="$clienteOptions ?? []"
+                                                :value="$filters['cliente'] ?? ''"
+                                                placeholder="Todos"
+                                                search-placeholder="Buscar cliente…"
+                                                :allow-clear="true"
+                                            />
+                                        </div>
+                                        <div class="form-field ficha-empleados-filters__field">
+                                            <label class="form-label" for="ficha-filter-ciudad">Ciudad</label>
+                                            <x-searchable-select
+                                                id="ficha-filter-ciudad"
+                                                name="ciudad"
+                                                :options="$ciudadOptions ?? []"
+                                                :value="$filters['ciudad'] ?? ''"
+                                                placeholder="Todas"
+                                                search-placeholder="Buscar ciudad…"
+                                                :allow-clear="true"
+                                            />
+                                        </div>
+                                        <div class="form-field ficha-empleados-filters__field ficha-empleados-filters__field--date">
+                                            <label class="form-label" for="ficha-fecha-desde">Ingreso desde</label>
+                                            <input
+                                                type="date"
+                                                id="ficha-fecha-desde"
+                                                name="fecha_desde"
+                                                class="form-input"
+                                                value="{{ $filters['fecha_desde'] ?? '' }}"
+                                            >
+                                        </div>
+                                        <div class="form-field ficha-empleados-filters__field ficha-empleados-filters__field--date">
+                                            <label class="form-label" for="ficha-fecha-hasta">Ingreso hasta</label>
+                                            <input
+                                                type="date"
+                                                id="ficha-fecha-hasta"
+                                                name="fecha_hasta"
+                                                class="form-input"
+                                                value="{{ $filters['fecha_hasta'] ?? '' }}"
+                                            >
+                                        </div>
+                                    </div>
+                                    <div class="ficha-empleados-filters__apply">
+                                        <button
+                                            type="submit"
+                                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                            title="Filtrar"
+                                            aria-label="Filtrar"
+                                        >
+                                            <x-lucide-search width="18" height="18" aria-hidden="true" />
+                                        </button>
+                                        @if ($hasActiveFilters)
+                                            <a
+                                                href="{{ $clearFiltersHref }}"
+                                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                                title="Limpiar filtros"
+                                                aria-label="Limpiar filtros"
+                                            >
+                                                <x-lucide-x width="18" height="18" aria-hidden="true" />
+                                            </a>
+                                        @endif
+                                    </div>
+                                @endif
                             </form>
 
                             <div class="ficha-empleados-filters__status">
@@ -180,6 +282,23 @@
                             @endif
                             @if ($filters['q'] ?? '')
                                 · Búsqueda: <strong>{{ $filters['q'] }}</strong>
+                            @endif
+                            @if ($filters['cargo'] ?? '')
+                                · Cargo: <strong>{{ $filters['cargo'] }}</strong>
+                            @endif
+                            @if ($filters['cliente'] ?? '')
+                                · Cliente: <strong>{{ $filters['cliente'] }}</strong>
+                            @endif
+                            @if ($filters['ciudad'] ?? '')
+                                · Ciudad: <strong>{{ $filters['ciudad'] }}</strong>
+                            @endif
+                            @if (($filters['fecha_desde'] ?? '') !== '' || ($filters['fecha_hasta'] ?? '') !== '')
+                                · Ingreso:
+                                <strong>
+                                    {{ ($filters['fecha_desde'] ?? '') !== '' ? $filters['fecha_desde'] : '…' }}
+                                    —
+                                    {{ ($filters['fecha_hasta'] ?? '') !== '' ? $filters['fecha_hasta'] : '…' }}
+                                </strong>
                             @endif
                         </p>
                     </div>
@@ -307,6 +426,11 @@
                             data: function (data) {
                                 data.q = @json($filters['q'] ?? '');
                                 data.estado = @json($filters['estado'] ?? 'en_ficha');
+                                data.cargo = @json($filters['cargo'] ?? '');
+                                data.cliente = @json($filters['cliente'] ?? '');
+                                data.ciudad = @json($filters['ciudad'] ?? '');
+                                data.fecha_desde = @json($filters['fecha_desde'] ?? '');
+                                data.fecha_hasta = @json($filters['fecha_hasta'] ?? '');
                                 @if ($employmentStatusQueryParam !== null)
                                 data.employment_status = @json($employmentStatusQueryParam);
                                 @endif

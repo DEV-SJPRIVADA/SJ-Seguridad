@@ -305,7 +305,12 @@ class FichaEmpleadosTest extends TestCase
         $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
 
         $response->assertOk();
-        $response->assertSee('aria-label="Limpiar filtros"', false);
+        $response->assertSeeInOrder([
+            'name="fecha_hasta"',
+            'aria-label="Filtrar"',
+            'aria-label="Limpiar filtros"',
+            'Volver a empleados en ficha',
+        ], false);
         $response->assertSee(route('gestion-humana.ficha-empleados.employees.index'), false);
 
         $datatable = $this->getFichaEmpleadosDatatable($viewer, ['estado' => 'pendientes']);
@@ -573,6 +578,112 @@ class FichaEmpleadosTest extends TestCase
             ->get(route('gestion-humana.ficha-empleados.employees.index'))
             ->assertOk()
             ->assertDontSee('preXhr.dt', false);
+    }
+
+    public function test_pendientes_datatable_filters_by_cargo_cliente_ciudad_and_hire_date_range(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $cargoA = RequisitionPosition::query()->create([
+            'name' => 'Cargo Filtro Pendiente A',
+            'is_active' => true,
+            'sort_order' => 910,
+        ]);
+        $cargoB = RequisitionPosition::query()->create([
+            'name' => 'Cargo Filtro Pendiente B',
+            'is_active' => true,
+            'sort_order' => 911,
+        ]);
+        $clienteA = RequisitionClient::query()->create([
+            'name' => 'Cliente Filtro Pendiente A',
+            'is_active' => true,
+            'sort_order' => 910,
+        ]);
+        $clienteB = RequisitionClient::query()->create([
+            'name' => 'Cliente Filtro Pendiente B',
+            'is_active' => true,
+            'sort_order' => 911,
+        ]);
+        $ciudadA = RequisitionCity::query()->create([
+            'name' => 'Ciudad Filtro Pendiente A',
+            'is_active' => true,
+            'sort_order' => 910,
+        ]);
+        $ciudadB = RequisitionCity::query()->create([
+            'name' => 'Ciudad Filtro Pendiente B',
+            'is_active' => true,
+            'sort_order' => 911,
+        ]);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-PEND-FILT-A', [
+                'position_id' => $cargoA->id,
+                'client_id' => $clienteA->id,
+                'city_id' => $ciudadA->id,
+                'hiring_date' => '2026-03-10',
+            ])->id,
+            'hired_document' => '900000901',
+            'hired_full_name' => 'Pendiente Filtro Alpha',
+            'moved_to_ficha_at' => null,
+            'moved_to_ficha_by' => null,
+        ]);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $this->createRequisition('REQ-FICHA-PEND-FILT-B', [
+                'position_id' => $cargoB->id,
+                'client_id' => $clienteB->id,
+                'city_id' => $ciudadB->id,
+                'hiring_date' => '2026-08-20',
+            ])->id,
+            'hired_document' => '900000902',
+            'hired_full_name' => 'Pendiente Filtro Beta',
+            'moved_to_ficha_at' => null,
+            'moved_to_ficha_by' => null,
+        ]);
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']))
+            ->assertOk()
+            ->assertSee('name="cargo"', false)
+            ->assertSee('name="cliente"', false)
+            ->assertSee('name="ciudad"', false)
+            ->assertSee('name="fecha_desde"', false)
+            ->assertSee('name="fecha_hasta"', false)
+            ->assertSee('Cargo Filtro Pendiente A', false);
+
+        $byCargo = $this->getFichaEmpleadosDatatable($viewer, [
+            'estado' => 'pendientes',
+            'cargo' => 'Cargo Filtro Pendiente A',
+        ]);
+        $byCargo->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $rowsCargo = $this->datatableRowTexts($byCargo->json());
+        $this->assertStringContainsString('Pendiente Filtro Alpha', $rowsCargo);
+        $this->assertStringNotContainsString('Pendiente Filtro Beta', $rowsCargo);
+
+        $byCliente = $this->getFichaEmpleadosDatatable($viewer, [
+            'estado' => 'pendientes',
+            'cliente' => 'Cliente Filtro Pendiente B',
+        ]);
+        $byCliente->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Pendiente Filtro Beta', $this->datatableRowTexts($byCliente->json()));
+
+        $byCiudad = $this->getFichaEmpleadosDatatable($viewer, [
+            'estado' => 'pendientes',
+            'ciudad' => 'Ciudad Filtro Pendiente A',
+        ]);
+        $byCiudad->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Pendiente Filtro Alpha', $this->datatableRowTexts($byCiudad->json()));
+
+        $byDates = $this->getFichaEmpleadosDatatable($viewer, [
+            'estado' => 'pendientes',
+            'fecha_desde' => '2026-08-01',
+            'fecha_hasta' => '2026-08-31',
+        ]);
+        $byDates->assertOk()->assertJsonPath('recordsFiltered', 1);
+        $this->assertStringContainsString('Pendiente Filtro Beta', $this->datatableRowTexts($byDates->json()));
+        $this->assertStringNotContainsString('Pendiente Filtro Alpha', $this->datatableRowTexts($byDates->json()));
     }
 
     public function test_ficha_empleados_board_hidden_without_board_permission(): void

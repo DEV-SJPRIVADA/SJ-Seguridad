@@ -139,7 +139,7 @@ Sync: `php artisan app:sync-permissions` + re-login.
 | `areas/gestion_humana/acreditaciones/partials/export-apo-manual.blade.php` | Grilla Manual (Cartas-like) + modal multi-cédula + Alpine `acreditacionesExportApoManual` |
 | `areas/gestion_humana/acreditaciones/partials/subnav.blade.php` | Pestanas `.module-tab` |
 | `areas/gestion_humana/acreditaciones/partials/nuevo-modal.blade.php` | Modal crear acreditado (tambien desde Validaciones cola `sin_acreditacion`) |
-| `areas/gestion_humana/acreditaciones/partials/edit-modal.blade.php` | Modal editar (identidad bloqueable, CARGO APO searchable-select; tambien desde Validaciones) |
+| `areas/gestion_humana/acreditaciones/partials/edit-modal.blade.php` | Modal editar (identidad bloqueable, CARGO APO searchable-select). El Alpine padre debe definir `editActionUrl()` con `editForm.update_url` (Acreditados, Validaciones, Export Apo) |
 | `areas/gestion_humana/acreditaciones/partials/bulk-update-modal.blade.php` | Modal actualizar seleccionados (fecha solicitud / observaciones) |
 | `areas/gestion_humana/acreditaciones/partials/masivos-modal.blade.php` | Modal import masivo Acreditados |
 

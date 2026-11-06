@@ -52,9 +52,10 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 
 1. Entre al tablero **Ficha empleados** (visible solo si tiene el permiso correspondiente).
 2. Abra la pestaña **Empleados**; por defecto se muestra la pill **Pendientes**.
-3. Use el buscador (cedula, nombre o codigo de requisicion) para filtrar.
-4. Revise las columnas: codigo de requisicion, cedula, nombre, cargo, cliente, ciudad y fecha de contratacion.
-5. Para descargar el listado a Excel, use el icono de Excel en la barra de acciones (respeta la búsqueda activa).
+3. Use el buscador (cédula, nombre o código de requisición) para filtrar.
+4. En la misma fila puede filtrar por **cargo**, **cliente**, **ciudad** y un **rango de fecha de ingreso** (desde/hasta). Los iconos **Filtrar** y **Limpiar filtros** están entre «Ingreso hasta» y el icono de volver a empleados en ficha. Filtrar aplica la búsqueda y los filtros; limpiar deja solo la vista Pendientes.
+5. Revise las columnas: cédula, nombre, cargo, cliente, ciudad y fecha de ingreso.
+6. Para descargar el listado a Excel, use el icono de Excel en la barra de acciones (respeta búsqueda y filtros activos).
 
 ### Gestionar Empleado (mover un pendiente a ficha)
 
@@ -168,6 +169,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.46 | 2026-11-06 | Agent | Pendientes: búsqueda, cargo, cliente, ciudad e ingreso en una sola fila. Filtrar y limpiar quedan entre «Ingreso hasta» y el icono de volver a empleados en ficha. |
 | 1.45 | 2026-10-28 | Agent | Gestionar empleado: si antes se generó la carta rápida de contratación (que abre el vínculo), al guardar la ficha se reutiliza ese vínculo y el registro pasa a **En ficha** sin el error «vínculo laboral activo». |
 | 1.44 | 2026-10-28 | Agent | Guardar ficha: los errores de negocio (p. ej. vínculo laboral ya activo) se muestran con su motivo real; los fallos técnicos generan un **código de incidente** para reportar a soporte. |
 | 1.43 | 2026-10-28 | Agent | Ficha (alta/edición): el guardado ya no se bloquea sin explicación; si faltan obligatorios se muestra la lista de campos y se resalta el primero. Los checks de requisitos (cursos, acreditación, psicofísicos) se editan solo con permiso de ficha; identificación editable (cédula queda de solo lectura) y la referencia de requisición pasa a ser solo informativa. |
