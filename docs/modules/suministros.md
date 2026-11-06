@@ -147,6 +147,8 @@ Vista: `resources/views/modules/supplies/show.blade.php`. Misma estructura que `
 
 **Subnav:** solicitante y Calidad ven las pestañas que queden en Suministros (Mis solicitudes o Por aprobar). Compras vuelve a Pedidos. El catálogo no está en este subnav.
 
+**Ancho de portátil sostenido en Compras:** `supplies/index` (Mis solicitudes) y `supplies/approval/index` (Por aprobar) reciben `purchase-requests-page--laptop` cuando `{module}=compras`; el contenedor se limita a `max-width: 1440px` para no estirar los campos en pantallas mayores. Los demás módulos mantienen el ancho previo. Detalle en `docs/modules/purchase-requests.md`.
+
 **Export FO-AD-44 desde detalle:** disponible cuando `status` ∈ `aprobada_calidad`, `en_compras`, `completada` (`SupplyRequest::isExportableForCompras()`). PDF usa filas autorizadas (`approved_quantity > 0`) agrupadas como en Excel.
 
 ### Hilo de notas (`supply_request_comments`)

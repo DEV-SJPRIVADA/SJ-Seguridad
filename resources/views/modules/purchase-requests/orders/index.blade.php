@@ -7,7 +7,7 @@
             || $filters['hasta'] !== null;
     @endphp
 
-    <div class="page-section req-manage-page purchase-orders-page">
+    <div class="page-section req-manage-page purchase-orders-page purchase-requests-page{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success" role="alert">{{ session('status') }}</div>

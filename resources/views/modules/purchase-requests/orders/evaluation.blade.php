@@ -37,7 +37,7 @@
         $umbral = $evaluation?->umbral_codigo;
     @endphp
 
-    <div class="page-section purchase-requests-page purchase-requests-page--form purchase-orders-page">
+    <div class="page-section purchase-requests-page purchase-requests-page--form purchase-orders-page{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success" role="status">{{ session('status') }}</div>

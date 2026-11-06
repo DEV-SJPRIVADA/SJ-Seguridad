@@ -10,7 +10,7 @@
         $attachmentMaxMb = (int) config('purchase-requests.attachments.max_kilobytes', 10240) / 1024;
     @endphp
 
-    <div class="page-section purchase-requests-page purchase-requests-page--form">
+    <div class="page-section purchase-requests-page purchase-requests-page--form{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
         <div class="app-container">
             <div class="page-header-inner purchase-requests-page__intro">
                 <h2 class="page-title">Nueva solicitud de compra</h2>

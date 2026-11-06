@@ -16265,6 +16265,21 @@ a.req-dashboard-kpi:focus-visible {
     gap: 0.85rem;
 }
 
+/* Compras: ancho de portátil sostenido en pantallas mayores.
+   Bandeja, nueva, procesar, detalle, mis solicitudes, insumos, órdenes y emisión de OC
+   no superan el ancho de trabajo de un portátil. */
+.page-section.purchase-requests-page.purchase-requests-page--laptop > .app-container {
+    width: calc(100% - 1.5rem);
+    max-width: 1440px;
+}
+
+@media (max-width: 768px) {
+    .page-section.purchase-requests-page.purchase-requests-page--laptop > .app-container {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+}
+
 .purchase-requests-page__panel {
     flex: 1 1 auto;
     display: flex;
@@ -17614,6 +17629,23 @@ a.req-dashboard-kpi:focus-visible {
 
 .purchase-orders-page__filter-actions .req-manage-filters__icon-btn {
     flex: 0 0 auto;
+}
+
+/* En portátil/escritorio los iconos de filtros van al final de la misma fila de selectores. */
+@media (min-width: 1101px) {
+    .purchase-orders-page__filter-grid {
+        flex-wrap: nowrap;
+    }
+
+    .purchase-orders-page__filter-grid .form-field {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .purchase-orders-page__filter-grid .purchase-orders-page__filter-actions {
+        flex: 0 0 auto;
+        margin-left: auto;
+    }
 }
 
 .purchase-orders-page__issued-list {

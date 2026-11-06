@@ -3,7 +3,7 @@
         @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section purchase-requests-page purchase-requests-page--form purchase-orders-page">
+    <div class="page-section purchase-requests-page purchase-requests-page--form purchase-orders-page{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
         <div class="app-container">
             <div class="page-header-inner purchase-requests-page__intro">
                 <div class="pur-req-detail__toolbar">

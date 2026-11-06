@@ -12,7 +12,7 @@
             && ($errors->has('anulacion_aprobador_id') || $errors->has('motivo_anulacion'));
     @endphp
 
-    <div class="page-section purchase-requests-page purchase-requests-page--detail purchase-orders-page">
+    <div class="page-section purchase-requests-page purchase-requests-page--detail purchase-orders-page{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success" role="status">{{ session('status') }}</div>

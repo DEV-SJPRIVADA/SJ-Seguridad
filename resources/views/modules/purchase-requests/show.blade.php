@@ -19,7 +19,7 @@
         @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section purchase-requests-page purchase-requests-page--detail">
+    <div class="page-section purchase-requests-page purchase-requests-page--detail{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success" role="status">{{ session('status') }}</div>

@@ -103,6 +103,7 @@ Compras también puede devolverlo si llegó mal diligenciado (solo antes de emit
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.11 | 2026-11-06 | Compras | Mis solicitudes y Por aprobar (módulo Compras) usan el ancho de portátil (máx. 1440px) y dejan de estirarse en pantallas mayores. |
 | 1.10 | 2026-10-22 | Compras | El detalle del suministro muestra sus órdenes de compra con PDF descargable y el saldo ordenado/pendiente. |
 | 1.9 | 2026-10-21 | Compras | Compras puede devolver un pedido Por comprar sin órdenes; al reenviarlo, Calidad lo vuelve a aprobar. |
 | 1.8 | 2026-10-21 | Calidad / Compras | Por aprobar muestra los pedidos de todas las áreas, con filtro por área. Los estados se llaman igual que en compras (Por autorizar, Devuelta, Por comprar, Con orden, Cerrado). Observaciones en mayúsculas. |

@@ -35,7 +35,7 @@
         </div>
     </x-slot>
 
-    <div class="page-section purchase-requests-page purchase-requests-page--list req-manage-page">
+    <div class="page-section purchase-requests-page purchase-requests-page--list req-manage-page{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
         <div class="app-container">
             <div class="panel purchase-requests-page__panel">
                 <div class="panel__header panel__header--compact">
