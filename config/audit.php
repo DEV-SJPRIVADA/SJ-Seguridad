@@ -39,6 +39,10 @@ return [
             'label' => 'Documentos calidad',
             'area' => 'calidad',
         ],
+        'servicio_cliente' => [
+            'label' => 'Servicio al cliente',
+            'area' => 'calidad',
+        ],
         'ficha_empleados' => [
             'label' => 'Ficha empleados',
             'area' => 'gestion_humana',

@@ -238,6 +238,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/areas/comercial.php';
     require __DIR__.'/areas/gestion_humana.php';
     require __DIR__.'/areas/compras.php';
+    require __DIR__.'/areas/calidad.php';
 });
 
 if (app()->environment('local')) {

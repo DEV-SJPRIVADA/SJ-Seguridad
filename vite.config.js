@@ -14,6 +14,7 @@ export default defineConfig({
                 'resources/js/gh-area-dashboard-charts.js',
                 'resources/js/desvinculaciones-dashboard-charts.js',
                 'resources/js/cliente-interno-dashboard-charts.js',
+                'resources/js/servicio-cliente-dashboard-charts.js',
                 'resources/js/seleccion-dashboard-charts.js',
                 'resources/js/acreditaciones-dashboard-charts.js',
                 'resources/js/mt-st-04-dashboard-charts.js',

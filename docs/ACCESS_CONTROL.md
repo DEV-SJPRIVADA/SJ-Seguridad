@@ -208,6 +208,8 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `plantillas_word` — **Plantillas Word** (`view.board.gestion_humana.plantillas_word` + `plantillas_word.view` / `manage`)
   - `cartas_notificacion` — **Cartas Notificación** (`view.board.gestion_humana.cartas_notificacion` + **solo** `cartas_notificacion.edit`; **sin** `.view`)
   - `inasistencias` — **Inasistencias** (`view.board.gestion_humana.inasistencias` + `inasistencias.view` / `inasistencias.edit`; `edit` implica `view`)
+- En area `calidad`, tablero de area unica:
+  - `servicio_cliente` — **Servicio al cliente** (`view.board.calidad.servicio_cliente` + `servicio_cliente.fo_gi_22.view` / `edit` + `servicio_cliente.parameters.edit`). El dashboard no tiene permiso propio: lo abre quien puede ver FO-GI-22. `edit` implica `view`. El rol `administrador` recibe el paquete en el seeder; no hay permiso legado.
 
 ### Inasistencias (Gestion humana)
 

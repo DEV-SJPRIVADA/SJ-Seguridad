@@ -20,6 +20,7 @@ use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SeleccionAccessService;
+use App\Services\Access\ServicioClienteAccessService;
 use App\Services\Access\SupplyAccessService;
 use App\Services\GestionHumana\PlantillasWordAccessService;
 
@@ -43,6 +44,7 @@ class SidebarVisibilityService
         private readonly ClienteInternoAccessService $clienteInternoAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
+        private readonly ServicioClienteAccessService $servicioClienteAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
     ) {}
@@ -82,6 +84,7 @@ class SidebarVisibilityService
             'cliente_interno' => $this->shouldShowClienteInternoBoard($user, $areaKey),
             'acreditaciones' => $this->shouldShowAcreditacionesBoard($user, $areaKey),
             'reportes_novedades' => $this->shouldShowReportesNovedadesBoard($user, $areaKey),
+            'servicio_cliente' => $this->shouldShowServicioClienteBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -297,6 +300,15 @@ class SidebarVisibilityService
         }
 
         return $this->clienteInternoAccess->canViewBoard($user);
+    }
+
+    private function shouldShowServicioClienteBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'calidad') {
+            return false;
+        }
+
+        return $this->servicioClienteAccess->canViewBoard($user);
     }
 
     private function shouldShowAcreditacionesBoard(User $user, string $areaKey): bool

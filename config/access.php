@@ -53,6 +53,9 @@ return [
         'cliente_interno.cartas_vacaciones.view' => 'Cliente interno: Ver Cartas Vacaciones',
         'cliente_interno.cartas_vacaciones.edit' => 'Cliente interno: Generar Cartas Vacaciones',
         'cliente_interno.parameters.edit' => 'Cliente interno: Catálogos',
+        'servicio_cliente.fo_gi_22.view' => 'FO-GI-22: Ver',
+        'servicio_cliente.fo_gi_22.edit' => 'FO-GI-22: Editar',
+        'servicio_cliente.parameters.edit' => 'Servicio al cliente: Catálogos',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
         'reportes_novedades.vacaciones.view' => 'Vacaciones: Ver',
@@ -157,6 +160,9 @@ return [
         'cliente_interno.cartas_vacaciones.view' => 'Permite ver las cartas de vacaciones de cliente interno.',
         'cliente_interno.cartas_vacaciones.edit' => 'Permite generar cartas de vacaciones.',
         'cliente_interno.parameters.edit' => 'Permite administrar los catálogos de cliente interno.',
+        'servicio_cliente.fo_gi_22.view' => 'Permite ver FO-GI-22, el dashboard, filtrar y exportar a Excel.',
+        'servicio_cliente.fo_gi_22.edit' => 'Permite crear, editar y eliminar casos, observaciones y adjuntos.',
+        'servicio_cliente.parameters.edit' => 'Permite administrar tipología, fuente, responsable y categoría.',
         'acreditaciones.view' => 'Permite ver Acreditados y exportar la información, además de mostrar los módulos del área.',
         'acreditaciones.edit' => 'Permite crear, editar y eliminar acreditados, importar información y administrar el catálogo.',
 
@@ -243,6 +249,7 @@ return [
         'cliente_interno' => 'Cliente interno',
         'acreditaciones' => 'Acreditaciones',
         'reportes_novedades' => 'MT-GH-04 Novedades',
+        'servicio_cliente' => 'Servicio al cliente',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'cartas_notificacion' => 'Cartas Notificación',
@@ -342,6 +349,10 @@ return [
             'home' => 'gestion_humana',
             'base_area_tab' => false,
         ],
+        'servicio_cliente' => [
+            'home' => 'calidad',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -398,6 +409,12 @@ return [
         'dashboard' => 'Dashboard',
         'ingresos' => 'Ingreso',
         'examenes' => 'Examen ocupacional',
+        'catalogos' => 'Catálogos',
+    ],
+
+    'servicio_cliente_tabs' => [
+        'dashboard' => 'Dashboard',
+        'fo_gi_22' => 'FO-GI-22',
         'catalogos' => 'Catálogos',
     ],
 
@@ -782,6 +799,15 @@ return [
                         'label' => 'Ver tableros',
                         'permissions' => [
                             'view.board.calidad.dashboard',
+                            'view.board.calidad.servicio_cliente',
+                        ],
+                    ],
+                    'servicio_cliente' => [
+                        'label' => 'Servicio al cliente (funciones)',
+                        'permissions' => [
+                            'servicio_cliente.fo_gi_22.view',
+                            'servicio_cliente.fo_gi_22.edit',
+                            'servicio_cliente.parameters.edit',
                         ],
                     ],
                     'area' => [

@@ -18,6 +18,7 @@ use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SeleccionAccessService;
+use App\Services\Access\ServicioClienteAccessService;
 use App\Services\Access\SupplyAccessService;
 use App\Services\Indicadores\IndicatorCaptureAccessService;
 use Database\Factories\UserFactory;
@@ -556,6 +557,27 @@ class User extends Authenticatable
             'cartas_vacaciones' => route('gestion-humana.cliente-interno.cartas-vacaciones'),
             'catalogos' => route('gestion-humana.cliente-interno.catalogos'),
             default => route('dashboard', ['module' => 'gestion_humana']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function servicioClienteBoardTabsFor(): Collection
+    {
+        return collect(app(ServicioClienteAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultServicioClienteBoardUrl(): string
+    {
+        $tabs = $this->servicioClienteBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('calidad.servicio-cliente.dashboard'),
+            'fo_gi_22' => route('calidad.servicio-cliente.fo-gi-22.index'),
+            'catalogos' => route('calidad.servicio-cliente.catalogos'),
+            default => route('dashboard', ['module' => 'calidad']),
         };
     }
 

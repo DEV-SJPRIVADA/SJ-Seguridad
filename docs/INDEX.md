@@ -53,6 +53,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Solicitudes de compra | [`modules/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/purchase-requests.md) | [`user/purchase-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/user/purchase-requests.md) |
 | Solicitudes de desarrollo | [`modules/development-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/development-requests.md) | [`user/development-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/user/development-requests.md) |
 | Documentos calidad | [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md) | [`user/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/user/quality-documents.md) |
+| Servicio al cliente | [`modules/servicio-cliente.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/servicio-cliente.md) | [`user/servicio-cliente.md`](c:/laragon/www/SJSEGURIDAD/docs/user/servicio-cliente.md) |
 | Indicadores | [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md) | [`user/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/user/indicadores.md) |
 | Audit log | [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md) | [`user/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/user/audit-log.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md) | [`user/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matriz-clientes.md) |
@@ -97,6 +98,7 @@ Analisis del costo de construir la plataforma desde cero sin inteligencia artifi
 - [`modules/development-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/development-requests.md)
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
+- [`modules/servicio-cliente.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/servicio-cliente.md)
 - [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)
 - [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md)
 - [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md)

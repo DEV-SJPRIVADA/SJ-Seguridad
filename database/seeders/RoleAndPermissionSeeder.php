@@ -31,6 +31,10 @@ class RoleAndPermissionSeeder extends Seeder
                 'view.board.gestion_humana.plantillas_word',
                 'plantillas_word.view',
                 'plantillas_word.manage',
+                'view.board.calidad.servicio_cliente',
+                'servicio_cliente.fo_gi_22.view',
+                'servicio_cliente.fo_gi_22.edit',
+                'servicio_cliente.parameters.edit',
             ],
             'director' => [
                 'view.dashboard',

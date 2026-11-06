@@ -20,6 +20,7 @@ use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Access\SeleccionAccessService;
+use App\Services\Access\ServicioClienteAccessService;
 use App\Services\Access\SupplyAccessService;
 use App\Services\GestionHumana\PlantillasWordAccessService;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,7 @@ class NavigationResolver
         private readonly ClienteInternoAccessService $clienteInternoAccess,
         private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
+        private readonly ServicioClienteAccessService $servicioClienteAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
@@ -403,6 +405,23 @@ class NavigationResolver
                                 'route' => 'gestion-humana.reportes-novedades.index',
                                 'url' => $user->defaultReportesNovedadesBoardUrl(),
                                 'active' => str_starts_with((string) $routeName, 'gestion-humana.reportes-novedades.'),
+                            ];
+                        }
+
+                        if ($boardKey === 'servicio_cliente') {
+                            if ($key !== 'calidad') {
+                                return null;
+                            }
+
+                            if (! $this->servicioClienteAccess->canViewBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'calidad.servicio-cliente.dashboard',
+                                'url' => $user->defaultServicioClienteBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'calidad.servicio-cliente.'),
                             ];
                         }
 
