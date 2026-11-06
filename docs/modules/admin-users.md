@@ -34,6 +34,12 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - `global_groups` (incluye `supplies_calidad` y `supplies_compras`)
 - `other_areas` (con `subgroups` por area)
 
+Cada permiso del formulario lleva una explicacion visible debajo del titulo:
+
+- `config/access.php` → `permission_help` (mapa `permiso => texto`).
+- `view.board.{area}.{tablero}`, `view.area.{area}` y `manage.area.{area}` se explican automaticamente en `UserPermissionFormBuilder::helpFor()` usando las etiquetas de `areas` y `boards`.
+- El buscador de permisos incluye titulo, identificador tecnico y explicacion (`data-search` en `switch-item.blade.php`).
+
 ## Servicios
 
 - `UserPermissionFormBuilder` — estructura del formulario (`sections` + `sections.navigation` para sidebar)
@@ -56,6 +62,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 
 | Version | Fecha | Descripcion |
 | --- | --- | --- |
+| 1.5 | 2026-11-06 | Permisos: explicacion visible debajo de cada permiso (`access.permission_help` + generacion automatica para tableros y areas); buscador incluye la explicacion |
 | 1.4 | 2026-08-20 | Lista de usuarios: scroll al ítem activo tras seleccionar |
 | 1.3 | 2026-08-19 | Admin: bloque **Solicitar en su area**; crear/mis compras solo ahi, no en transversal |
 | 1.2 | 2026-08-12 | Copiar acceso al crear usuario y aplicar acceso desde edicion |

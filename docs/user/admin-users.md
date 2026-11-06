@@ -64,6 +64,7 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
    - **Solicitar en su area:** pedir personal, insumos o compras en el area de Identidad (no son ficha, archivo ni otros modulos del departamento).
    - **Funcionalidades transversales:** gestion GH, Calidad, autorizacion/bandeja de compras, admin, documentos, etc.
    - **Activa visualizacion de otras areas:** tableros y modulos de cada departamento.
+   - Debajo del nombre de cada permiso se muestra una explicacion de que podra hacer el usuario al activarlo. El buscador tambien encuentra permisos por esa explicacion.
 5. Revise los avisos de coherencia que muestre el sistema (son recomendaciones, no bloqueos).
 6. Guarde el formulario.
 
@@ -72,7 +73,7 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 1. Seleccione al usuario en el listado.
 2. Pulse el icono de lápiz (**Editar usuario**) junto a Nuevo.
 3. Modifique datos personales, área, rol o estado activo según necesite.
-4. Ajuste permisos en la pestaña **Qué puede hacer**.
+4. Ajuste permisos en la pestaña **Qué puede hacer**. Cada permiso muestra debajo la explicacion de lo que permite hacer al activarlo.
 5. Guarde los cambios.
 
 ### Desactivar un usuario
@@ -93,6 +94,7 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.8 | 2026-11-06 | Agent | Acceso y permisos: cada permiso muestra debajo una explicacion de lo que permite hacer; el buscador tambien filtra por esa explicacion. |
 | 1.7 | 2026-10-08 | Agent | Editar usuario: acciones Volver/Guardar/Cancelar/Sedes/Copiar acceso como iconos. |
 | 1.6 | 2026-10-08 | Agent | KPIs (total/activos/bloqueados) encima de Lista de usuarios; sin cabecera soft. |
 | 1.5 | 2026-10-08 | Agent | Listado: Buscar y Limpiar filtros como iconos (lupa / X). |

@@ -1,6 +1,6 @@
 @props(['perm', 'selectedPermissions'])
 
-<div class="switch-item js-permission-item" data-search="{{ Str::lower($perm['label'].' '.$perm['name']) }}">
+<div class="switch-item js-permission-item" data-search="{{ Str::lower($perm['label'].' '.$perm['name'].' '.($perm['help'] ?? '')) }}">
     <div class="switch-item__info">
         <span class="switch-item__title">{{ $perm['label'] }}</span>
         <code class="switch-item__code" title="Identificador interno">{{ $perm['name'] }}</code>

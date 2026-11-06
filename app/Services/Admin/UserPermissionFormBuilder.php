@@ -81,7 +81,7 @@ class UserPermissionFormBuilder
                         $permissions->push([
                             'name' => $name,
                             'label' => "Biblioteca en {$areaLabel}",
-                            'help' => $name,
+                            'help' => $this->helpFor($name),
                         ]);
                     }
                 }
@@ -260,7 +260,41 @@ class UserPermissionFormBuilder
         return [
             'name' => $name,
             'label' => $label,
-            'help' => $name,
+            'help' => $this->helpFor($name),
         ];
+    }
+
+    /**
+     * Explicación legible de qué permite activar el permiso.
+     * Los permisos de tablero/área se explican a partir de config/access.php.
+     */
+    private function helpFor(string $name): string
+    {
+        $configured = config('access.permission_help', []);
+
+        if (isset($configured[$name]) && $configured[$name] !== '') {
+            return (string) $configured[$name];
+        }
+
+        if (preg_match('/^view\.board\.(.+)\.(.+)$/', $name, $matches) === 1) {
+            $areaLabel = config("access.areas.{$matches[1]}", $matches[1]);
+            $boardLabel = config("access.boards.{$matches[2]}", $matches[2]);
+
+            return "Muestra el tablero {$boardLabel} en el menú de {$areaLabel} y permite consultar su contenido.";
+        }
+
+        if (preg_match('/^view\.area\.(.+)$/', $name, $matches) === 1) {
+            $areaLabel = config("access.areas.{$matches[1]}", $matches[1]);
+
+            return "Da acceso de solo lectura a la biblioteca de documentos de {$areaLabel}.";
+        }
+
+        if (preg_match('/^manage\.area\.(.+)$/', $name, $matches) === 1) {
+            $areaLabel = config("access.areas.{$matches[1]}", $matches[1]);
+
+            return "Permite administrar la biblioteca de documentos de {$areaLabel}: crear, editar y eliminar.";
+        }
+
+        return '';
     }
 }

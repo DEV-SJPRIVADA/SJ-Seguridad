@@ -146,6 +146,27 @@ class AdminUserManagementTest extends TestCase
         $this->assertContains('purchase.tab.approval', $globalNames);
     }
 
+    public function test_every_permission_in_admin_form_has_a_human_help_text(): void
+    {
+        $form = app(UserPermissionFormBuilder::class)->build();
+
+        $permissions = collect($form['sections']['navigation'] ?? [])
+            ->flatMap(fn (array $item) => collect($item['permissions'] ?? []))
+            ->unique('name')
+            ->values();
+
+        $this->assertNotEmpty($permissions);
+
+        $missing = $permissions->filter(
+            fn (array $perm) => blank($perm['help'] ?? null) || $perm['help'] === $perm['name']
+        );
+
+        $this->assertTrue(
+            $missing->isEmpty(),
+            'Permisos sin explicación: '.$missing->pluck('name')->implode(', ')
+        );
+    }
+
     public function test_permission_form_builder_lists_global_requisition_actions_once(): void
     {
         $form = app(UserPermissionFormBuilder::class)->build();
