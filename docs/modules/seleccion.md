@@ -22,6 +22,7 @@ Tablero de area **Gestion Humana** para operar dos flujos independientes — **I
 - Audit: `SeleccionAuditLogService` → `SystemAuditService` (`module=seleccion`, `area=gestion_humana`). Solo mutaciones.
 - Selectores: `<x-searchable-select>` (prohibido Select2). Export: `BaseExport` + `<x-export-excel>` (prohibido `excelHtml5`).
 - "Fuera V1: sync Ficha/Requisiciones, import Excel, soft-delete, notificaciones, CRUD clientes/uniforms, catalogo servicio/sector. (v1.1 incorporo el catalogo jefe OPE; servicio/sector sigue fuera)."
+- Dashboard (v2.0): shell alineado al Dashboard de área GH — título de cabecera, filtros con **rangos rápidos** (Mes actual, Últimos 30 días, Año actual, Todo el histórico), **4 KPIs clicables** que abren Ingreso/Examen con los filtros vigentes y grilla de charts **3 + 1** (donut de estado de solicitud + rankings top 8 de cliente/responsable + tendencia mensual). Al abrir sin fechas en la URL, el tablero aplica por defecto **Mes actual**.
 
 ## Rutas
 
@@ -82,7 +83,7 @@ Config: `config/access.php` (`system_permissions`, `boards`, `board_canonical_ar
 
 | Vista | Descripcion |
 | --- | --- |
-| `areas/gestion_humana/seleccion/dashboard.blade.php` | KPIs + ApexCharts + filtros |
+| `areas/gestion_humana/seleccion/dashboard.blade.php` | Dashboard: cabecera, filtros + rangos rápidos, KPIs clicables y ApexCharts (donut + rankings + tendencia) |
 | `areas/gestion_humana/seleccion/ingresos.blade.php` | Shell DT server-side + CRUD modal (modales Nuevo/Editar con secciones y botones icono; filtros asistencia/estado) |
 | `areas/gestion_humana/seleccion/examenes.blade.php` | Shell DT server-side + CRUD modal |
 | `areas/gestion_humana/seleccion/catalogos.blade.php` | Tablero tarjetas (`?catalog=`) |
@@ -143,15 +144,16 @@ Nav: `NavigationResolver`, `SidebarVisibilityService`, `User::defaultSeleccionBo
    - **Historial** (`SeleccionExamenHistorialService`, solo `seleccion.edit`): lee `audit_logs` `module=seleccion`, `event_type=seleccion_examen`; alta guarda snapshot inicial (`logModelChange` before null), edición before/after (`SeleccionExamenService::auditSnapshot`, fechas Y-m-d); cambios campo a campo con labels, nombres de cliente/responsable y estado legible. Toolbar (global, filtro por usuario) + icono por fila.
    - Modales Nuevo/Editar: mismo partial por secciones (Datos del aspirante · Cargo y afiliaciones · Proceso del examen) con clases `seleccion-ingresos-form*` y pie icon-only.
 4. Duplicado: misma tabla; sin `confirm_duplicate` → 422 con matches; con flag → persiste.
-5. Dashboard filtros: Ingreso por `fecha_ingreso`; Examen por `fecha_arl`; ambos + cliente + responsable. Sin mutaciones.
-6. KPIs: totales Ingreso/Examen; conteo por SOLICITUD; ingresos del mes calendario; examenes `EN_PROCESO`.
+5. Dashboard filtros: Ingreso por `fecha_ingreso`; Examen por `fecha_arl`; ambos + cliente + responsable. Sin mutaciones. **Default al abrir:** si la URL no trae `date_from`/`date_to`, `SeleccionController::dashboard` los completa con el **mes actual** (día 1 → hoy) antes de calcular el payload; el endpoint `dashboard.metrics` **no** aplica ese default (permite «Todo el histórico»). Los **rangos rápidos** solo ajustan `date_from`/`date_to` del tablero (no persisten). Los **KPIs clicables** abren el listado correspondiente con los filtros vigentes (`date_from`, `date_to`, `commercial_client_id`, `responsable_user_id`); «Ingresos del mes» fuerza el rango del mes en curso y «Exámenes en proceso» agrega `solicitud_status_code = config('seleccion.solicitud_en_proceso_code')`.
+6. KPIs: totales Ingreso/Examen; conteo por SOLICITUD; ingresos del mes calendario; examenes `EN_PROCESO`. Charts: donut por estado de solicitud, top 8 de clientes y responsables (mismo conteo Ingreso + Examen) y tendencia mensual de ingresos (máx. 24 meses).
 7. Catalogos: DELETE bloqueado si hay referencias en tablas Seleccion (ingreso_estado via `estado_code`, jefe_operativo via `jefe_ope_code`); se permite desactivar (`is_active=false`). Unique `(catalog_type, code)`.
 8. Catalogos **codeless** (`config('seleccion.codeless_catalog_types')`: `blood_type`, `marital_status`, `seleccion_solicitud_status`, `ingreso_estado`, `jefe_operativo`): UI sin Codigo ni Orden. Alta: `SeleccionCatalogService::makeUniqueCode` (ASCII mayúsculas, espacios→`_`, conserva `+`/`-`; sufijo `_2…` si choca) + `nextSortOrder` (max+1). Edicion: conserva `code` y `sort_order` (Ingreso/Examen referencian por code). Nombre unique por tipo. Tabla sin fila vacia con colspan (DataTables `errMode=throw`).
 8. **Dual-edit city/position/eps/afp:** cambios desde Seleccion o Ficha afectan la misma tabla; el bloqueo de DELETE en Seleccion **solo** mira refs en tablas Seleccion (no Ficha). Documentado como riesgo aceptado (review obs. #6).
 
 ## JavaScript / assets
 
-- Entry Vite: `resources/js/seleccion-dashboard-charts.js` + `apex-defaults.js`.
+- Entry Vite: `resources/js/seleccion-dashboard-charts.js` + `apex-defaults.js`. Donut con total al centro (porcentajes solo si hay ≤6 estados), rankings horizontales top 8 con etiquetas numéricas y truncado de nombres, tendencia tipo área con etiquetas verticales cuando hay >6 meses. El entry emite `seleccion-dashboard-charts-ready` para evitar el primer paint vacío (mismo patrón que el Dashboard de área GH).
+- Estilos del dashboard: `resources/css/areas/gestion-humana/115-gh-seleccion.css` (capa 115; pisa las reglas de la capa 101).
 - DataTables `serverSide: true` en ingresos/examenes (tope length; sin `-1`). 18 col + acciones (v1.1: fecha asistencia, estado badge, jefe operativo, observaciones).
 - `searchable-select` transversal: dropdown teleportado a `<body>` con `position: fixed` (JS) + reposicion en scroll/resize; corrige opciones recortadas en modales/overflow. `resources/js/components/searchable-select.js`.
 - Confirmacion UI borrado duro y duplicado cedula.
@@ -172,7 +174,7 @@ Ambas extienden `BaseExport`. Boton `<x-export-excel>`. Auth: `seleccion.view`.
 1. `php artisan migrate` (aditivo) + `php artisan app:sync-permissions`.
 2. Asignar manualmente board + view (+ edit) a usuario GH; verificar sidebar y pestanas.
 3. CRUD Ingreso/Examen; aviso duplicado B; export Excel.
-4. Dashboard: cambiar filtros → refresh AJAX metrics.
+4. Dashboard: cambiar filtros → refresh AJAX metrics; probar rangos rápidos y KPIs clicables.
 5. Catalogos: CRUD tipo nuevo y `city`; verificar exclusion en Ficha Catalogos.
 6. `php artisan test --compact --filter=Seleccion` (o `tests/Feature/GestionHumana/Seleccion*`).
 7. `npm run build` si falta entry charts en Vite manifest.
@@ -210,6 +212,7 @@ Ambas extienden `BaseExport`. Boton `<x-export-excel>`. Auth: `seleccion.view`.
 
 | Ver | Fecha | Cambio |
 | --- | --- | --- |
+| 2.0 | 2026-11-09 | Dashboard de Selección rediseñado con el lenguaje del Dashboard de área GH: título de cabecera + subtítulo, filtros con rangos rápidos y sello de actualización, **apertura por defecto en «Mes actual»** (solo en la vista; `dashboard.metrics` sigue sin default), 4 KPIs con icono/hint clicables (abren Ingreso/Examen con los filtros vigentes) y charts en grilla 3 + 1 (donut de estado con total al centro, rankings horizontales top 8, tendencia tipo área). Nueva capa CSS `115-gh-seleccion.css`; `SeleccionController::dashboard` agrega `ingresosUrl`, `examenesUrl`, `solicitudEnProcesoCode` y `today`. Sin cambios de datos ni de permisos. |
 | 1.9 | 2026-11-03 | Ingreso (Nuevo y Editar): **CORREO, JEFE OPE ASIGNADO y REEMPLAZA A pasan a opcionales**. `Store/UpdateSeleccionIngresoRequest`: reglas `nullable` y `?: null` en `prepareForValidation` (si queda `''`, la regla `email` falla; `nullable` solo omite `null`). UI: se quita `required`/`:required` y se agrega «(opcional)»; se elimina el aviso que exigia jefe operativo para guardar. `SeleccionIngresoService` persiste `''` (no `null`) en `email`/`reemplaza_a` y en `jefe_ope_code`/`jefe_ope` para respetar las columnas NOT NULL; **sin migracion**. Prueba nueva `test_email_jefe_ope_and_reemplaza_a_are_optional`. El correo sigue obligatorio en Examen. |
 | 1.5 | 2026-10-20 | Ingreso: se quita la alerta verde de `session('status')` encima de filtros (queda solo el toast global del layout). |
 | 1.4 | 2026-10-20 | Ingreso: REFERIDO pasa a opcional (`nullable` en Store/Update; sin migración). |

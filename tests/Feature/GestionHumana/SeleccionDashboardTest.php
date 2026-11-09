@@ -37,6 +37,38 @@ class SeleccionDashboardTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_dashboard_opens_with_current_month_when_no_dates_are_given(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.seleccion.dashboard'))
+            ->assertOk()
+            ->assertViewHas('filters', function (array $filters): bool {
+                return $filters['date_from'] === now()->startOfMonth()->toDateString()
+                    && $filters['date_to'] === now()->toDateString();
+            });
+
+        // Las fechas explícitas en la URL mandan sobre el default.
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.seleccion.dashboard', [
+                'date_from' => '2026-01-01',
+                'date_to' => '2026-01-31',
+            ]))
+            ->assertOk()
+            ->assertViewHas('filters', function (array $filters): bool {
+                return $filters['date_from'] === '2026-01-01'
+                    && $filters['date_to'] === '2026-01-31';
+            });
+
+        // El endpoint metrics no aplica el default: «Todo el histórico» sigue funcionando.
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.seleccion.dashboard.metrics'))
+            ->assertOk()
+            ->assertJsonPath('filters.date_from', '')
+            ->assertJsonPath('filters.date_to', '');
+    }
+
     public function test_dashboard_renders_and_metrics_respect_filters(): void
     {
         $viewer = $this->viewerUser();

@@ -10,7 +10,7 @@ Apoyar a Gestión Humana en el seguimiento operativo de candidatos y trámites d
 
 Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
-- **Dashboard** — totales, ingresos del mes, exámenes en proceso, gráficos por estado de solicitud y tendencias; al cambiar filtros (fechas, cliente, responsable) se actualizan solos.
+- **Dashboard** — totales, ingresos del mes, exámenes en proceso, gráficos por estado de solicitud y tendencias; al cambiar filtros (fechas, cliente, responsable) se actualizan solos. Incluye **rangos rápidos** de fecha y tarjetas de indicadores que abren el listado con los mismos filtros.
 - **Ingreso** — listado paginado, filtros (por fechas de ingreso/asistencia, estado, cliente, responsable, etc.), alta/edición/eliminación y exportar a Excel. Registra datos de ingreso (cédula, contacto, ciudad, cargo, cliente, tallas, tipo de dotación, RH, responsable, **fecha de asistencia**, **estado**, **jefe operativo**, **observaciones**, etc.).
 - **Examen ocupacional** — mismo tipo de listado para el trámite de examen (EPS, pensión, estado civil, fecha ARL, estado de solicitud, etc.).
 - **Catálogos** — solo con permiso de edición: administrar listas usadas en los formularios (ciudad, cargo, EPS, AFP, RH, estado civil, estado de solicitud, **estado de ingreso**, **jefe operativo**).
@@ -56,10 +56,11 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 ### Usar el Dashboard
 
-1. Ajuste el rango de fechas, el cliente y/o el responsable.
-2. Revise los totales de ingresos y exámenes, los ingresos del mes actual y los exámenes en proceso.
-3. Consulte los gráficos de estados de solicitud, tendencia mensual de ingresos y distribución por cliente/responsable.
-4. Los datos se recalculan al cambiar un filtro (no hace falta un botón de “buscar”).
+1. El tablero abre con el rango **Mes actual** ya aplicado. Ajuste las fechas, el cliente y/o el responsable. También puede usar los **rangos rápidos**: **Mes actual**, **Últimos 30 días**, **Año actual** o **Todo el histórico** (un solo clic ajusta las dos fechas).
+2. Revise los totales de ingresos y exámenes, los ingresos del mes actual y los exámenes en proceso. Cada tarjeta indica el contexto del dato («En el rango filtrado», «Mes en curso», «Solicitud EN PROCESO»).
+3. Pulse una tarjeta para abrir el listado correspondiente (**Ingreso** o **Examen ocupacional**) con los mismos filtros aplicados: *Total ingresos* e *Ingresos del mes* llevan a Ingreso; *Total exámenes* y *Exámenes en proceso* llevan a Examen (este último filtrando la solicitud **EN PROCESO**).
+4. Consulte los gráficos: **Estado de la solicitud** (dona con el total al centro), **Top clientes** y **Top responsables** (ocho primeros por número de registros) y **Tendencia mensual de ingresos**.
+5. Los datos se recalculan al cambiar un filtro (no hace falta un botón de “buscar”); el sello **Actualizado hh:mm** indica la última actualización. El botón ✕ limpia todos los filtros.
 
 ### Registrar o editar un Ingreso
 
@@ -108,6 +109,7 @@ Aplica al tablero **Selección** en **Gestión Humana**, con pestañas:
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.11 | 2026-11-09 | Desarrollo | Dashboard de Selección renovado: título de página, **abre por defecto con el rango Mes actual**, rangos rápidos de fecha (Mes actual, Últimos 30 días, Año actual, Todo el histórico), tarjetas de indicadores clicables que abren el listado con los filtros aplicados, sello de última actualización y gráficos rediseñados (dona de estado con total al centro, top 8 de clientes y responsables, tendencia mensual). |
 | 1.10 | 2026-11-03 | Desarrollo | Ingreso: **Correo**, **Jefe ope asignado** y **Reemplaza a** ya no son obligatorios (se marcan «(opcional)» y pueden guardarse vacíos). Ya no es necesario tener jefes operativos en el catálogo para guardar un ingreso. El correo sigue siendo obligatorio en Examen ocupacional. |
 | 1.0 | 2026-09-22 | Documentador | Version inicial FEAT-035: tablero Selección (Dashboard, Ingreso, Examen ocupacional, Catálogos). |
 | 1.1 | 2026-09-23 | Desarrollo | Ingresos: campo obligatorio REFERIDO (formulario, listado y Excel) después de RESPONSABLE. |

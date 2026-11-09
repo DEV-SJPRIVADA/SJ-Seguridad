@@ -67,6 +67,14 @@ class SeleccionController extends Controller
         abort_unless($this->seleccionAccess->canView(auth()->user()), 403);
 
         $filters = $this->dashboardFiltersFromRequest($request);
+
+        // Sin fechas en la URL el tablero abre en «Mes actual» (el endpoint
+        // metrics NO aplica este default: así «Todo el histórico» sigue vacío).
+        if ($filters['date_from'] === '' && $filters['date_to'] === '') {
+            $filters['date_from'] = now()->startOfMonth()->toDateString();
+            $filters['date_to'] = now()->toDateString();
+        }
+
         $payload = $this->dashboardService->metrics($filters);
 
         return view('areas.gestion_humana.seleccion.dashboard', [
@@ -74,6 +82,10 @@ class SeleccionController extends Controller
             'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.seleccion.dashboard.metrics'),
+            'today' => now()->toDateString(),
+            'ingresosUrl' => route('gestion-humana.seleccion.ingresos'),
+            'examenesUrl' => route('gestion-humana.seleccion.examenes'),
+            'solicitudEnProcesoCode' => (string) config('seleccion.solicitud_en_proceso_code', 'EN_PROCESO'),
             'clientOptions' => array_merge(
                 [['value' => '', 'label' => 'Todos']],
                 $this->clientSelectOptions(),
