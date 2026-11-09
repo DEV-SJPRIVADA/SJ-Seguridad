@@ -1,0 +1,82 @@
+/* Gestión Humana / Compartido entre tableros — capa 082
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Ficha empleados.
+*/
+
+.multi-cedula-modal .ficha-empleados-masivos-modal__heading {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.multi-cedula-modal__heading-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.multi-cedula-modal__lead {
+    margin: 0.3rem 0 0;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: unset;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    max-width: 100%;
+}
+
+.multi-cedula-modal__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 0;
+}
+
+.multi-cedula-modal__body .form-label {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--color-text-soft);
+}
+
+.multi-cedula-modal__hint {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    line-height: 1.4;
+    color: var(--color-text-soft);
+}
+
+.multi-cedula-modal__hint--warn {
+    color: var(--color-warning);
+    font-weight: 650;
+}
+
+.multi-cedula-modal__error {
+    margin: 0.1rem 0 0;
+    padding: 0.45rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid #fecdd3;
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+    font-size: 0.8rem;
+    line-height: 1.4;
+}
+
+.multi-cedula-modal__error[hidden] {
+    display: none !important;
+}
+
+.multi-cedula-modal__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.45rem;
+    margin: 0;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.multi-cedula-modal__actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}

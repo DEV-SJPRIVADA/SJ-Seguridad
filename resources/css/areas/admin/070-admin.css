@@ -1,0 +1,151 @@
+/* Administración — capa 070
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Requisiciones, Comercial.
+*/
+
+@media (max-width: 768px) {
+    .app-container {
+        width: calc(100% - 1rem);
+    }
+
+    .app-container--wide,
+    .app-container--narrow {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+
+    .req-manage-filters {
+        padding: 0.5rem 0.9rem;
+        margin-bottom: 1rem;
+    }
+
+    .req-manage-filters__head {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.65rem;
+    }
+
+    .req-manage-filters__actions {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .req-manage-filters__actions .btn,
+    .req-manage-filters__actions a.btn {
+        flex: 1 1 auto;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .req-manage-filters__row {
+        grid-template-columns: 1fr;
+    }
+
+    .req-manage-filters__search-group {
+        flex-direction: column;
+    }
+
+    .req-manage-filters__search-group .form-input {
+        flex: 1 1 auto;
+        width: 100%;
+    }
+
+    .req-manage-filters__search-group .btn {
+        width: 100%;
+    }
+
+    .req-manage-filters__meta {
+        font-size: 0.78rem;
+    }
+
+    .users-kpi-grid,
+    .detail-grid,
+    .form-grid--two,
+    .form-grid--three,
+    .form-grid--four,
+    .req-form__meta,
+    .req-form__meta--edit,
+    .req-form__replacement,
+    .req-form-layout,
+    .req-form-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .req-manage-filters__extras .req-manage-filters__row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .req-manage-filters__field--compact {
+        min-width: 100%;
+    }
+
+    .req-form-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .req-form-actions__group {
+        justify-content: stretch;
+    }
+
+    .req-form-actions__group .btn,
+    .req-form-actions__group button:not(.req-manage-filters__icon-btn) {
+        flex: 1;
+    }
+
+    .dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis),
+    .dashboard-area-grid,
+    .dashboard-empty-state__grid,
+    .welcome-footer,
+    .welcome-side__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-actions,
+    .action-row,
+    .search-bar,
+    .auth-row,
+    .welcome-header,
+    .welcome-nav {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .page-header-inner,
+    .page-section {
+        padding: 1.25rem 0;
+    }
+
+    .welcome-shell {
+        padding: 1.25rem 0;
+    }
+
+    .guest-card {
+        padding: 1.5rem;
+    }
+
+    .guest-logo .brand-logo {
+        height: 56px;
+    }
+
+    .profile-card__inner {
+        padding: 1.25rem;
+    }
+
+    .profile-hero__inner {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 1.25rem;
+    }
+
+    .profile-hero__avatar {
+        width: 3.5rem;
+        height: 3.5rem;
+        font-size: 1rem;
+    }
+
+    .profile-form {
+        max-width: none;
+    }
+}

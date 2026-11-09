@@ -1,0 +1,35 @@
+/* Requisiciones — capa 048
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* Requisition Statuses */
+.status-pill--req-solicitada {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill--req-pendiente_autorizacion_gerencia {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.status-pill--req-aprobada {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill--req-en_gestion {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.status-pill--req-contratado {
+    background: #166534;
+    color: #ffffff;
+}
+
+.status-pill--req-cancelada {
+    background: #ffe4e6;
+    color: #be123c;
+}

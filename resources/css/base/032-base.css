@@ -1,0 +1,109 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 032
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.form-field--full {
+    grid-column: 1 / -1;
+}
+
+.form-label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.form-input,
+.form-select {
+    width: 100%;
+    min-height: var(--control-height-chrome);
+    padding: 0.5rem var(--control-padding-x);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--control-radius);
+    background: #fff;
+    color: var(--color-text);
+    font-size: var(--control-font-size);
+    line-height: var(--control-line-height);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-select {
+    padding-right: 2rem;
+}
+
+.form-input[type="search"] {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+.form-input[type="search"]::-webkit-search-decoration,
+.form-input[type="search"]::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+}
+
+.form-textarea {
+    width: 100%;
+    min-height: 132px;
+    padding: 0.8rem 0.95rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--color-text);
+    font-size: 0.95rem;
+    resize: vertical;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+.form-textarea:focus {
+    outline: none;
+    border-color: var(--color-sky);
+    box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.12);
+}
+
+.form-check {
+    width: 1rem;
+    height: 1rem;
+    border: 1px solid var(--color-border-strong);
+    border-radius: 0.35rem;
+    accent-color: var(--color-primary);
+}
+
+.form-error-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    color: var(--color-danger);
+    font-size: 0.84rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.form-actions__group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.form-actions__group--end {
+    justify-content: flex-end;
+}

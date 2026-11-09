@@ -1,0 +1,222 @@
+/* Calidad / Servicio al cliente — capa 114
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   También nombra clases de: Gestión Humana / Dashboard de área, gh-cursos, Gestión Humana / Ficha empleados.
+*/
+
+/* FO-GI-22: textos largos a todo el ancho y seguimiento del caso. */
+.servicio-cliente-page__full {
+    grid-column: 1 / -1;
+}
+
+.servicio-cliente-page__hint {
+    margin: 0.25rem 0 0;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+/* El buscador de DataTables no debe montarse sobre la línea del listado. */
+.servicio-cliente-page .req-manage-dt-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.35rem 0 0.75rem;
+    margin-bottom: 0.35rem;
+    background: #fff;
+}
+
+.servicio-cliente-page .req-manage-dt-top .dataTables_length,
+.servicio-cliente-page .req-manage-dt-top .dataTables_filter {
+    float: none !important;
+    margin: 0 !important;
+}
+
+.servicio-cliente-page__eficacia {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.85rem;
+}
+
+/* Dashboard Servicio al cliente: 6 KPI en fila y gráficos 3+2, como el informe de GH. */
+.servicio-cliente-dashboard-page.gh-area-dashboard-page .servicio-cliente-dashboard-page__kpi-grid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+
+.servicio-cliente-dashboard-page a.cursos-dashboard-page__kpi {
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.servicio-cliente-dashboard-page a.cursos-dashboard-page__kpi:hover {
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+}
+
+.servicio-cliente-dashboard-page a.cursos-dashboard-page__kpi:focus-visible {
+    outline: 2px solid #0369a1;
+    outline-offset: 2px;
+}
+
+.servicio-cliente-dashboard-page__charts-row--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+}
+
+.servicio-cliente-dashboard-page__charts-row--two .cursos-dashboard-page__chart {
+    min-height: 240px;
+    height: 260px;
+}
+
+.servicio-cliente-dashboard-page__recurrencia {
+    width: 100%;
+    margin-top: 0.65rem;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+
+.servicio-cliente-dashboard-page__recurrencia th,
+.servicio-cliente-dashboard-page__recurrencia td {
+    padding: 0.35rem 0.4rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.servicio-cliente-dashboard-page__recurrencia th:last-child,
+.servicio-cliente-dashboard-page__recurrencia td:last-child {
+    text-align: right;
+    width: 4.5rem;
+}
+
+@media (max-width: 959px) {
+    .servicio-cliente-dashboard-page.gh-area-dashboard-page .servicio-cliente-dashboard-page__kpi-grid,
+    .servicio-cliente-dashboard-page__charts-row--two {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 639px) {
+    .servicio-cliente-dashboard-page.gh-area-dashboard-page .servicio-cliente-dashboard-page__kpi-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .servicio-cliente-dashboard-page__charts-row--two {
+        grid-template-columns: 1fr;
+    }
+}
+
+.servicio-cliente-page__timeline {
+    list-style: none;
+    margin: 0 0 1rem;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.servicio-cliente-page__timeline p {
+    margin: 0.2rem 0 0;
+}
+
+.servicio-cliente-page__obs {
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    background: #fff;
+}
+
+.servicio-cliente-page__obs-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.servicio-cliente-page__obs-meta {
+    margin: 0;
+}
+
+.servicio-cliente-page__stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.servicio-cliente-page__inline {
+    display: inline-flex;
+}
+
+.servicio-cliente-page__upload-line {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.servicio-cliente-page__upload-line .cursos-registros-page__file-name {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.servicio-cliente-page__upload-line .btn {
+    flex: 0 0 auto;
+}
+
+@media (max-width: 768px) {
+    .servicio-cliente-page__upload-line {
+        flex-wrap: wrap;
+    }
+}
+
+/* Alta y edición FO-GI-22: solo el formulario queda en 1440px. Las pestañas conservan el ancho del tablero. */
+.servicio-cliente-form-page > .app-container {
+    width: calc(100% - 1.5rem);
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 768px) {
+    .servicio-cliente-form-page > .app-container {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+}
+
+/* Catálogo abierto: mismo ancho centrado que la bandeja de Compras.
+   En portátil ocupa el contenido; en pantallas mayores se sostiene en 1440px. */
+.servicio-cliente-catalogs-page .ficha-empleados-catalogs-page__manage {
+    width: min(1440px, 100%);
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.servicio-cliente-catalogs-page .ficha-empleados-catalogs-page__manage .panel,
+.servicio-cliente-catalogs-page .data-table-wrap,
+.servicio-cliente-catalogs-page .dataTables_wrapper,
+.servicio-cliente-catalogs-page table.dataTable {
+    width: 100% !important;
+    max-width: none;
+}
+
+@media (max-width: 768px) {
+    .servicio-cliente-catalogs-page .ficha-empleados-catalogs-page__manage {
+        width: 100%;
+        max-width: none;
+    }
+}
+
+.servicio-cliente-catalogs-page table.dataTable {
+    table-layout: fixed;
+}
+
+.servicio-cliente-catalogs-page__col-id {
+    width: 4.5rem;
+}
+
+.servicio-cliente-catalogs-page__col-name {
+    width: auto;
+}

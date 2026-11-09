@@ -1,0 +1,14 @@
+/* Gestión Humana / Ficha empleados — capa 049
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.status-pill--ficha-activo {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill--ficha-desvinculado {
+    background: #ffe4e6;
+    color: #be123c;
+}

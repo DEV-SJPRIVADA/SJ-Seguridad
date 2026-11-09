@@ -1,0 +1,320 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 042
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.req-manage-filters__panel {
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: 0.45rem 0.85rem;
+    box-shadow: var(--shadow-soft);
+}
+
+.req-manage-filters__panel-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.35rem;
+    width: 100%;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--brand-blue);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.req-manage-filters__panel-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.req-manage-filters__panel-toggle::before {
+    content: '\25B8';
+    margin-right: 0.35rem;
+    font-size: 0.65rem;
+    transition: transform 0.15s ease;
+}
+
+.req-manage-filters__panel[open] .req-manage-filters__panel-toggle::before {
+    transform: rotate(90deg);
+}
+
+.req-manage-filters__panel-badge {
+    display: inline-flex;
+    align-items: center;
+    margin-left: auto;
+    padding: 0.15rem 0.5rem;
+    border-radius: 999px;
+    background: var(--brand-blue-soft);
+    color: var(--brand-blue);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.req-manage-filters__panel-body {
+    margin-top: 0.65rem;
+    padding-top: 0.65rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.req-manage-filters__panel .req-manage-filters__head {
+    margin-bottom: 0.5rem;
+}
+
+.req-manage-filters__panel .req-manage-filters__actions {
+    justify-content: flex-end;
+    width: 100%;
+}
+
+.req-manage-page .req-manage-filters__panel.req-manage-filters {
+    margin-bottom: 0;
+}
+
+.req-manage-page .req-manage-filters__toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    align-items: stretch;
+}
+
+.req-manage-filters__query-panel {
+    margin-top: 0.35rem;
+}
+
+.req-manage-filters__query-toggle,
+.req-manage-filters__dates-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--brand-blue);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.req-manage-filters__query-toggle::-webkit-details-marker,
+.req-manage-filters__dates-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.req-manage-filters__query-toggle::before,
+.req-manage-filters__dates-toggle::before {
+    content: '\25B8';
+    font-size: 0.65rem;
+    transition: transform 0.15s ease;
+}
+
+.req-manage-filters__query-panel[open] .req-manage-filters__query-toggle::before,
+.req-manage-filters__dates[open] .req-manage-filters__dates-toggle::before {
+    transform: rotate(90deg);
+}
+
+.req-manage-filters__query-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: flex-end;
+    margin-top: 0.5rem;
+}
+
+.req-manage-filters__query-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+}
+
+.req-manage-filters__query-field--search {
+    flex: 0 1 22rem;
+    max-width: 50%;
+}
+
+.req-manage-filters__query-field--date {
+    flex: 0 1 9.5rem;
+}
+
+.req-manage-filters__query-field--recruiter {
+    flex: 0 1 19rem;
+    width: 19rem;
+    max-width: 100%;
+}
+
+.req-manage-filters__query-field--select {
+    flex: 1 1 12rem;
+    min-width: 10rem;
+    max-width: 18rem;
+}
+
+.req-manage-filters__query-row--manage .req-manage-filters__query-field--search {
+    flex: 1 1 14rem;
+    max-width: 18rem;
+}
+
+.req-manage-filters__query-row--manage .req-manage-filters__query-export {
+    margin-left: 0;
+}
+
+.req-manage-filters__query-submit {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+}
+
+.req-manage-filters__query-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+}
+
+.req-manage-filters__query-export {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+    margin-left: auto;
+}
+
+.req-manage-filters__export-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.req-manage-filters__query-actions-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.req-manage-filters__icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--control-height-chrome);
+    height: var(--control-height-chrome);
+    min-width: var(--control-height-chrome);
+    min-height: var(--control-height-chrome);
+    padding: 0;
+    flex-shrink: 0;
+    border-radius: 10px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.req-manage-filters__icon-btn svg {
+    width: 1.125rem;
+    height: 1.125rem;
+}
+
+.req-manage-filters__icon-btn--primary {
+    border: 1px solid var(--brand-blue);
+    background: var(--brand-blue);
+    color: #fff;
+}
+
+.req-manage-filters__icon-btn--primary:hover {
+    background: #002244;
+    border-color: #002244;
+    color: #fff;
+}
+
+.req-manage-filters__icon-btn--ghost {
+    border: 1px solid var(--color-border);
+    background: #fff;
+    color: var(--brand-blue);
+}
+
+.req-manage-filters__icon-btn--ghost:hover {
+    background: rgba(0, 51, 102, 0.08);
+    color: #002244;
+}
+
+.req-manage-filters__icon-btn--danger {
+    border: 1px solid rgba(185, 28, 28, 0.25);
+    background: #fff;
+    color: #b91c1c;
+}
+
+.req-manage-filters__icon-btn--danger:hover {
+    background: rgba(185, 28, 28, 0.08);
+    color: #991b1b;
+}
+
+.req-manage-filters__icon-btn:disabled,
+.req-manage-filters__icon-btn[disabled] {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.req-manage-filters__query-submit .btn {
+    min-height: var(--control-height-chrome);
+    padding: 0.35rem 0.85rem;
+    font-size: var(--control-font-size);
+    line-height: var(--control-line-height);
+    border-radius: 10px;
+}
+
+.req-manage-filters__label--spacer {
+    visibility: hidden;
+    height: 0;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.req-manage-filters__status-row {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.req-manage-page .req-manage-filters__status-row .req-manage-filters__status-label {
+    margin: 0;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}
+
+.req-manage-page .req-manage-filters__status-row .req-manage-filters__pills--scroll {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.req-manage-filters__row--dates {
+    margin-top: 0.5rem;
+}
+
+.req-manage-filters__pills--scroll {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 0.1rem;
+    scrollbar-width: thin;
+    justify-content: flex-start;
+}
+
+.req-manage-filters__pills--scroll .req-manage-filters__pill {
+    flex: 0 0 auto;
+}
+
+.req-manage-filters__meta--compact {
+    margin-top: 0.35rem;
+    font-size: 0.76rem;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

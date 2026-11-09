@@ -10,8 +10,29 @@ Centralizar la identidad visual base de `SJ StatFlow` (marca corporativa SJ Segu
 - Uso en layout de invitados: [`resources/views/layouts/guest.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/layouts/guest.blade.php)
 - Uso en navegacion autenticada: [`resources/views/layouts/navigation.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/layouts/navigation.blade.php)
 - Pie de sidebar (desktop): [`resources/views/components/app-sidebar-footer.blade.php`](c:/laragon/www/SJSEGURIDAD/resources/views/components/app-sidebar-footer.blade.php) — nombre, rol, area asignada, cerrar sesion y logo compacto
-- Tokens globales de color: [`resources/css/app.css`](c:/laragon/www/SJSEGURIDAD/resources/css/app.css)
+- Tokens globales de color: [`resources/css/base/001-base.css`](c:/laragon/www/SJSEGURIDAD/resources/css/base/001-base.css) (`:root`)
+- Entrada de estilos: [`resources/css/app.css`](c:/laragon/www/SJSEGURIDAD/resources/css/app.css) (solo `@import`, en orden de cascada)
 - Tipografía corporativa: **Neue Haas Grotesk Display** (`resources/fonts/nhg-display/`) — Roman 400, Italic 400, Bold 700; token `--font-sans`
+
+## Organización del CSS
+
+Un archivo por área o tablero. `app.css` no contiene reglas: importa las capas en el orden en que se pintan.
+
+| Carpeta | Contenido |
+| --- | --- |
+| `resources/css/base/` | Chrome de toda la app: tokens, layout, pills, botones, formularios, tablas, shell de listados |
+| `resources/css/areas/gestion-humana/` | Tableros de Gestión Humana (Ficha, Cursos, Acreditaciones, etc.) |
+| `resources/css/areas/comercial/` | Comercial |
+| `resources/css/areas/compras/` | Compras y suministros |
+| `resources/css/areas/calidad/` | Documentos de calidad y Servicio al cliente |
+| `resources/css/areas/operaciones/` | Operaciones |
+| `resources/css/areas/tic/` | TIC |
+| `resources/css/areas/admin/` | Administración |
+| `resources/css/modules/requisiciones/` | Requisiciones |
+
+El número al inicio del archivo (`098-gh-dashboard.css`) es su puesto en la cascada. El mismo tablero puede tener varias capas porque, en el CSS histórico, otro bloque quedó en medio. La capa de número mayor pisa a la anterior. No se fusionan ni se reordenan: Gestión Humana en productivo depende de ese orden.
+
+Estilo nuevo de un tablero: archivo nuevo en su carpeta e `@import` al final de `app.css`. Ajuste de una clase que ya existe: editar la capa que ya la tiene. Regla: [`.cursor/rules/css-cascade.mdc`](../../.cursor/rules/css-cascade.mdc).
 
 ## Paleta corporativa base
 
@@ -28,7 +49,7 @@ Extraida visualmente de la imagen corporativa compartida por el usuario y tomada
 
 ## Regla obligatoria de uso
 
-- Toda nueva vista, componente o modulo debe usar primero los tokens `--brand-*` o sus alias `--color-*` definidos en `resources/css/app.css`.
+- Toda nueva vista, componente o modulo debe usar primero los tokens `--brand-*` o sus alias `--color-*` definidos en `resources/css/base/001-base.css`.
 - No introducir hexadecimales nuevos en vistas o componentes si el mismo resultado puede lograrse con la paleta corporativa.
 - Si una nueva pantalla necesita una variacion adicional, primero debe incorporarse como token reutilizable y documentarse en este archivo.
 - La tabla de permisos, navegacion, botones principales y elementos de marca deben priorizar `--brand-navy` y `--brand-blue` como colores base.
@@ -42,7 +63,7 @@ Extraida visualmente de la imagen corporativa compartida por el usuario y tomada
 | `NHG_DSPRO-75-Bold.ttf` | 700 normal |
 
 - Familia CSS: `"Neue Haas Grotesk Display"`
-- Token: `--font-sans` en `resources/css/app.css`
+- Token: `--font-sans` en `resources/css/base/001-base.css`
 - Tailwind: `theme.extend.fontFamily.sans`
 - No cargar Figtree por CDN; las fuentes se empaquetan con Vite
 
@@ -62,7 +83,7 @@ Los tres niveles de navegacion autenticada usan **el mismo look de pill**:
 | Tableros del area | `.module-tab` | `.module-strip__inner` |
 | Pestanas del modulo | `.module-tab` | `.module-subnav__inner` / `.requisition-subtabs__inner` |
 
-- Estilos compartidos en `resources/css/app.css` (selectores `.sidebar-link, .module-tab`).
+- Estilos compartidos en `resources/css/base/001-base.css` (selectores `.sidebar-link, .module-tab`).
 - Padding entre botones y contenedor de franja: **`0.2rem`**.
 - **Sidebar Procesos (desktop):** scroll de áreas oculto (sin barra visible); botón pill con chevrones (`chevrons-left` / `chevrons-right`) para **colapsar/mostrar** la barra (preferencia en `localStorage` `sj.sidebarCollapsed`). En ≤1024px sigue el select móvil (sin colapso).
 - **Tableros del area:** una sola fila (`.module-tabs--scroll`) con scroll horizontal oculto (sin barra visible); flechas laterales (`.module-tabs-scroller`) en desktop y móvil cuando hay overflow; swipe nativo en el track (sin capturar pointer, para no romper clics). Sin wrap a segunda fila.
@@ -163,3 +184,4 @@ Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero e
 - Si en el futuro se agrega un archivo raster o vector oficial, este documento debe actualizarse para indicar su ubicacion y formato fuente.
 - Inventar clases de icon-btn por modulo rompe el estandar; migrar a las clases canónicas.
 - Entregar UI genérica en el primer slice obliga a rediseños posteriores; la regla `module-ui-quality` evita ese ciclo.
+- Reordenar un `@import` de `resources/css/app.css`, o meter el CSS de un tablero en el archivo de otro, cambia lo que se pinta en Gestión Humana aunque el selector sea el mismo.

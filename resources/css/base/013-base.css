@@ -1,0 +1,204 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 013
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.import-failure-result {
+    margin-bottom: 1rem;
+}
+
+.import-failure-result__errors {
+    margin: 0;
+    padding-left: 1.2rem;
+    max-height: 16rem;
+    overflow: auto;
+    line-height: 1.45;
+    color: #334155;
+}
+
+.import-failure-result__errors li + li {
+    margin-top: 0.35rem;
+}
+
+.import-failure-result__actions {
+    margin-top: 1rem;
+}
+
+/* Resultado carga masiva (modal compartido) */
+.import-result-modal--success .import-result-modal__heading-icon {
+    background: color-mix(in srgb, #16a34a 14%, white);
+    color: #15803d;
+}
+
+.import-result-modal--warning .import-result-modal__heading-icon {
+    background: color-mix(in srgb, #d97706 14%, white);
+    color: #b45309;
+}
+
+.import-result-modal__body {
+    display: grid;
+    gap: 1rem;
+    padding: 0 1.25rem 0.25rem;
+}
+
+.import-result-modal__stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    gap: 0.65rem;
+}
+
+.import-result-modal__stat {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.65rem;
+    background: #f8fafc;
+    padding: 0.7rem 0.75rem;
+    text-align: center;
+}
+
+.import-result-modal__stat--danger {
+    border-color: color-mix(in srgb, #dc2626 28%, #e2e8f0);
+    background: color-mix(in srgb, #dc2626 6%, white);
+}
+
+.import-result-modal__stat-value {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #0f172a;
+}
+
+.import-result-modal__stat--danger .import-result-modal__stat-value {
+    color: #b91c1c;
+}
+
+.import-result-modal__stat--muted {
+    border-color: #e2e8f0;
+    background: #f1f5f9;
+}
+
+.import-result-modal__stat--muted .import-result-modal__stat-value {
+    color: #475569;
+}
+
+.import-result-modal__stat-label {
+    display: block;
+    margin-top: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.import-result-modal__errors {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: #fff;
+}
+
+.import-result-modal__errors-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.35rem 0.75rem;
+    padding: 0.7rem 0.85rem;
+    border-bottom: 1px solid #e2e8f0;
+    background: #f8fafc;
+}
+
+.import-result-modal__errors-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 650;
+    color: #0f172a;
+}
+
+.import-result-modal__errors-meta {
+    margin: 0;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.import-result-modal__table-wrap {
+    max-height: 16rem;
+    overflow: auto;
+}
+
+.import-result-modal__table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.import-result-modal__table th,
+.import-result-modal__table td {
+    padding: 0.55rem 0.75rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.import-result-modal__table th {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #64748b;
+    z-index: 1;
+}
+
+.import-result-modal__table td:first-child {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: #475569;
+    width: 4.5rem;
+}
+
+.import-result-modal__table td:nth-child(2) {
+    white-space: nowrap;
+    max-width: 9rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #334155;
+}
+
+.import-result-modal__table td:last-child {
+    color: #0f172a;
+    line-height: 1.4;
+}
+
+.import-result-modal__ok {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.85rem 1rem;
+    border-radius: 0.75rem;
+    border: 1px solid color-mix(in srgb, #16a34a 22%, #e2e8f0);
+    background: color-mix(in srgb, #16a34a 7%, white);
+    color: #166534;
+    font-size: 0.9rem;
+}
+
+.import-result-modal__ok p {
+    margin: 0;
+}
+
+.import-result-modal__footer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding: 1rem 1.25rem 1.25rem;
+}
+
+.import-result-modal__footer .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}

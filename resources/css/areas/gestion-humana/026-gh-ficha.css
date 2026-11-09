@@ -1,0 +1,133 @@
+/* Gestión Humana / Ficha empleados — capa 026
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.ficha-empleados-catalogs-page__back {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-bottom: 1rem;
+    border: none;
+    background: transparent;
+    color: var(--color-sky);
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+}
+
+.ficha-empleados-catalogs-page__manage-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    margin-bottom: 1rem;
+}
+
+.ficha-empleados-catalogs-page__manage-toolbar .ficha-empleados-catalogs-page__back {
+    margin-bottom: 0;
+}
+
+.ficha-empleados-catalogs-page__switch {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.2rem;
+}
+
+.ficha-empleados-catalogs-page__switch-count {
+    margin-left: 0.35rem;
+    font-size: 0.72rem;
+    opacity: 0.75;
+}
+
+.ficha-empleados-catalogs-page__back:hover {
+    text-decoration: underline;
+}
+
+.ficha-empleados-catalogs-page__create-form {
+    background: var(--color-bg);
+    padding: 1rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 1.25rem;
+}
+
+.ficha-empleados-catalogs-page__create-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    align-items: flex-end;
+}
+
+.ficha-empleados-catalogs-page__name-field {
+    flex: 1 1 14rem;
+    min-width: 0;
+}
+
+.ficha-empleados-catalogs-page__sort-field {
+    width: 6rem;
+    flex-shrink: 0;
+}
+
+.ficha-empleados-catalogs-page__create-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    min-height: var(--control-height-chrome);
+}
+
+.ficha-empleados-catalogs-page__active-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.ficha-empleados-catalogs-page__delete-form {
+    display: inline;
+}
+
+.ficha-empleados-catalogs-page__modal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.ficha-empleados-catalogs-page__modal[hidden] {
+    display: none;
+}
+
+.ficha-empleados-catalogs-page__modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.48);
+    backdrop-filter: blur(2px);
+}
+
+/* Modal edición catálogo: cabecera con icono, cuerpo en rejilla y pie de acciones */
+.ficha-empleados-catalogs-page__modal-card {
+    position: relative;
+    z-index: 1;
+    width: min(32rem, 100%);
+    max-height: min(90vh, 40rem);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 16px;
+    background: #fff;
+    box-shadow:
+        0 24px 48px rgba(15, 23, 42, 0.18),
+        0 2px 8px rgba(15, 23, 42, 0.08);
+    animation: ficha-catalog-modal-in 0.18s ease-out;
+}

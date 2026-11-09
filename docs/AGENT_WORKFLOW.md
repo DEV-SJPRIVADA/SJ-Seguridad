@@ -181,7 +181,7 @@ Solo **un** agente por tarea puede tocar estos archivos (marcar en `TASKS.md` co
 - `config/access.php`
 - `routes/web.php` (solo linea `require` de rutas nuevas)
 - `resources/views/layouts/`
-- `resources/css/app.css`
+- `resources/css/app.css` (solo la lista de `@import`; la capa de un tablero en `resources/css/areas/` no es compartida)
 - `database/seeders/` (globales)
 - `docs/INDEX.md`, `README.md`
 

@@ -1,0 +1,184 @@
+/* Gestión Humana / MT-ST-04 — capa 110
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   También nombra clases de: gh-cursos.
+*/
+
+/* MT-ST-04: grupos visuales psicofísico vs psicosensométrico (matriz + modales) */
+/* Matriz: filtros en una sola fila en pantallas grandes; Arma/Apto compactos */
+.mt-st-04-matriz-page .cursos-registros-page__filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 0.55rem;
+    align-items: end;
+}
+
+.mt-st-04-matriz-page .cursos-registros-page__filters > .form-field:not(.cursos-registros-page__filter-actions) {
+    flex: 1 1 7.5rem;
+    min-width: 0;
+    max-width: 12rem;
+}
+
+.mt-st-04-matriz-page .cursos-registros-page__filters > .mt-st-04-filters__field--compact {
+    flex: 0 0 5.25rem;
+    max-width: 5.75rem;
+    min-width: 5rem;
+}
+
+.mt-st-04-matriz-page .cursos-registros-page__filter-actions {
+    flex: 0 0 auto;
+    margin-left: 0;
+}
+
+@media (min-width: 1280px) {
+    .mt-st-04-matriz-page .cursos-registros-page__filters {
+        flex-wrap: nowrap;
+    }
+
+    .mt-st-04-matriz-page .cursos-registros-page__filters > .form-field:not(.cursos-registros-page__filter-actions):not(.mt-st-04-filters__field--compact) {
+        flex: 1 1 0;
+        max-width: none;
+    }
+}
+
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-group--psico,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-group--psico,
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-sub--psico,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-sub--psico {
+    background-color: #0b4f7a !important;
+    border-bottom-color: #083a5a !important;
+}
+
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-group--senso,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-group--senso,
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-sub--senso,
+.mt-st-04-matriz-page .data-table thead th.mt-st-04-th-sub--senso {
+    background-color: #1e5f4a !important;
+    border-bottom-color: #164536 !important;
+}
+
+.mt-st-04-matriz-page table.dataTable thead th.mt-st-04-th-group {
+    letter-spacing: 0.04em;
+    font-weight: 800;
+}
+
+/*
+ * Thead de 2 filas + sticky: la fila de grupos queda en top:0;
+ * la de subcolumnas se ancla debajo (var medida en JS) para no tapar
+ * «Psicofísico / Psicosensométrico» al hacer scroll vertical.
+ */
+.mt-st-04-matriz-page .req-manage-table-scroll table.dataTable thead tr:first-child th {
+    top: 0 !important;
+    z-index: 14 !important;
+}
+
+.mt-st-04-matriz-page .req-manage-table-scroll table.dataTable thead tr:nth-child(2) th {
+    top: var(--mt-st-04-sticky-sub-top, 2.75rem) !important;
+    z-index: 13 !important;
+    box-shadow: 0 2px 0 #002244;
+}
+
+.mt-st-04-matriz-page .req-manage-table-scroll table.dataTable thead tr:first-child th.mt-st-04-th-group {
+    box-shadow: none;
+}
+
+.mt-st-04-matriz-page .mt-st-04-td--psico {
+    background-color: color-mix(in srgb, #0b4f7a 6%, #fff);
+}
+
+.mt-st-04-matriz-page .mt-st-04-td--senso {
+    background-color: color-mix(in srgb, #1e5f4a 7%, #fff);
+}
+
+.mt-st-04-matriz-page .data-table tbody tr:hover .mt-st-04-td--psico {
+    background-color: color-mix(in srgb, #0b4f7a 11%, #fff);
+}
+
+.mt-st-04-matriz-page .data-table tbody tr:hover .mt-st-04-td--senso {
+    background-color: color-mix(in srgb, #1e5f4a 12%, #fff);
+}
+
+.mt-st-04-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.mt-st-04-form-section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: var(--radius-lg, 0.75rem);
+    background: linear-gradient(180deg, #fbfdff 0%, #fff 100%);
+}
+
+.mt-st-04-form-section--psico {
+    border-color: color-mix(in srgb, #0b4f7a 28%, var(--color-border, #dbe3ef));
+    background: linear-gradient(180deg, #f3f9fd 0%, #fff 78%);
+    box-shadow: inset 3px 0 0 #0b4f7a;
+}
+
+.mt-st-04-form-section--senso {
+    border-color: color-mix(in srgb, #1e5f4a 28%, var(--color-border, #dbe3ef));
+    background: linear-gradient(180deg, #f3faf7 0%, #fff 78%);
+    box-shadow: inset 3px 0 0 #1e5f4a;
+}
+
+.mt-st-04-form-section__head {
+    margin: 0;
+}
+
+.mt-st-04-form-section__title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--brand-navy, #003366);
+}
+
+.mt-st-04-form-section--psico .mt-st-04-form-section__title {
+    color: #0b4f7a;
+}
+
+.mt-st-04-form-section--senso .mt-st-04-form-section__title {
+    color: #1e5f4a;
+}
+
+.mt-st-04-form-section__desc {
+    margin: 0.2rem 0 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.mt-st-04-lookup-hint {
+    margin-top: 0.25rem;
+    font-size: 0.8rem;
+    color: #b45309;
+}
+
+.mt-st-04-cedula--sin-ficha {
+    font-weight: 700;
+    color: #b45309;
+}
+
+/* Dashboard MT-ST-04: panel de subpestaña + charts */
+.mt-st-04-dash-pane {
+    gap: 0.75rem;
+}
+
+.mt-st-04-dash-pane__hint {
+    margin: 0;
+}
+
+.mt-st-04-dash-charts {
+    margin-top: 0;
+}
+
+.mt-st-04-dash-chart--cargo {
+    min-height: 14rem;
+}
+
+.mt-st-04-dash-chart-span {
+    grid-column: 1 / -1;
+}

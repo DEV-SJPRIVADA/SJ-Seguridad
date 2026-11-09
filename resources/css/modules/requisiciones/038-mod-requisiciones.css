@@ -1,0 +1,34 @@
+/* Requisiciones — capa 038
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.req-manage-filters__pill.is-active.status-pill--req-solicitada,
+.req-manage-filters__pill.status-pill--req-solicitada.is-active {
+    background: #64748b;
+    border-color: #64748b;
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-aprobada,
+.req-manage-filters__pill.status-pill--req-aprobada.is-active {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-en_gestion,
+.req-manage-filters__pill.status-pill--req-en_gestion.is-active {
+    background: #0284c7;
+    border-color: #0284c7;
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-contratado,
+.req-manage-filters__pill.status-pill--req-contratado.is-active {
+    background: #166534;
+    border-color: #166534;
+}
+
+.req-manage-filters__pill.is-active.status-pill--req-cancelada,
+.req-manage-filters__pill.status-pill--req-cancelada.is-active {
+    background: #b91c1c;
+    border-color: #b91c1c;
+}

@@ -1,0 +1,624 @@
+/* Gestión Humana / Plantillas Word — capa 019
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.plantillas-word-file-picker {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.plantillas-word-file-picker__input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+.plantillas-word-file-picker__zone {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.65rem;
+    min-height: 2.75rem;
+    padding: 0.45rem 0.75rem;
+    border: 1.5px dashed var(--brand-blue-soft);
+    border-radius: 12px;
+    background: var(--brand-blue-pale);
+    cursor: pointer;
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.plantillas-word-file-picker__zone:hover,
+.plantillas-word-file-picker:focus-within .plantillas-word-file-picker__zone {
+    border-color: var(--brand-blue);
+    background: #e8f4fc;
+    box-shadow: 0 0 0 3px rgba(14, 74, 110, 0.08);
+}
+
+.plantillas-word-file-picker--dragover .plantillas-word-file-picker__zone {
+    border-color: var(--brand-blue);
+    border-style: solid;
+    background: #dff0fb;
+    box-shadow: 0 0 0 3px rgba(14, 74, 110, 0.14);
+}
+
+.plantillas-word-file-picker__icon {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.85rem;
+    height: 1.85rem;
+    border-radius: 999px;
+    background: var(--brand-white);
+    color: var(--brand-blue);
+    border: 1px solid var(--brand-blue-soft);
+}
+
+.plantillas-word-file-picker__copy {
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+    min-width: 0;
+}
+
+.plantillas-word-file-picker__title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-file-picker__hint {
+    font-size: 0.72rem;
+    color: #64748b;
+}
+
+.plantillas-word-file-picker__name {
+    font-size: 0.85rem;
+    color: var(--color-text-soft, #64748b);
+    max-width: 16rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__zone {
+    border-style: solid;
+    border-color: var(--brand-blue);
+    background: #e8f4fc;
+}
+
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__icon {
+    background: var(--brand-blue);
+    border-color: var(--brand-blue);
+    color: #fff;
+}
+
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__title {
+    color: var(--brand-blue);
+}
+
+.plantillas-word-file-picker--has-file .plantillas-word-file-picker__name {
+    color: var(--brand-navy);
+    font-weight: 600;
+}
+
+.plantillas-word-file-picker--compact .plantillas-word-file-picker__name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Plantillas Word â pagina */
+.plantillas-word-page__board-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+/* Contenedor = tarjeta visual; acciones abajo centradas (no fuera del grid) */
+.plantillas-word-page__card-wrap.plantillas-word-page__card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: default;
+}
+
+.plantillas-word-page__card-wrap--inactive {
+    opacity: 0.72;
+}
+
+.plantillas-word-page__card-link {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    flex: 1 1 auto;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+    text-align: center;
+}
+
+.plantillas-word-page__card-status {
+    margin-top: 0.15rem;
+}
+
+.plantillas-word-page__card-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.35rem;
+    width: 100%;
+    margin-top: auto;
+    padding-top: 0.15rem;
+}
+
+.plantillas-word-page__empty-board {
+    grid-column: 1 / -1;
+}
+
+.plantillas-word-page__detail-toolbar {
+    margin-bottom: 0.75rem;
+}
+
+.plantillas-word-page__detail-title-block {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-wrap: wrap;
+}
+
+.plantillas-word-page {
+    padding-top: 0.35rem;
+    padding-bottom: 0.75rem;
+}
+
+.plantillas-word-page > .app-container {
+    width: min(1120px, calc(100% - 1.5rem));
+    max-width: min(1120px, calc(100% - 1.5rem));
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+}
+
+.plantillas-word-page__panel {
+    margin: 0;
+}
+
+.plantillas-word-page__header-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+}
+
+.plantillas-word-page__error-list {
+    margin: 0;
+    padding-left: 1.1rem;
+}
+
+.plantillas-word-page__code {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-page__name {
+    font-weight: 600;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-page__col-sort {
+    width: 80px;
+}
+
+.plantillas-word-page__col-status {
+    width: 100px;
+}
+
+.plantillas-word-page__col-count {
+    width: 90px;
+}
+
+.plantillas-word-page__col-file {
+    width: 110px;
+}
+
+.plantillas-word-page__col-actions {
+    width: 120px;
+}
+
+.plantillas-word-page__col-actions-wide {
+    width: 1%;
+    min-width: 9.5rem;
+    white-space: nowrap;
+}
+
+.plantillas-word-page .table-actions {
+    width: 1%;
+    white-space: nowrap;
+    vertical-align: middle;
+}
+
+.plantillas-word-page__row-actions {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+    width: max-content;
+    max-width: 100%;
+}
+
+.plantillas-word-page__row-actions--templates {
+    flex-wrap: nowrap;
+}
+
+.plantillas-word-page__replace-form,
+.plantillas-word-page__icon-form {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+    width: auto;
+    margin: 0;
+    vertical-align: middle;
+}
+
+.plantillas-word-file-picker--compact {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    width: auto;
+    gap: 0.35rem;
+    position: relative;
+}
+
+.plantillas-word-page__filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 0.65rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, #fbfdff 0%, var(--brand-white) 100%);
+}
+
+.plantillas-word-page__filters-field {
+    min-width: 0;
+}
+
+.plantillas-word-page__filters-field--search {
+    flex: 0 1 18rem;
+    max-width: 18rem;
+}
+
+.plantillas-word-page__filters-field--search .form-input {
+    width: 100%;
+    min-height: var(--control-height-chrome, 2.1rem);
+}
+
+.plantillas-word-page__filters-field--type {
+    flex: 0 1 14rem;
+    min-width: 11rem;
+    max-width: 16rem;
+}
+
+.plantillas-word-page__filters-field--file {
+    flex: 0 1 11rem;
+    min-width: 9rem;
+    max-width: 12rem;
+}
+
+.plantillas-word-page__filters-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: auto;
+}
+
+.plantillas-word-page__filters-meta {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .plantillas-word-page__filters-field--search,
+    .plantillas-word-page__filters-field--type,
+    .plantillas-word-page__filters-field--file {
+        flex: 1 1 100%;
+        max-width: none;
+    }
+
+    .plantillas-word-page__filters-actions {
+        margin-left: 0;
+    }
+}
+
+.plantillas-word-form__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(180deg, #fbfdff 0%, var(--brand-white) 100%);
+    box-shadow: var(--shadow-soft);
+}
+
+.plantillas-word-form__section-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+}
+
+.plantillas-word-form__section-step {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    background: var(--brand-navy);
+    color: var(--brand-white);
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.plantillas-word-form__section-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--brand-navy);
+}
+
+.plantillas-word-form__section-desc {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+.plantillas-word-form__create-row,
+.plantillas-word-form__create-grid {
+    display: flex;
+    align-items: end;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.plantillas-word-form__create-grid .form-field,
+.plantillas-word-form__create-row .form-field {
+    min-width: 9rem;
+}
+
+.plantillas-word-form__field--grow {
+    flex: 1 1 14rem;
+    min-width: 12rem;
+}
+
+.plantillas-word-form__field--sort {
+    flex: 0 0 6rem;
+    max-width: 6.5rem;
+}
+
+.plantillas-word-form__field--file {
+    flex: 1 1 16rem;
+    min-width: 14rem;
+}
+
+.plantillas-word-form__create-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.1rem;
+}
+
+.plantillas-word-form__check {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.84rem;
+    color: var(--brand-navy);
+}
+
+@media (max-width: 768px) {
+    .plantillas-word-page > .app-container {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+
+    .plantillas-word-form__create-row,
+    .plantillas-word-form__create-grid {
+        align-items: stretch;
+    }
+
+    .plantillas-word-form__field--sort {
+        max-width: none;
+        flex: 1 1 6rem;
+    }
+}
+
+/* Modal Editar plantilla (Plantillas Word) */
+.plantillas-word-edit-modal-shell .plantillas-word-edit-modal {
+    position: relative;
+    z-index: 1;
+    width: min(34rem, calc(100vw - 2rem));
+    max-height: min(88vh, 36rem);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-lg, 14px);
+    box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+}
+
+.plantillas-word-edit-modal__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    padding: 1.1rem 1.2rem 0.95rem;
+    border-bottom: 1px solid var(--color-border, #dbe3ef);
+    background: linear-gradient(180deg, #fff 0%, color-mix(in srgb, var(--brand-blue-pale, #e8f0fa) 35%, #fff) 100%);
+}
+
+.plantillas-word-edit-modal__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    min-width: 0;
+}
+
+.plantillas-word-edit-modal__heading-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 12px;
+    background: rgba(0, 51, 102, 0.1);
+    color: var(--brand-blue, #003366);
+}
+
+.plantillas-word-edit-modal__heading-copy {
+    min-width: 0;
+}
+
+.plantillas-word-edit-modal__title {
+    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 700;
+    color: var(--color-text, #0f172a);
+    line-height: 1.3;
+}
+
+.plantillas-word-edit-modal__lead {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-soft, #475569);
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.plantillas-word-edit-modal__close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--color-text-soft, #64748b);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.plantillas-word-edit-modal__close:hover {
+    color: var(--color-text);
+    border-color: var(--color-border-strong, #cbd5e1);
+    background: #f8fafc;
+}
+
+.plantillas-word-edit-modal__form {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    flex: 1 1 auto;
+}
+
+.plantillas-word-edit-modal__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 7.5rem;
+    gap: 0.85rem 0.75rem;
+    padding: 1.05rem 1.2rem 1.1rem;
+    overflow: auto;
+}
+
+.plantillas-word-edit-modal__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    min-width: 0;
+}
+
+.plantillas-word-edit-modal__field--full {
+    grid-column: 1 / -1;
+}
+
+.plantillas-word-edit-modal__field--type {
+    grid-column: 1;
+}
+
+.plantillas-word-edit-modal__field--sort {
+    grid-column: 2;
+}
+
+.plantillas-word-edit-modal__field .form-hint {
+    margin: 0;
+}
+
+.plantillas-word-edit-modal__actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+    padding: 0.85rem 1.2rem 1.05rem;
+    border-top: 1px solid var(--color-border, #dbe3ef);
+    background: color-mix(in srgb, var(--color-surface-muted, #f8fafc) 70%, #fff);
+}
+
+.plantillas-word-edit-modal__submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+@media (max-width: 640px) {
+    .plantillas-word-edit-modal__body {
+        grid-template-columns: 1fr;
+        padding: 0.95rem;
+    }
+
+    .plantillas-word-edit-modal__field--type,
+    .plantillas-word-edit-modal__field--sort {
+        grid-column: 1;
+    }
+
+    .plantillas-word-edit-modal__actions {
+        flex-wrap: wrap;
+    }
+
+    .plantillas-word-edit-modal__actions .btn {
+        flex: 1 1 auto;
+        justify-content: center;
+    }
+}

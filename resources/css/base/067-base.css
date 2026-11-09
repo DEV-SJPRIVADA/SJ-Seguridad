@@ -1,0 +1,43 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 067
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.dashboard-board-list__items {
+    display: flex;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-empty-state {
+    min-height: 24rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.dashboard-empty-state__grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-area-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.dashboard-aside {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.list-clean {
+    margin: 1rem 0 0;
+    padding-left: 1rem;
+    color: var(--color-text-soft);
+    font-size: 0.92rem;
+    line-height: 1.7;
+}

@@ -1,0 +1,8 @@
+/* Gestión Humana / Acreditaciones — capa 083
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: gh-cursos, Gestión Humana / Compartido entre tableros.
+*/
+
+.av-cola-filters > .form-field.cursos-registros-page__filter-actions .multi-cedula-filter {
+    flex: 0 0 auto;
+}

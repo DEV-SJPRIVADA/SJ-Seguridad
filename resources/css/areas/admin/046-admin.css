@@ -1,0 +1,10 @@
+/* Administración — capa 046
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.panel__pagination.pagination-wrap,
+.users-panel__pagination.pagination-wrap {
+    margin-top: 0;
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}

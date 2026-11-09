@@ -1,0 +1,17 @@
+/* Gestión Humana / Compartido entre tableros — capa 088
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Acreditaciones, gh-cursos.
+*/
+
+.multi-cedula-modal__textarea,
+.av-cola-filters .multi-cedula-modal__textarea,
+.cursos-registros-page__filters .multi-cedula-modal__textarea {
+    width: 100%;
+    height: auto;
+    min-height: 14rem;
+    resize: vertical;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    padding: 0.7rem 0.8rem;
+}

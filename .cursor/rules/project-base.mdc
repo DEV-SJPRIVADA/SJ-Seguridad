@@ -29,6 +29,7 @@ Al tocar Blade/CSS/JS o dashboards, aplican las reglas con `alwaysApply: false`:
 
 - [module-ui-quality.mdc](module-ui-quality.mdc) · [dashboard-ui.mdc](dashboard-ui.mdc)
 - [nav-chrome-ui.mdc](nav-chrome-ui.mdc) · [icon-buttons-ui.mdc](icon-buttons-ui.mdc)
+- [css-cascade.mdc](css-cascade.mdc) — un archivo por área/tablero; no reordenar `@import`
 - [datatables-server-side.mdc](datatables-server-side.mdc) · [`docs/modules/branding.md`](../../docs/modules/branding.md)
 
 ## Docs de feature completa

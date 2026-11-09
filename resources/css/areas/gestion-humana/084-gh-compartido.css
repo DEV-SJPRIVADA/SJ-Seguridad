@@ -1,0 +1,10 @@
+/* Gestión Humana / Compartido entre tableros — capa 084
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.multi-cedula-filter-slot {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+}

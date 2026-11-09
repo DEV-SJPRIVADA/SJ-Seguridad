@@ -1,0 +1,78 @@
+/* Gestión Humana / Plantillas Word — capa 017
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   También nombra clases de: Gestión Humana / Ficha empleados.
+*/
+
+/* Modal Variables (Plantillas Word): filtro + scroll */
+.plantillas-word-variables-modal {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+    max-height: min(88vh, 42rem);
+    overflow: hidden;
+}
+
+.plantillas-word-variables-modal .ficha-empleados-consult-modal__header {
+    padding: 1rem 1.15rem 0.85rem;
+    flex-shrink: 0;
+}
+
+.plantillas-word-variables-modal__filter {
+    flex-shrink: 0;
+    padding: 0 1.15rem 0.75rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+}
+
+.plantillas-word-variables-modal__filter-row {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.35rem 0.45rem 0.35rem 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--color-border, #dbe3ef) 90%, transparent);
+    border-radius: 0.7rem;
+    background: #fff;
+}
+
+.plantillas-word-variables-modal__filter-icon {
+    display: inline-flex;
+    color: var(--color-text-muted, #64748b);
+    flex-shrink: 0;
+}
+
+.plantillas-word-variables-modal__filter-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    border: 0 !important;
+    box-shadow: none !important;
+    background: transparent !important;
+    padding: 0.35rem 0.25rem !important;
+    font-size: 0.88rem;
+}
+
+.plantillas-word-variables-modal__filter-input:focus {
+    outline: none;
+}
+
+.plantillas-word-variables-modal__scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 0.85rem 1.15rem 1.1rem;
+}
+
+.plantillas-word-variables-modal__scroll .ficha-empleados-letter-templates__placeholder-groups {
+    margin-top: 0;
+}
+
+.plantillas-word-variables-modal__empty {
+    margin: 0;
+    padding: 1.25rem 0.85rem;
+    text-align: center;
+    color: var(--color-text-soft, #475569);
+    font-size: 0.88rem;
+    border: 1px dashed color-mix(in srgb, var(--color-border, #dbe3ef) 90%, transparent);
+    border-radius: 0.7rem;
+    background: color-mix(in srgb, var(--color-surface-muted, #f5f7fb) 70%, #fff);
+}

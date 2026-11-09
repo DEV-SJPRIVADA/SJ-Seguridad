@@ -1,0 +1,60 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 021
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* ==========================================================================
+   Alpine.js Searchable Select (Combobox)
+   ========================================================================== */
+.searchable-select-wrap {
+    position: relative;
+    width: 100%;
+    min-width: 0;
+}
+
+/* Proxy invisible que ocupa todo el control: el aviso nativo de "campo obligatorio"
+   se ancla al select visible en lugar de a un input de 0x0 (que bloqueaba el envío
+   sin mostrar ningún mensaje). */
+.searchable-select__required-proxy {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.searchable-select__trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    min-height: var(--control-height-chrome, 2rem);
+    padding: 0.25rem var(--control-padding-x, 0.65rem);
+    border: 1px solid var(--color-border-strong, #cbd5e1);
+    border-radius: var(--control-radius, 12px);
+    background-color: #ffffff;
+    color: var(--color-text, #0f172a);
+    font-size: var(--control-font-size, 0.8125rem);
+    line-height: var(--control-line-height, 1.35);
+    cursor: pointer;
+    user-select: none;
+    text-align: left;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.searchable-select__trigger:focus,
+.searchable-select__trigger--open {
+    outline: none;
+    border-color: var(--color-sky, #0e7490);
+    box-shadow: 0 0 0 4px rgba(14, 116, 144, 0.12);
+}
+
+.searchable-select__trigger--disabled {
+    opacity: 0.7;
+    background-color: var(--color-surface, #f8fafc);
+    cursor: not-allowed;
+}

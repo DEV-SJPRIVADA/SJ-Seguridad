@@ -1,0 +1,89 @@
+/* gh-cursos — capa 092
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.cursos-registros-page__export-icon {
+    color: inherit;
+}
+
+.cursos-registros-page__checkbox-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 2.25rem;
+}
+
+.cursos-registros-page__form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+    gap: 0.75rem 1rem;
+}
+
+.cursos-registros-page__form-span {
+    grid-column: 1 / -1;
+}
+
+.cursos-registros-page__form-actions {
+    margin-top: 1rem;
+}
+
+.cursos-registros-page__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.cursos-registros-page__row-actions {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.cursos-registros-page__document-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    min-width: 14rem;
+}
+
+.cursos-registros-page__document-links {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.cursos-registros-page__upload {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    margin: 0;
+    min-width: 0;
+}
+
+.cursos-registros-page__modal {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+}
+
+.cursos-registros-page__modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.cursos-registros-page__modal-panel {
+    position: relative;
+    z-index: 1;
+    width: min(48rem, 100%);
+    max-height: 90vh;
+    overflow: auto;
+}

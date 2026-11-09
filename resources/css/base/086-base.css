@@ -1,0 +1,10 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 086
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+@keyframes av-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

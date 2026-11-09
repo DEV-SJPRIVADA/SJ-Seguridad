@@ -1,0 +1,69 @@
+/* Gestión Humana / Desvinculaciones — capa 074
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* FEAT-031 ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Desvinculaciones Masivos */
+.app-main:has(.desvinculaciones-masivos-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.desvinculaciones-masivos-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.desvinculaciones-masivos-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}
+
+.desvinculaciones-masivos-page .desvinculaciones-masivos {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.desvinculaciones-masivos-page .desvinculaciones-masivos > .panel__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.desvinculaciones-masivos__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    gap: 0.65rem;
+    margin-top: 1rem;
+    padding-top: 0.35rem;
+}
+
+.desvinculaciones-masivos__toolbar-end {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.desvinculaciones-masivos__table-top {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    flex-shrink: 0;
+    margin-bottom: 0.55rem;
+}

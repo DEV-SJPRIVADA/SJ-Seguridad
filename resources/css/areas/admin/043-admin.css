@@ -1,0 +1,50 @@
+/* Administración — capa 043
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* Admin ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ auditoria global (patron req-manage) */
+.audit-page.req-manage-page .audit-filters__query-row {
+    margin-top: 0;
+}
+
+.audit-page.req-manage-page .audit-filters__query-row--footer {
+    margin-top: 0.5rem;
+}
+
+.audit-page.req-manage-page .audit-filters__field {
+    flex: 1 1 9.5rem;
+    min-width: min(100%, 9.5rem);
+}
+
+.audit-page.req-manage-page .audit-filters__field--wide {
+    flex: 1.4 1 12rem;
+    min-width: min(100%, 12rem);
+}
+
+.audit-page.req-manage-page .audit-filters__field--checkbox {
+    flex: 1 1 auto;
+    min-width: min(100%, 16rem);
+}
+
+.audit-page.req-manage-page .audit-filters__checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-height: var(--control-height-chrome);
+    font-size: 0.82rem;
+    color: #475569;
+    cursor: pointer;
+}
+
+.audit-page.req-manage-page .audit-filters__checkbox input[type="checkbox"] {
+    width: 1rem;
+    height: 1rem;
+    margin: 0;
+}
+
+.audit-page.req-manage-page .audit-table td:last-child {
+    max-width: 18rem;
+    white-space: normal;
+    word-break: break-word;
+}

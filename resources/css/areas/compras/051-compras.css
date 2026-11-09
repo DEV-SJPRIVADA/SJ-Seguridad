@@ -1,0 +1,83 @@
+/* Compras — capa 051
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.status-pill--compras-pendiente {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.status-pill--compras-en_curso {
+    background: #eff6ff;
+    color: #1984c7;
+}
+
+.status-pill--compras-completado {
+    background: var(--color-success-soft);
+    color: #15803d;
+}
+
+.status-pill--compras-rechazado {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+/* Etapa común del pedido (PedidoEtapa): mismo color en compras y suministros. */
+.status-pill--etapa-por_autorizar {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill--etapa-devuelta {
+    background: var(--color-danger-soft);
+    color: var(--color-danger);
+}
+
+.status-pill--etapa-por_comprar {
+    background: #fff7ed;
+    color: #ea580c;
+}
+
+.status-pill--etapa-con_orden {
+    background: #eff6ff;
+    color: #1984c7;
+}
+
+.status-pill--etapa-cerrado {
+    background: var(--color-success-soft);
+    color: #15803d;
+}
+
+.status-pill--etapa-cerrado_sin_compra {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-pendiente,
+.req-manage-filters__pill.status-pill--compras-pendiente.is-active {
+    background: #ea580c;
+    border-color: #ea580c;
+    color: #fff;
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-en_curso,
+.req-manage-filters__pill.status-pill--compras-en_curso.is-active {
+    background: #1984c7;
+    border-color: #1984c7;
+    color: #fff;
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-completado,
+.req-manage-filters__pill.status-pill--compras-completado.is-active {
+    background: #15803d;
+    border-color: #15803d;
+    color: #fff;
+}
+
+.req-manage-filters__pill.is-active.status-pill--compras-rechazado,
+.req-manage-filters__pill.status-pill--compras-rechazado.is-active {
+    background: #be123c;
+    border-color: #be123c;
+    color: #fff;
+}

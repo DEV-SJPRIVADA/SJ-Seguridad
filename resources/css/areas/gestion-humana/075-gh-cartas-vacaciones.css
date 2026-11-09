@@ -1,0 +1,114 @@
+/* Gestión Humana / Cartas de vacaciones — capa 075
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   También nombra clases de: Gestión Humana / Cartas de notificación.
+*/
+
+/* Cartas Vacaciones: franja compacta título + hint (evita page-header alto) */
+.cartas-vacaciones-page .cartas-vacaciones__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.55rem;
+}
+
+.cartas-vacaciones-page .cartas-vacaciones__toolbar-meta {
+    min-width: 0;
+    flex: 1 1 14rem;
+}
+
+.cartas-vacaciones-page .cartas-vacaciones__toolbar-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 650;
+    line-height: 1.25;
+    color: var(--color-text);
+}
+
+.cartas-vacaciones-page .cartas-vacaciones__toolbar-hint {
+    margin: 0.15rem 0 0;
+    font-size: 0.78rem;
+    line-height: 1.35;
+    color: var(--color-text-soft);
+    max-width: 40rem;
+}
+
+/* Cartas Notificación: bloque derecho en una sola franja; limpiar/+ al extremo */
+.cartas-vacaciones-page .cartas-notificacion__toolbar-right {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    margin-left: auto;
+    min-width: 0;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__toolbar-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__filter-input {
+    width: 11rem;
+    min-width: 8rem;
+    max-width: 14rem;
+    flex: 0 1 11rem;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__toolbar-end {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+/* Cartas Notificación: preforma del lote (aplica a todas las filas) */
+.cartas-vacaciones-page .cartas-notificacion__batch-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    margin: 0 0 0.65rem;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 0.6rem;
+    background: #f8fafc;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-field {
+    display: flex;
+    flex: 1 1 20rem;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-label {
+    flex-shrink: 0;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--color-text-soft);
+    white-space: nowrap;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-select {
+    flex: 1 1 12rem;
+    min-width: 10rem;
+    max-width: 22rem;
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-hint {
+    margin: 0;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: var(--color-text-soft);
+}
+
+.cartas-vacaciones-page .cartas-notificacion__batch-hint--warn {
+    color: #b45309;
+}

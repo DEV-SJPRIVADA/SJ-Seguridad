@@ -1,0 +1,75 @@
+/* Requisiciones — capa 036
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.req-form-guide__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.req-form-guide__item {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    min-width: 0;
+    font-size: 0.86rem;
+    color: #475569;
+    line-height: 1.45;
+    overflow-wrap: break-word;
+    word-break: break-word;
+}
+
+.req-form-guide__item::before {
+    content: '';
+    flex-shrink: 0;
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-top: 0.45rem;
+    border-radius: 999px;
+    background: var(--brand-blue);
+}
+
+.req-form-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 0.5rem;
+    padding: 1.25rem 1.35rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+}
+
+.req-form-actions__note {
+    margin: 0;
+    font-size: 0.84rem;
+    color: #64748b;
+    max-width: 28rem;
+    line-height: 1.45;
+}
+
+.req-form-actions__group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.req-form-readonly__fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+}
+
+.req-form-readonly .searchable-select {
+    pointer-events: none;
+}

@@ -1,6 +1,6 @@
 ---
 description: Estandar visual de pills de navegacion — areas, tableros y pestanas
-globs: resources/css/app.css,resources/views/layouts/**/*.blade.php,**/partials/subnav*.blade.php,docs/modules/branding.md
+globs: resources/css/**/*.css,resources/views/layouts/**/*.blade.php,**/partials/subnav*.blade.php,docs/modules/branding.md
 alwaysApply: false
 ---
 
@@ -18,7 +18,7 @@ Estandar visual unico para los tres niveles de navegacion autenticada.
 
 ## Reglas obligatorias
 
-1. **Mismo look:** `.sidebar-link` y `.module-tab` comparten tipografia, padding, borde, `border-radius: 999px`, colores y estados hover/activo en `resources/css/app.css`. No reinventar pills distintas por modulo.
+1. **Mismo look:** `.sidebar-link` y `.module-tab` comparten tipografia, padding, borde, `border-radius: 999px`, colores y estados hover/activo en `resources/css/base/001-base.css`. No reinventar pills distintas por modulo.
 2. **Padding contenedor ↔ botones:** `0.2rem` en `.module-strip__inner`, `.module-subnav__inner` y `.requisition-subtabs__inner` (tambien en media queries moviles de esas clases).
 3. **Tableros del area:** una fila con scroll (`.module-tabs--scroll`) + flechas (`.module-tabs-scroller`) si hay overflow; no usar `flex-wrap: wrap` en esa franja.
 4. **Sidebar Procesos:** scroll de areas oculto; colapso desktop via `.app-sidebar--collapsed` + Alpine `appSidebar` (no afecta el select movil ≤1024px).
@@ -34,5 +34,5 @@ Estandar visual unico para los tres niveles de navegacion autenticada.
 
 ## Referencia
 
-- Codigo: `resources/css/app.css` (selectores compartidos `.sidebar-link, .module-tab`)
+- Codigo: `resources/css/base/001-base.css` (selectores compartidos `.sidebar-link, .module-tab`)
 - Doc: [`docs/modules/branding.md`](../../docs/modules/branding.md), [`docs/ARCHITECTURE.md`](../../docs/ARCHITECTURE.md)

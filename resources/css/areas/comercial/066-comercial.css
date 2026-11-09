@@ -1,0 +1,10 @@
+/* Comercial — capa 066
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Requisiciones.
+*/
+
+.dashboard-stat-grid:not(.dashboard-stat-grid--matriz-kpis):not(.dashboard-stat-grid--requisition-kpis) {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}

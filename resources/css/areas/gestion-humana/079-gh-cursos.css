@@ -1,0 +1,67 @@
+/* gh-cursos — capa 079
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Compartido entre tableros.
+*/
+
+.cursos-registros-page .cursos-registros-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+}
+
+.cursos-registros-page .cursos-registros-panel > .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.cursos-registros-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.cursos-registros-page__table-wrap {
+    margin-top: 0.25rem;
+}
+
+.cursos-registros-page__chip-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-top: 0.65rem;
+}
+
+.cursos-registros-page__status-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    padding: 0.2rem;
+}
+
+.cursos-registros-page__filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 0.75rem 1rem;
+    align-items: end;
+}
+
+.cursos-registros-page__filter-actions {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.cursos-registros-page__filter-actions .req-manage-filters__icon-btn {
+    flex: 0 0 auto;
+}
+
+.cursos-registros-page__filter-actions .multi-cedula-filter {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+}

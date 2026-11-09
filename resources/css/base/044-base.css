@@ -1,0 +1,231 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 044
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* DataTables compacto en gestion (conserva buscador) */
+.req-manage-shell .dataTables_wrapper .dataTables_length,
+.req-manage-shell .dataTables_wrapper .dataTables_filter {
+    margin: 0 0 0.35rem;
+    padding: 0;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_length label,
+.req-manage-shell .dataTables_wrapper .dataTables_filter label {
+    margin: 0;
+    font-size: 0.78rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_filter input {
+    min-width: 10rem !important;
+    max-width: 14rem;
+    min-height: var(--control-height-chrome) !important;
+    padding: 0.35rem 0.65rem !important;
+    margin-left: 0.35rem !important;
+    font-size: var(--control-font-size) !important;
+    border-radius: var(--control-radius) !important;
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_length select {
+    min-height: var(--control-height-chrome);
+    padding: 0.2rem 1.5rem 0.2rem 0.45rem;
+    font-size: var(--control-font-size);
+    border-radius: var(--control-radius);
+}
+
+.req-manage-shell .dataTables_wrapper .dataTables_info,
+.req-manage-shell .dataTables_wrapper .dataTables_paginate {
+    margin-top: 0.35rem !important;
+    font-size: 0.78rem !important;
+}
+
+@media (max-height: 900px), (max-width: 1366px) {
+    .req-manage-page .panel-text--compact {
+        display: none;
+    }
+
+    .req-manage-page .req-manage-filters {
+        padding: 0.45rem 0.85rem;
+    }
+
+    .req-manage-page .req-manage-filters__toolbar {
+        gap: 0.65rem;
+    }
+}
+
+/* Requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ filtros: tablet en adelante, fechas en 2 columnas */
+@media (min-width: 480px) {
+    .req-manage-filters__row {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.75rem;
+        align-items: end;
+    }
+}
+
+/* Portatil: panel un poco mas compacto */
+@media (max-width: 1279px) {
+    .req-manage-filters {
+        padding: 1rem 1.1rem;
+    }
+
+    .req-manage-filters__head {
+        margin-bottom: 0.5rem;
+    }
+
+    .req-manage-filters__pill {
+        padding: 0.36rem 0.7rem;
+    }
+}
+
+/* Escritorio ancho: busqueda/fechas | pills en fila */
+@media (min-width: 1280px) {
+    .req-manage-filters__toolbar {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
+        gap: 1.25rem 1.5rem;
+        align-items: end;
+    }
+}
+
+@media (min-width: 1440px) {
+    .req-manage-filters__toolbar {
+        grid-template-columns: minmax(320px, 1fr) minmax(360px, 1.15fr);
+    }
+}
+
+.checkbox-card {
+    display: flex;
+    gap: 0.85rem;
+    padding: 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: #fff;
+}
+
+.checkbox-card__title {
+    display: block;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.checkbox-card__text {
+    display: block;
+    margin-top: 0.35rem;
+    color: var(--color-text-soft);
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.data-table-wrap {
+    overflow-x: auto;
+    position: relative;
+}
+
+.data-table-wrap--booting {
+    min-height: 14rem;
+}
+
+.data-table-wrap--booting > table,
+.data-table-wrap--booting > .dataTables_wrapper {
+    visibility: hidden;
+}
+
+.data-table-wrap__loader {
+    position: absolute;
+    inset: 0;
+    z-index: 15;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    min-height: 14rem;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.92);
+    pointer-events: none;
+}
+
+.data-table-wrap--booting .data-table-wrap__loader {
+    display: flex;
+}
+
+.data-table-wrap__spinner {
+    display: inline-block;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 2px solid rgba(0, 51, 102, 0.15);
+    border-top-color: var(--brand-blue);
+    border-radius: 999px;
+    animation: ficha-import-spin 0.75s linear infinite;
+}
+
+.data-table-wrap__loader-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #64748b;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th, 
+.js-datatable thead th,
+table.dataTable thead th,
+table.dataTable thead td {
+    background-color: #003366 !important; /* Azul oscuro corporativo */
+    color: #ffffff !important;
+    font-size: clamp(10px, 0.8vw, 13px) !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 12px 10px !important;
+    white-space: nowrap;
+    border-bottom: 2px solid #002244;
+    text-align: center !important;
+}
+
+.data-table tbody tr:hover, .js-datatable tbody tr:hover {
+    background-color: rgba(0, 51, 102, 0.05);
+}
+
+.data-table td {
+    padding: 0.9rem 1rem;
+    border-bottom: 1px solid #edf2f7;
+    font-size: 0.92rem;
+    color: #334155;
+    vertical-align: top;
+}
+
+.table-empty {
+    text-align: center;
+    color: var(--color-text-soft);
+}
+
+.table-actions {
+    white-space: nowrap;
+}
+
+.top-spaced {
+    margin-top: 1rem;
+}
+
+.pagination-wrap {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    width: 100%;
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.req-manage-shell__pagination.pagination-wrap {
+    flex-shrink: 0;
+    margin-top: 0;
+    padding-top: 0.35rem;
+}

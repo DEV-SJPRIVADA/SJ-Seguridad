@@ -1,0 +1,161 @@
+/* Gestión Humana / Formación — capa 006
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   También nombra clases de: Gestión Humana / Ficha empleados.
+*/
+
+/* Formación import modal — toolbar compacta + confirmación (icon-only, sin dos cards altas) */
+.formacion-import-modal .ficha-empleados-masivos-modal__cards {
+    grid-template-columns: minmax(0, 1fr);
+    max-width: none;
+}
+
+.formacion-import-modal__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+}
+
+.formacion-import-modal__file-name {
+    flex: 1 1 10rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.formacion-import-modal__actions {
+    display: inline-flex !important;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+    grid-template-columns: none;
+}
+
+.formacion-import-modal__actions .req-manage-filters__icon-btn {
+    width: auto;
+}
+
+.formacion-import-modal__confirm {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    margin-top: 0.65rem;
+    padding: 0.5rem 0.65rem;
+    border-radius: 8px;
+    border: 1px solid #f0c674;
+    background: #fffbeb;
+    cursor: pointer;
+    user-select: none;
+}
+
+.formacion-import-modal__confirm:hover {
+    border-color: #d97706;
+    background: #fef3c7;
+}
+
+.formacion-import-modal__checkbox {
+    width: 1.05rem;
+    height: 1.05rem;
+    margin-top: 0.1rem;
+    flex: 0 0 auto;
+    accent-color: #d97706;
+    cursor: pointer;
+}
+
+.formacion-import-modal__confirm-text {
+    font-size: 0.8rem;
+    font-weight: 650;
+    line-height: 1.35;
+    color: #78350f;
+}
+
+.formacion-import-modal .formacion-import-modal__mode {
+    display: block;
+    margin: 0 0 0.9rem;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    width: 100%;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-legend {
+    display: block;
+    width: 100%;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-text-soft, #64748b);
+}
+
+.formacion-import-modal .formacion-import-modal__mode-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card {
+    position: relative;
+    display: flex !important;
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 0.65rem;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    user-select: none;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card:hover {
+    border-color: #93c5fd;
+    background: #f8fafc;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card.is-active {
+    border-color: var(--color-primary, #1d4ed8);
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(29, 78, 216, 0.14);
+}
+
+.formacion-import-modal .formacion-import-modal__mode-input {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin: 0.15rem 0 0;
+    flex: 0 0 auto;
+    accent-color: var(--color-primary, #1d4ed8);
+    cursor: pointer;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card-title {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.25;
+    color: var(--color-text, #0f172a);
+}
+
+.formacion-import-modal .formacion-import-modal__mode-card-desc {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 500;
+    line-height: 1.4;
+    color: var(--color-text-soft, #64748b);
+}

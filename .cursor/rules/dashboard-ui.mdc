@@ -1,6 +1,6 @@
 ---
 description: Dashboards KPI/charts — referencia canónica gestion-humana/dashboard (GH área)
-globs: "**/dashboard.blade.php,resources/js/**/*dashboard*charts*.js,resources/css/app.css,docs/modules/branding.md"
+globs: "**/dashboard.blade.php,resources/js/**/*dashboard*charts*.js,resources/css/**/*.css,docs/modules/branding.md"
 alwaysApply: false
 ---
 
@@ -12,7 +12,7 @@ alwaysApply: false
 | --- | --- |
 | Vista | `resources/views/areas/gestion_humana/dashboard.blade.php` |
 | Charts JS | `resources/js/gh-area-dashboard-charts.js` |
-| CSS | `.gh-area-dashboard-page*` en `resources/css/app.css` |
+| CSS | `.gh-area-dashboard-page*` en `resources/css/areas/gestion-humana/` (capas `gh-dashboard`) |
 | URL | `/gestion-humana/dashboard` |
 
 Antes de codear un dashboard nuevo o rediseñar uno: **abrir esa vista + su JS** y clonar shell / patrones. No inventar layout de cards/charts genérico.

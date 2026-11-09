@@ -1,6 +1,6 @@
 ---
 description: Calidad UI al crear tableros/vistas nuevas — mismo nivel que un rediseño, reutilizar chrome del proyecto
-globs: resources/views/**/*.blade.php,resources/css/app.css,resources/js/**/*.{js,ts},docs/modules/branding.md,docs/agents/prompts/feature-developer.md
+globs: resources/views/**/*.blade.php,resources/css/**/*.css,resources/js/**/*.{js,ts},docs/modules/branding.md,docs/agents/prompts/feature-developer.md
 alwaysApply: false
 ---
 
@@ -57,7 +57,7 @@ Usar el chrome existente; **no** armar páginas “desde cero” con divs suelto
 
 - Preferir clases globales ya usadas (`req-manage-*`, `panel`, `data-table`, `module-tab`).
 - Prefijo BEM del módulo **solo** para lo específico; no redefinir botones/navegación.
-- Tras tocar `resources/css/app.css`: `npm run build` (o `npm run dev`) antes de dar por cerrado.
+- Tras tocar CSS en `resources/css/`: `npm run build` (o `npm run dev`) antes de dar por cerrado. El estilo nuevo va en la capa del tablero, no en otro archivo ([css-cascade.mdc](css-cascade.mdc)).
 
 ## Checklist de cierre UI (obligatorio)
 

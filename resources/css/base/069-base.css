@@ -1,0 +1,141 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 069
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+@media (max-width: 900px) {
+    .top-nav__account {
+        display: none;
+    }
+
+    .nav-toggle {
+        display: inline-flex;
+    }
+
+    .nav-mobile {
+        display: block;
+    }
+}
+
+@media (max-width: 1024px) {
+    .app-sidebar {
+        padding: 0.75rem 1rem;
+        overflow: visible;
+        width: auto;
+        min-width: 0;
+    }
+
+    .app-sidebar__header {
+        padding: 0 0 0.5rem;
+    }
+
+    /* En móvil el select cubre el cambio de área; sin colapso */
+    .app-sidebar__collapse-btn {
+        display: none !important;
+    }
+
+    .app-sidebar.app-sidebar--collapsed {
+        width: 100%;
+        min-width: 0;
+        padding: 0.75rem 1rem;
+    }
+
+    .app-sidebar.app-sidebar--collapsed .app-sidebar__label,
+    .app-sidebar.app-sidebar--collapsed .app-sidebar__mobile-select {
+        display: block !important;
+    }
+
+    .app-sidebar__mobile-select {
+        display: block;
+    }
+
+    .app-sidebar__nav--desktop {
+        display: none;
+    }
+
+    .app-sidebar-footer {
+        display: none;
+    }
+
+    .module-strip {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+    }
+
+    .module-strip__inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        padding: 0.2rem 0;
+    }
+
+    .module-strip__label {
+        display: block;
+    }
+
+    /* Misma UX que desktop: fila + flechas; scroll oculto; swipe nativo */
+    .module-tabs {
+        width: 100%;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scroll-snap-type: x proximity;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+
+    .module-tabs::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+
+    .module-tabs .module-tab {
+        flex: 0 0 auto;
+        scroll-snap-align: start;
+    }
+
+    .module-tabs-scroller {
+        width: 100%;
+    }
+
+    .module-tabs-scroller__btn {
+        width: 2rem;
+        height: 2rem;
+    }
+
+    /* Tableros de area + subtabs del modulo visibles en movil (dos niveles) */
+    .module-strip--area {
+        background: var(--color-surface);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .app-workspace:has(.module-subnav) > .module-strip--area {
+        position: relative;
+        top: auto;
+        z-index: 29;
+    }
+
+    .module-subnav {
+        position: sticky;
+        top: 0;
+        z-index: 30;
+        background: #f8fafc;
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    .module-subnav__inner,
+    .requisition-subtabs__inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+        padding: 0.2rem 0;
+        min-height: 0;
+    }
+
+    .module-subnav__label {
+        display: block;
+    }
+}

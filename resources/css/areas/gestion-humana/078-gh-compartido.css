@@ -1,0 +1,10 @@
+/* Gestión Humana / Compartido entre tableros — capa 078
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* Cédula duplicada (más de un registro) en listados Cursos / Acreditados */
+.gh-cedula-duplicate {
+    color: var(--color-danger);
+    font-weight: 600;
+}

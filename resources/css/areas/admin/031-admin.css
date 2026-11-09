@@ -1,0 +1,36 @@
+/* Administración — capa 031
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.permission-filter-bar {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(0, 1.4fr) minmax(220px, 0.6fr) auto;
+    margin-bottom: 1rem;
+}
+
+.permission-filter-bar--manage {
+    grid-template-columns: minmax(0, 1.4fr) minmax(9rem, 0.45fr) minmax(9rem, 0.45fr) minmax(11rem, 0.55fr) auto;
+    align-items: center;
+}
+
+@media (max-width: 900px) {
+    .permission-filter-bar--manage {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .permission-filter-bar--manage .permission-filter-bar__search {
+        grid-column: 1 / -1;
+    }
+
+    .permission-filter-bar--manage .permission-filter-bar__submit {
+        grid-column: 1 / -1;
+        justify-self: start;
+    }
+}
+
+.permission-filter-bar__search,
+.permission-filter-bar__select {
+    min-width: 0;
+}

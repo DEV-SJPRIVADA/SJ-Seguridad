@@ -1,0 +1,16 @@
+/* Compras — capa 041
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.req-manage-page .req-manage-table-scroll table.dataTable thead th,
+.req-manage-page .req-manage-table-scroll .data-table thead th,
+.req-manage-page .req-manage-table-scroll .supply-table thead th {
+    position: -webkit-sticky !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 12 !important;
+    background-color: #003366 !important;
+    background-clip: padding-box;
+    box-shadow: 0 2px 0 #002244;
+}

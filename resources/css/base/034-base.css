@@ -1,0 +1,9 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 034
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* Admin ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ configuracion de notificaciones */
+[x-cloak] {
+    display: none !important;
+}

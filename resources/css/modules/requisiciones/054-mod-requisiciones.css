@@ -1,0 +1,13 @@
+/* Requisiciones — capa 054
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.dashboard-stat-grid.dashboard-stat-grid--requisition-kpis {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+    width: 100%;
+}

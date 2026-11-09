@@ -13,7 +13,7 @@ alwaysApply: true
 ## Lectura de código
 
 - Abrir solo archivos citados por el usuario o hallados con grep/glob acotado.
-- No leer `resources/css/app.css` completo ni dumps masivos; buscar por clase/símbolo.
+- No leer `resources/css/` entero ni dumps masivos; buscar la clase y abrir solo esa capa.
 - No releer `AGENTS.md` / docs enteros si la regla always-on ya cubre el punto.
 
 ## Tests y build

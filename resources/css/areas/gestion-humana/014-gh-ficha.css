@@ -1,0 +1,49 @@
+/* Gestión Humana / Ficha empleados — capa 014
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.ficha-empleados-page__table-wrap {
+    margin-top: 0.5rem;
+}
+
+/* Listado Empleados: panel/tabla hasta el borde inferior (sin hueco vacío) */
+.app-main:has(.ficha-empleados-page:not(.ficha-empleados-page--form)) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.35rem;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) .ficha-empleados-page__alert {
+    flex-shrink: 0;
+}
+
+.ficha-empleados-page:not(.ficha-empleados-page--form) .ficha-empleados-panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+}
+
+.ficha-empleados-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}

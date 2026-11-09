@@ -10,7 +10,7 @@
 
 ## Capa visual reutilizable
 
-- Los estilos base del proyecto se concentran en [`resources/css/app.css`](c:/laragon/www/SJSEGURIDAD/resources/css/app.css)
+- La entrada CSS es [`resources/css/app.css`](c:/laragon/www/SJSEGURIDAD/resources/css/app.css): solo `@import`, en orden de cascada. Chrome en `resources/css/base/`; cada área o tablero en `resources/css/areas/`; Requisiciones en `resources/css/modules/requisiciones/`. No reordenar imports ni mezclar tableros en un mismo archivo (regla `.cursor/rules/css-cascade.mdc`).
 - La meta actual es reducir HTML cargado de utilidades y mover la interfaz a clases semanticas reutilizables
 - Ya existen clases comunes para:
   botones, formularios, tablas, tarjetas, layout, navegacion y paneles de administracion
@@ -103,4 +103,4 @@ Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Wo
 | audit-log (transversal) | `routes/web.php` (admin auditoria) | `Admin\SystemAuditController`, `SystemAuditService` | `resources/views/admin/audit/` | `docs/modules/audit-log.md` | `docs/user/audit-log.md` |
 | branding | — | — | layouts, components | `docs/modules/branding.md` | — |
 
-Archivos compartidos (un solo agente por tarea): `config/access.php`, `routes/web.php` (require), layouts, `resources/css/app.css`, seeders globales.
+Archivos compartidos (un solo agente por tarea): `config/access.php`, `routes/web.php` (require), layouts, `resources/css/app.css` (la lista de `@import`), seeders globales. Una capa de un solo tablero (`resources/css/areas/...`) no es archivo compartido.

@@ -1,0 +1,19 @@
+/* Gestión Humana / Ficha empleados — capa 108
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Novedades.
+*/
+
+.ficha-empleados-masivos-modal:not(.rn-novedad-modal) .rn-novedad-form {
+    max-height: min(68vh, 36rem);
+    overflow: auto;
+    padding-right: 0.15rem;
+}
+
+.ficha-empleados-masivos-modal__footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid color-mix(in srgb, var(--color-border, #d6dde8) 90%, transparent);
+}

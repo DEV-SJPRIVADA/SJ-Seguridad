@@ -1,0 +1,35 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 011
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.alert.alert--warning {
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+}
+
+.alert.alert--danger {
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}
+
+.alert.alert--danger ul {
+    margin: 0.25rem 0 0;
+    padding-left: 1.1rem;
+}
+
+.alert.alert--info {
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e3a8a;
+    font-size: 0.82rem;
+    line-height: 1.4;
+}

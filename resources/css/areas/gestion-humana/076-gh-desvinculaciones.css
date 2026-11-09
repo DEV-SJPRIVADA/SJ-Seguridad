@@ -1,0 +1,641 @@
+/* Gestión Humana / Desvinculaciones — capa 076
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.desvinculaciones-masivos__bulk-summary {
+    margin-top: 0.85rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid var(--color-border, #dbe3ef);
+    border-radius: 0.75rem;
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 55%);
+    box-shadow: 0 1px 2px rgb(15 23 42 / 4%);
+}
+
+.desvinculaciones-masivos__bulk-summary--warn {
+    border-color: color-mix(in srgb, var(--color-warning, #92400e) 22%, var(--color-border, #dbe3ef));
+    background: linear-gradient(180deg, var(--color-warning-soft, #fffbeb) 0%, #fff 60%);
+}
+
+.desvinculaciones-masivos__bulk-summary-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.desvinculaciones-masivos__bulk-summary-title-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.65rem;
+    min-width: 0;
+}
+
+.desvinculaciones-masivos__bulk-summary-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.55rem;
+    color: var(--color-primary, #0f172a);
+    background: color-mix(in srgb, var(--color-primary, #0f172a) 8%, white);
+    border: 1px solid color-mix(in srgb, var(--color-primary, #0f172a) 14%, var(--color-border, #dbe3ef));
+}
+
+.desvinculaciones-masivos__bulk-summary-title {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.25;
+}
+
+.desvinculaciones-masivos__bulk-summary-lead {
+    margin: 0.15rem 0 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    line-height: 1.35;
+}
+
+.desvinculaciones-masivos__bulk-summary-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.desvinculaciones-masivos__bulk-stat {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.65rem;
+    background: #fff;
+    padding: 0.65rem 0.7rem;
+    text-align: center;
+}
+
+.desvinculaciones-masivos__bulk-stat--ok {
+    border-color: color-mix(in srgb, var(--color-success, #047857) 28%, #e2e8f0);
+    background: var(--color-success-soft, #ecfdf5);
+}
+
+.desvinculaciones-masivos__bulk-stat--dup {
+    border-color: color-mix(in srgb, #64748b 22%, #e2e8f0);
+    background: #f8fafc;
+}
+
+.desvinculaciones-masivos__bulk-stat--fail {
+    border-color: color-mix(in srgb, var(--color-danger, #be123c) 28%, #e2e8f0);
+    background: var(--color-danger-soft, #fff1f2);
+}
+
+.desvinculaciones-masivos__bulk-stat--muted {
+    border-color: #e2e8f0;
+    background: #f8fafc;
+}
+
+.desvinculaciones-masivos__bulk-stat-value {
+    display: block;
+    font-size: 1.35rem;
+    font-weight: 700;
+    line-height: 1.15;
+    color: #0f172a;
+}
+
+.desvinculaciones-masivos__bulk-stat--ok .desvinculaciones-masivos__bulk-stat-value {
+    color: var(--color-success, #047857);
+}
+
+.desvinculaciones-masivos__bulk-stat--fail .desvinculaciones-masivos__bulk-stat-value {
+    color: var(--color-danger, #be123c);
+}
+
+.desvinculaciones-masivos__bulk-stat--dup .desvinculaciones-masivos__bulk-stat-value,
+.desvinculaciones-masivos__bulk-stat--muted .desvinculaciones-masivos__bulk-stat-value {
+    color: #334155;
+}
+
+.desvinculaciones-masivos__bulk-stat-label {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.desvinculaciones-masivos__bulk-summary-details {
+    margin-top: 0.75rem;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--color-border, #dbe3ef);
+}
+
+.desvinculaciones-masivos__bulk-summary-details-title {
+    margin: 0 0 0.4rem;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.desvinculaciones-masivos__bulk-summary-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    max-height: 9rem;
+    overflow: auto;
+    display: grid;
+    gap: 0.35rem;
+}
+
+.desvinculaciones-masivos__bulk-summary-list li {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem 0.55rem;
+    align-items: baseline;
+    padding: 0.4rem 0.55rem;
+    border-radius: 0.45rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    font-size: 0.82rem;
+    color: #475569;
+}
+
+.desvinculaciones-masivos__bulk-summary-cedula {
+    font-weight: 700;
+    color: #0f172a;
+    font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+    .desvinculaciones-masivos__bulk-summary-stats {
+        grid-template-columns: 1fr;
+    }
+}
+
+.desvinculaciones-masivos__table-wrap {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    overflow: auto;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.desvinculaciones-masivos__table {
+    width: 100%;
+    margin: 0;
+}
+
+.desvinculaciones-masivos__table .form-input,
+.desvinculaciones-masivos__table .searchable-select-wrap {
+    min-width: 9rem;
+}
+
+.desvinculaciones-masivos__col-cedula {
+    width: 6.5rem;
+    max-width: 6.5rem;
+}
+
+.desvinculaciones-masivos__col-actions {
+    width: 2.75rem;
+    text-align: center;
+}
+
+.desvinculaciones-masivos__table td.table-actions {
+    white-space: nowrap;
+    vertical-align: middle;
+    text-align: center;
+}
+
+.desvinculaciones-masivos__cedula-input,
+.desvinculaciones-masivos__table .desvinculaciones-masivos__cedula-input {
+    min-width: 4.5rem;
+    width: 100%;
+    max-width: 6.5rem;
+}
+
+.desvinculaciones-masivos__table th {
+    white-space: nowrap;
+    font-size: 0.75rem;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+.desvinculaciones-masivos__name {
+    display: inline-block;
+    min-width: 8rem;
+    font-size: 0.875rem;
+}
+
+.desvinculaciones-masivos__report {
+    flex-shrink: 0;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--color-border, #e5e7eb);
+    max-height: 30vh;
+    overflow-y: auto;
+}
+
+.desvinculaciones-masivos__report-block {
+    margin-top: 0.75rem;
+}
+
+.desvinculaciones-masivos__report-list {
+    margin: 0.35rem 0 0;
+    padding-left: 1.25rem;
+    font-size: 0.875rem;
+}
+
+.desvinculaciones-masivos__report-list--fail {
+    color: var(--color-danger, #b91c1c);
+}
+
+/* FEAT-031 ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ Desvinculaciones Seguimientos */
+.app-main:has(.desvinculaciones-seguimientos-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.desvinculaciones-seguimientos-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.desvinculaciones-seguimientos-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+}
+
+.desvinculaciones-seguimientos-page .desvinculaciones-seguimientos {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+}
+
+.desvinculaciones-seguimientos-page .desvinculaciones-seguimientos > .panel__body {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.desvinculaciones-seguimientos__readonly-notice {
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+
+.desvinculaciones-seguimientos__filters {
+    flex-shrink: 0;
+    margin-bottom: 0;
+}
+
+.desvinculaciones-seguimientos__table-toolbar {
+    flex-shrink: 0;
+    margin-bottom: 0;
+    align-items: center;
+}
+
+.desvinculaciones-seguimientos__table-toolbar .req-manage-filters__meta {
+    margin: 0;
+}
+
+.desvinculaciones-seguimientos__filters .desvinculaciones-seguimientos__toolbar {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    width: 100%;
+}
+
+.desvinculaciones-seguimientos__filters-main {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.85rem 1rem;
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.desvinculaciones-seguimientos__filters .desvinculaciones-seguimientos__search {
+    flex: 0 1 17.5rem;
+    width: auto;
+    min-width: 14rem;
+    max-width: 20rem;
+}
+
+.desvinculaciones-seguimientos__filters .req-manage-filters__search-group {
+    flex-wrap: nowrap;
+    padding: 0;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.desvinculaciones-seguimientos__filters .req-manage-filters__search-group .form-input {
+    width: 100%;
+    min-width: 0;
+}
+
+.desvinculaciones-seguimientos__fecha-campo {
+    flex: 0 1 16rem;
+    min-width: 13rem;
+    max-width: 18rem;
+    margin: 0;
+}
+
+.desvinculaciones-seguimientos__rehireable {
+    flex: 0 1 11rem;
+    min-width: 9.5rem;
+    max-width: 13rem;
+    margin: 0;
+}
+
+.desvinculaciones-seguimientos__date-range {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.3rem;
+    flex: 0 0 auto;
+}
+
+.desvinculaciones-seguimientos__date-fields {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.desvinculaciones-seguimientos__date-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    flex: 0 0 auto;
+}
+
+.desvinculaciones-seguimientos__date-input {
+    width: 8.75rem;
+    min-width: 0;
+    max-width: 8.75rem;
+    flex: none;
+    padding-inline: 0.4rem;
+}
+
+.desvinculaciones-seguimientos__filter-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 auto;
+    padding-bottom: 0.05rem;
+}
+
+.desvinculaciones-seguimientos__export {
+    margin-left: 0;
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.desvinculaciones-seguimientos__export-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+    line-height: 1;
+}
+
+.desvinculaciones-seguimientos__export-btn svg {
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Etiqueta corta del export «Centro de costo» para distinguirlo del Excel completo */
+.desvinculaciones-seguimientos__export-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.desvinculaciones-seguimientos__status-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0.75rem 0 0;
+    padding: 0.2rem;
+}
+
+/* Contenedor tabla: llena el resto; scroll en .req-manage-table-scroll; buscador DT visible arriba */
+.desvinculaciones-seguimientos__table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: visible;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--color-border, #e5e7eb);
+    border-radius: 0.5rem;
+    background: #fff;
+}
+
+.desvinculaciones-seguimientos-page.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.desvinculaciones-seguimientos__table-wrap .dataTables_wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    padding: 0.45rem 0.55rem 0.55rem;
+}
+
+.desvinculaciones-seguimientos__table-wrap .req-manage-dt-top {
+    position: relative;
+    z-index: 3;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    background: #fff;
+    padding: 0.15rem 0 0.45rem;
+    margin-bottom: 0.15rem;
+}
+
+.desvinculaciones-seguimientos__table-wrap .req-manage-dt-top .dataTables_length,
+.desvinculaciones-seguimientos__table-wrap .req-manage-dt-top .dataTables_filter {
+    float: none;
+    margin: 0;
+}
+
+.desvinculaciones-seguimientos__table-wrap .req-manage-table-scroll {
+    border-radius: 0.35rem;
+}
+
+.desvinculaciones-seguimientos__table {
+    width: 100%;
+    min-width: 2100px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
+}
+
+/* Encabezados: fondo opaco sticky + espacio para icono de orden DataTables */
+.desvinculaciones-seguimientos__table thead th {
+    background-color: #003366 !important;
+    color: #ffffff !important;
+    white-space: normal !important;
+    font-size: 0.7rem !important;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: 0.02em;
+    text-align: center !important;
+    vertical-align: middle !important;
+    overflow: visible;
+    text-overflow: clip;
+    position: sticky;
+    top: 0;
+    z-index: 12;
+    padding: 0.5rem 1.35rem 0.5rem 0.45rem !important;
+    hyphens: auto;
+}
+
+.desvinculaciones-seguimientos__table thead th.sorting,
+.desvinculaciones-seguimientos__table thead th.sorting_asc,
+.desvinculaciones-seguimientos__table thead th.sorting_desc {
+    cursor: pointer;
+    background-color: #003366 !important;
+    background-repeat: no-repeat !important;
+    background-position: right 0.35rem center !important;
+}
+
+/* Checks: títulos horizontales cortos (legibles + ordenables); tooltip con label completo */
+.desvinculaciones-seguimientos__check-th {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    min-width: 4.25rem;
+    max-width: 5.25rem;
+    width: 4.75rem;
+    white-space: normal !important;
+    word-break: break-word;
+    font-size: 0.62rem !important;
+    line-height: 1.15;
+    padding: 0.4rem 1.15rem 0.4rem 0.3rem !important;
+}
+
+.desvinculaciones-seguimientos__check-td {
+    text-align: center;
+    vertical-align: middle;
+    min-width: 4.25rem;
+    width: 4.75rem;
+}
+
+.desvinculaciones-seguimientos__check {
+    width: 1rem;
+    height: 1rem;
+    cursor: pointer;
+}
+
+.desvinculaciones-seguimientos__check:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+}
+
+.desvinculaciones-seguimientos__date {
+    min-width: 9.5rem;
+}
+
+.desvinculaciones-seguimientos__col-id {
+    min-width: 3rem;
+}
+
+.desvinculaciones-seguimientos__col-doc {
+    min-width: 6.5rem;
+}
+
+.desvinculaciones-seguimientos__col-name {
+    min-width: 11rem;
+}
+
+.desvinculaciones-seguimientos__col-wide {
+    min-width: 8.5rem;
+}
+
+.desvinculaciones-seguimientos__ok-todo {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.desvinculaciones-seguimientos__notes {
+    max-width: 14rem;
+    white-space: normal;
+    font-size: 0.8125rem;
+}
+
+.desvinculaciones-seguimientos__empty {
+    text-align: center;
+    padding: 1.25rem 0.75rem;
+}
+
+.desvinculaciones-seguimientos__pager {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.desvinculaciones-seguimientos__actions-th,
+.desvinculaciones-seguimientos__actions-td {
+    text-align: center;
+    width: 6rem;
+    white-space: nowrap;
+}
+
+.desvinculaciones-seguimientos__revert-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.35rem 0.45rem;
+}
+
+.desvinculaciones-seguimientos__revert-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: rgba(15, 23, 42, 0.45);
+}
+
+.desvinculaciones-seguimientos__revert-modal,
+.desvinculaciones-seguimientos__import-modal {
+    width: min(32rem, 100%);
+    max-height: 90vh;
+    overflow: auto;
+    background: #fff;
+    color: var(--color-text, #0f172a);
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(15, 23, 42, 0.2);
+}
+
+.desvinculaciones-seguimientos__import-modal {
+    width: min(36rem, 100%);
+}

@@ -1,0 +1,21 @@
+/* Gestión Humana / Formación — capa 095
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: gh-cursos.
+*/
+
+/* Formación dashboard */
+.formacion-dashboard-page__filter-actions,
+.cursos-dashboard-page__filter-actions {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.25rem;
+}
+
+.formacion-dashboard-page__kpi-hint {
+    margin: 0.2rem 0 0;
+    font-size: 0.75rem;
+    color: #64748b;
+}

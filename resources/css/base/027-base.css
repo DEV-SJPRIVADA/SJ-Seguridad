@@ -1,0 +1,15 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 027
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+@keyframes ficha-catalog-modal-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}

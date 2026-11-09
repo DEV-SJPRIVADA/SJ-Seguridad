@@ -1,0 +1,12 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 071
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* ==========================================================================
+   Documentos de Calidad - Formulario
+   ========================================================================== */
+
+.text-danger {
+    color: var(--color-danger);
+}

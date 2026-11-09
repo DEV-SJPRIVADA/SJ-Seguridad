@@ -1,6 +1,6 @@
 ---
 description: Estandar de botones icon-only — chrome/filtros y acciones de fila
-globs: resources/views/**/*.blade.php,resources/css/app.css,app/Services/**/*DatatableService.php,docs/modules/branding.md
+globs: resources/views/**/*.blade.php,resources/css/**/*.css,app/Services/**/*DatatableService.php,docs/modules/branding.md
 alwaysApply: false
 ---
 
@@ -71,6 +71,6 @@ En DataTables server-side, reutilizar el HTML/SVG ya usado en `*DatatableService
 
 ## Referencia
 
-- CSS: `resources/css/app.css` (`.req-manage-filters__icon-btn*`, `.cursos-catalogo-page__icon-btn*`)
+- CSS: `resources/css/base/042-base.css` (`.req-manage-filters__icon-btn*`) y `resources/css/areas/gestion-humana/094-gh-cursos.css` (`.cursos-catalogo-page__icon-btn*`)
 - Doc: [`docs/modules/branding.md`](../../docs/modules/branding.md)
 - Bases: [`AGENTS.md`](../../AGENTS.md)

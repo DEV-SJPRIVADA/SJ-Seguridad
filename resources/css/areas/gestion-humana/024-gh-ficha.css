@@ -1,0 +1,65 @@
+/* Gestión Humana / Ficha empleados — capa 024
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.ficha-empleados-catalogs-page__alert {
+    margin-bottom: 1rem;
+}
+
+.ficha-empleados-catalogs-page__head {
+    padding-top: 0;
+    margin-bottom: 1.25rem;
+}
+
+.ficha-empleados-catalogs-page__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1rem;
+}
+
+.ficha-empleados-catalogs-page__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 1.25rem 1rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: #fff;
+    box-shadow: var(--shadow-soft);
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    text-align: center;
+}
+
+.ficha-empleados-catalogs-page__card:hover {
+    transform: translateY(-3px);
+    border-color: var(--color-sky);
+    box-shadow: var(--shadow-card);
+}
+
+.ficha-empleados-catalogs-page__card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    background: var(--brand-blue-pale);
+    color: var(--brand-blue);
+}
+
+.ficha-empleados-catalogs-page__card-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.ficha-empleados-catalogs-page__card-count {
+    font-size: 0.74rem;
+    color: var(--color-text-soft);
+    background: var(--color-bg);
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
+}

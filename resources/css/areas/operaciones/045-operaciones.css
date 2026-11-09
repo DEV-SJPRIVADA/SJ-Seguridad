@@ -1,0 +1,9 @@
+/* Operaciones — capa 045
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.indicadores-subpanel__pagination.pagination-wrap {
+    margin-top: 0.75rem;
+    padding-top: 0.65rem;
+}

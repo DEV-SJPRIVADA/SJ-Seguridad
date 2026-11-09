@@ -1,0 +1,42 @@
+/* Compras — capa 099
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Dashboard de área, gh-cursos.
+*/
+
+/* Dashboard Compras: 5 KPI (Solicitudes) / 7 KPI (Órdenes); charts 2+3 y 2+2. */
+.compras-dashboard-page.gh-area-dashboard-page .compras-dashboard-page__kpi-grid--solicitudes {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.compras-dashboard-page.gh-area-dashboard-page .compras-dashboard-page__kpi-grid--ordenes {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.compras-dashboard-page a.cursos-dashboard-page__kpi {
+    text-decoration: none;
+    color: inherit;
+}
+
+.compras-dashboard-page .compras-dashboard-page__charts-row--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.compras-dashboard-page .compras-dashboard-page__charts-row--three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 959px) {
+    .compras-dashboard-page.gh-area-dashboard-page .compras-dashboard-page__kpi-grid--solicitudes,
+    .compras-dashboard-page.gh-area-dashboard-page .compras-dashboard-page__kpi-grid--ordenes,
+    .compras-dashboard-page .compras-dashboard-page__charts-row--two,
+    .compras-dashboard-page .compras-dashboard-page__charts-row--three {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 639px) {
+    .compras-dashboard-page.gh-area-dashboard-page .compras-dashboard-page__kpi-grid--solicitudes,
+    .compras-dashboard-page.gh-area-dashboard-page .compras-dashboard-page__kpi-grid--ordenes {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

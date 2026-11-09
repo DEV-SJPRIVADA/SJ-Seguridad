@@ -1,0 +1,119 @@
+/* Administración — capa 062
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.users-grid {
+    display: grid;
+    min-height: 0;
+    grid-template-columns: 320px minmax(0, 1fr);
+}
+
+.users-sidebar {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    border-right: 1px solid var(--color-border);
+    background: var(--color-surface-muted);
+    min-height: 0;
+}
+
+.users-list-header {
+    margin-bottom: 0.15rem;
+}
+
+.users-list-header .panel-text {
+    margin-bottom: 0;
+}
+
+.users-filter-actions {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 0.75rem;
+    margin-top: 0.65rem;
+}
+
+.users-filter-actions .users-filter-toggle {
+    flex: 0 1 auto;
+    min-width: 0;
+    margin: 0;
+}
+
+.users-filter-actions__icons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.users-filter-actions__icon--disabled {
+    opacity: 0.45;
+    pointer-events: none;
+    cursor: not-allowed;
+}
+
+.users-list {
+    overflow-y: auto;
+    padding-bottom: 0.75rem;
+    min-height: 0;
+}
+
+.users-list-item {
+    display: block;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.users-list-item:hover {
+    background: #fff;
+}
+
+.users-list-item--active {
+    background: #fff;
+    box-shadow: inset 4px 0 0 0 var(--color-primary);
+}
+
+.users-list-item__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.users-list-item__title {
+    margin: 0;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.users-list-item__meta {
+    margin: 0.35rem 0 0;
+    font-size: 0.8rem;
+    color: var(--color-text-soft);
+}
+
+.users-content {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    background: var(--color-surface);
+    min-height: 0;
+}
+
+.users-content__header,
+.users-content__body {
+    min-height: 0;
+}
+
+.users-content__header {
+    border-bottom: 1px solid var(--color-border);
+}
+
+.users-content__body {
+    overflow: auto;
+    padding-bottom: 0.75rem;
+    min-height: 0;
+}

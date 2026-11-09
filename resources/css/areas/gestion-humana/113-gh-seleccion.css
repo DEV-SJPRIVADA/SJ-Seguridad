@@ -1,0 +1,395 @@
+/* Gestión Humana / Selección — capa 113
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Ficha empleados, gh-cursos.
+*/
+/* ================= Selección — Ingresos ================= */
+/* Estado del ingreso (badge en tabla) */
+.seleccion-ingresos-page__estado-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.seleccion-ingresos-page__estado-badge--ok {
+    background-color: rgba(22, 163, 74, 0.12);
+    color: #15803d;
+}
+
+.seleccion-ingresos-page__estado-badge--info {
+    background-color: rgba(14, 116, 144, 0.12);
+    color: var(--color-sky, #0e7490);
+}
+
+.seleccion-ingresos-page__estado-badge--muted {
+    background-color: rgba(100, 116, 139, 0.14);
+    color: #475569;
+}
+
+.seleccion-ingresos-page__estado-badge--danger {
+    background-color: rgba(220, 38, 38, 0.12);
+    color: #b91c1c;
+}
+
+/* Modal nuevo/editar ingreso: secciones en tarjeta (patrón Nuevo acreditado) + pie con acciones */
+.seleccion-ingresos-modal {
+    gap: 0.85rem;
+}
+
+.seleccion-ingresos-modal__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.seleccion-ingresos-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.seleccion-ingresos-form__section {
+    margin: 0;
+    padding: 0.8rem 1rem 0.95rem;
+    border-radius: 0.65rem;
+    border: 1px solid color-mix(in srgb, var(--brand-primary, #003366) 12%, #e2e8f0);
+    background: color-mix(in srgb, var(--brand-primary, #003366) 3%, #fff);
+}
+
+.seleccion-ingresos-form__section-head {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 0.7rem;
+}
+
+.seleccion-ingresos-form__section-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border-radius: 999px;
+    background: var(--brand-navy);
+    color: var(--brand-white, #fff);
+    flex-shrink: 0;
+}
+
+.seleccion-ingresos-form__section-title {
+    margin: 0;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--brand-primary, #003366);
+}
+
+.seleccion-ingresos-form__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem 0.9rem;
+    align-items: start;
+}
+
+.seleccion-ingresos-form__grid .form-field {
+    min-width: 0;
+}
+
+.seleccion-ingresos-form__span-2 {
+    grid-column: span 2;
+}
+
+.seleccion-ingresos-form__span-3 {
+    grid-column: 1 / -1;
+}
+
+.seleccion-ingresos-form__optional {
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+    color: var(--color-text-soft);
+}
+
+.seleccion-ingresos-form__duplicates {
+    margin: 0.75rem 0 0;
+}
+
+.seleccion-ingresos-form__footer {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 0.55rem;
+    margin-top: 0.9rem;
+    padding-top: 0.85rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.seleccion-ingresos-form__submit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+@media (max-width: 40rem) {
+    .seleccion-ingresos-form__grid {
+        grid-template-columns: 1fr;
+    }
+
+    .seleccion-ingresos-form__span-2,
+    .seleccion-ingresos-form__span-3 {
+        grid-column: 1 / -1;
+    }
+}
+
+/* Selección › Ingreso: filtros en dos filas (grande y portátil).
+   Fila 1: Buscar + 4 fechas + filtrar/limpiar a la derecha. Fila 2: 5 selectores. */
+.seleccion-ingresos-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.seleccion-ingresos-filters__row {
+    display: grid;
+    gap: 0.65rem 0.75rem;
+    align-items: end;
+}
+
+.seleccion-ingresos-filters__row > .form-field {
+    min-width: 0;
+}
+
+.seleccion-ingresos-filters__row--primary {
+    grid-template-columns: minmax(12rem, 2fr) repeat(4, minmax(8.5rem, 1fr)) auto;
+}
+
+.seleccion-ingresos-filters__row--selects {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.seleccion-ingresos-filters__actions {
+    justify-self: end;
+    align-self: end;
+    min-height: var(--control-height-chrome);
+}
+
+/* Variante con 2 fechas (Examen: Fecha ARL desde/hasta) */
+.seleccion-ingresos-filters__row--dates-2 {
+    grid-template-columns: minmax(14rem, 2fr) repeat(2, minmax(9rem, 1fr)) auto;
+}
+
+/* Selección › Examen: estado operativo (pill tabla + pills filtro, familia Requisiciones) */
+.status-pill--examen-solicitado {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.status-pill--examen-agendado {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.status-pill--examen-aprobado {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.status-pill--examen-no-aprobado {
+    background: #ffe4e6;
+    color: #be123c;
+}
+
+.status-pill--examen-cancelado {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.req-manage-filters__pill.status-pill--examen-solicitado.is-active {
+    background: #0284c7;
+    border-color: #0284c7;
+}
+
+.req-manage-filters__pill.status-pill--examen-agendado.is-active {
+    background: #7e22ce;
+    border-color: #7e22ce;
+}
+
+.req-manage-filters__pill.status-pill--examen-aprobado.is-active {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+
+.req-manage-filters__pill.status-pill--examen-no-aprobado.is-active {
+    background: #be123c;
+    border-color: #be123c;
+}
+
+.req-manage-filters__pill.status-pill--examen-cancelado.is-active {
+    background: #64748b;
+    border-color: #64748b;
+}
+
+/* Selección › Examen: historial — filtros en una franja y cambios antes → después */
+.seleccion-examen-historial__filters-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
+    align-items: end;
+}
+
+.seleccion-examen-historial__changes {
+    list-style: none;
+    margin: 0.5rem 0 0;
+    padding: 0.45rem 0.6rem;
+    display: grid;
+    gap: 0.25rem;
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--brand-primary, #003366) 4%, #fff);
+    border: 1px solid var(--color-border);
+}
+
+.seleccion-examen-historial__change {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.35rem;
+    font-size: 0.78rem;
+    line-height: 1.35;
+}
+
+.seleccion-examen-historial__field {
+    min-width: 8.5rem;
+    font-weight: 700;
+    color: var(--brand-primary, #003366);
+}
+
+.seleccion-examen-historial__before {
+    color: var(--color-text-soft);
+    text-decoration: line-through;
+}
+
+.seleccion-examen-historial__arrow {
+    color: var(--color-text-soft);
+}
+
+.seleccion-examen-historial__after {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+@media (max-width: 1023px) {
+    .seleccion-examen-historial__filters-grid {
+        grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    }
+}
+
+@media (max-width: 1023px) {
+    .seleccion-ingresos-filters__row--primary,
+    .seleccion-ingresos-filters__row--selects {
+        grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    }
+}
+
+/* Selección › Catálogos: gestión compacta (ancho acotado, filas densas, columnas fijas) */
+.seleccion-catalogs-page .ficha-empleados-catalogs-page__manage {
+    max-width: 58rem;
+}
+
+.seleccion-catalogs-page__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+}
+
+.seleccion-catalogs-page__count {
+    flex-shrink: 0;
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    background: var(--brand-blue-pale);
+    color: var(--brand-blue);
+    font-size: 0.74rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.seleccion-catalogs-page .ficha-empleados-catalogs-page__create-form {
+    padding: 0.7rem 0.85rem;
+    margin-bottom: 0.75rem;
+}
+
+.seleccion-catalogs-page .ficha-empleados-catalogs-page__name-field {
+    flex: 1 1 18rem;
+}
+
+.seleccion-catalogs-page .panel__body.section-stack {
+    gap: 0.5rem;
+}
+
+.seleccion-catalogs-page__table-wrap .dataTables_wrapper .dataTables_length,
+.seleccion-catalogs-page__table-wrap .dataTables_wrapper .dataTables_filter {
+    margin-bottom: 0.5rem;
+}
+
+.seleccion-catalogs-page table.seleccion-catalogs-page__table thead th {
+    padding: 0.55rem 0.7rem !important;
+}
+
+.seleccion-catalogs-page table.seleccion-catalogs-page__table tbody td {
+    padding: 0.4rem 0.7rem;
+    vertical-align: middle;
+}
+
+.seleccion-catalogs-page .seleccion-catalogs-page__col-center {
+    text-align: center;
+}
+
+.seleccion-catalogs-page .seleccion-catalogs-page__col-center .cursos-catalogo-page__row-actions {
+    justify-content: center;
+}
+
+.seleccion-catalogs-page__table code {
+    font-size: 0.78rem;
+}
+
+/* Ingreso: errores de validación visibles al guardar + campo resaltado */
+.seleccion-ingresos-form__errors {
+    margin: 0.75rem 0 0;
+    font-size: 0.8rem;
+}
+
+.seleccion-ingresos-form__field--invalid .form-input,
+.seleccion-ingresos-form__field--invalid .searchable-select__trigger {
+    border-color: #dc2626;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.12);
+}
+
+.seleccion-ingresos-form__field--invalid .form-label {
+    color: #b91c1c;
+}
+
+/* Ingreso: aviso de búsqueda de cédula de reemplazo en Ficha */
+.seleccion-ingresos-form__lookup-hint {
+    margin: 0.3rem 0 0;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    color: var(--color-text-soft);
+}
+
+.seleccion-ingresos-form__lookup-hint--ok {
+    color: #15803d;
+}
+
+.seleccion-ingresos-form__lookup-hint--warn {
+    color: #b45309;
+}
+
+.seleccion-ingresos-page__form-hint {
+    margin: 0.3rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.35;
+    color: #b45309;
+}

@@ -1,0 +1,11 @@
+/* Comercial — capa 055
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.dashboard-stat-grid.dashboard-stat-grid--matriz-kpis > .kpi-card,
+.dashboard-stat-grid.dashboard-stat-grid--matriz-kpis > .card {
+    flex: 1 1 0;
+    min-width: 0;
+    padding: 0.55rem 0.65rem !important;
+}

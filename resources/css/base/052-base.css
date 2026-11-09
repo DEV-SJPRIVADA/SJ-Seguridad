@@ -1,0 +1,71 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 052
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* Bandeja compras ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ toolbar compacto: campos izq, estado der */
+.req-manage-filters--bandeja .req-manage-filters__toolbar--bandeja {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+    align-items: stretch;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__fields-col {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__row--bandeja {
+    margin: 0;
+    gap: 0.55rem;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__field--date {
+    flex: 0 1 9.5rem;
+    min-width: 8.5rem;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__field--compact {
+    flex: 1 1 8.5rem;
+    min-width: 7.5rem;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__status-col--right {
+    align-items: center;
+    text-align: right;
+}
+
+.req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills:not(.req-manage-filters__pills--scroll) {
+    justify-content: flex-end;
+}
+
+@media (min-width: 992px) {
+    .req-manage-filters--bandeja .req-manage-filters__toolbar--bandeja {
+        flex-direction: row;
+        flex-wrap: nowrap;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 1rem;
+    }
+
+    .req-manage-filters--bandeja .req-manage-filters__status-col--right {
+        flex: 0 1 auto;
+        max-width: 52%;
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 991px) {
+    .req-manage-filters--bandeja .req-manage-filters__status-col--right,
+    .req-manage-filters--bandeja .req-manage-filters__status-col--right .req-manage-filters__pills:not(.req-manage-filters__pills--scroll) {
+        align-items: flex-start;
+        text-align: left;
+        justify-content: flex-start;
+    }
+}
+
+.requisition-subtabs {
+    margin-left: 0;
+    margin-right: 0;
+}

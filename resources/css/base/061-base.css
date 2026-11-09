@@ -1,0 +1,41 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 061
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.kpi-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.45rem;
+}
+
+.kpi-card__label {
+    margin: 0;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+}
+
+.kpi-card__label--success,
+.kpi-card__value--success {
+    color: var(--color-success);
+}
+
+.kpi-card__label--danger,
+.kpi-card__value--danger {
+    color: var(--color-danger);
+}
+
+.kpi-card__label--info {
+    color: var(--color-sky);
+}
+
+.kpi-card__value {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 800;
+    flex: 0 0 auto;
+    white-space: nowrap;
+}

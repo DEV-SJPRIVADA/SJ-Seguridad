@@ -1,0 +1,271 @@
+/* Compras — capa 112
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: gh-cursos.
+*/
+
+/* Proveedores (FEAT-047): franja única = chips de estado + conteo (izquierda) y acciones icon-only (derecha) */
+.purchase-providers-page__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem 1rem;
+    padding: 0.2rem 0 0.55rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.purchase-providers-page__toolbar-start {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 1rem;
+    min-width: 0;
+}
+
+.purchase-providers-page__toolbar-start .cursos-registros-page__status-chips {
+    flex-wrap: nowrap;
+}
+
+.purchase-providers-page__count {
+    margin: 0;
+    white-space: nowrap;
+}
+
+.purchase-providers-page__table-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-left: auto;
+}
+
+/* Proveedores: columnas de la tabla */
+.purchase-providers-page .data-table td.purchase-providers-page__col-id {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-text-soft);
+}
+
+.purchase-providers-page .data-table td.purchase-providers-page__col-name {
+    font-weight: 700;
+    color: var(--brand-ink, #0f172a);
+    min-width: 14rem;
+}
+
+.purchase-providers-page .data-table td.purchase-providers-page__col-address {
+    max-width: 22rem;
+}
+
+.purchase-providers-page__address {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.purchase-providers-page .data-table .purchase-providers-page__col-center {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.purchase-providers-page .data-table .purchase-providers-page__col-actions {
+    width: 1%;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.purchase-providers-page .data-table td.purchase-providers-page__col-actions .cursos-catalogo-page__icon-btn {
+    margin: 0 auto;
+}
+
+.purchase-providers-page__email {
+    color: var(--brand-blue);
+    text-decoration: none;
+    word-break: break-all;
+}
+
+.purchase-providers-page__email:hover,
+.purchase-providers-page__email:focus-visible {
+    text-decoration: underline;
+}
+
+.purchase-providers-page__import-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    width: 100%;
+}
+
+.purchase-providers-page__import-file {
+    flex: 1 1 10rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.purchase-providers-page__import-actions {
+    display: inline-flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+@media (max-width: 640px) {
+    .purchase-providers-page__table-actions {
+        margin-left: 0;
+    }
+}
+
+/* Proveedores: formulario de alta/edición con shell pur-req-form */
+.purchase-providers-page .pur-req-form {
+    margin-top: 0.35rem;
+}
+
+/* Proveedores (FEAT-047): el listado ocupa todo el alto del main (sin espacio vacío abajo) */
+.app-main:has(.purchase-providers-page.req-manage-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.purchase-providers-page.req-manage-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.purchase-providers-page.req-manage-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.purchase-providers-page.req-manage-page .purchase-providers-page__panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+}
+
+.purchase-providers-page.req-manage-page .purchase-providers-page__panel > .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+/* �rdenes de compra (FEAT-047 T4): tablero del �rea Compras y reparto de cantidades */
+.purchase-orders-page__filter-grid {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 0.75rem 1rem;
+}
+
+.purchase-orders-page__filter-grid .form-field {
+    flex: 0 1 14rem;
+    min-width: 11rem;
+}
+
+.purchase-orders-page__filter-actions {
+    display: inline-flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.purchase-orders-page__filter-actions .req-manage-filters__icon-btn {
+    flex: 0 0 auto;
+}
+
+/* En portátil/escritorio los iconos de filtros van al final de la misma fila de selectores. */
+@media (min-width: 1101px) {
+    .purchase-orders-page__filter-grid {
+        flex-wrap: nowrap;
+    }
+
+    .purchase-orders-page__filter-grid .form-field {
+        flex: 1 1 0;
+        min-width: 0;
+    }
+
+    .purchase-orders-page__filter-grid .purchase-orders-page__filter-actions {
+        flex: 0 0 auto;
+        margin-left: auto;
+    }
+}
+
+.purchase-orders-page__issued-list {
+    margin: 0.35rem 0 0;
+    padding-left: 1.15rem;
+    font-size: 0.85rem;
+}
+
+.purchase-order-lines__pending-value {
+    display: block;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.purchase-order-lines__pending-hint {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--color-text-muted, #64748b);
+    white-space: nowrap;
+}
+
+.purchase-order-lines__row--sin-saldo {
+    opacity: 0.6;
+}
+
+/* El listado de �rdenes de compra ocupa todo el alto del main (sin espacio vac�o abajo) */
+.app-main:has(.purchase-orders-page.req-manage-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.purchase-orders-page.req-manage-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.purchase-orders-page.req-manage-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.purchase-orders-page.req-manage-page .purchase-orders-page__panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+}
+
+.purchase-orders-page.req-manage-page .purchase-orders-page__panel > .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+/* Acciones al final de la cabecera de secci�n (p. ej. Emitir OC en Productos solicitados) */
+.pur-req-form__section-head-actions {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}

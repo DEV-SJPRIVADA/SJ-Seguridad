@@ -1,0 +1,13 @@
+/* Administración — capa 064
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.users-list-toolbar__search .form-input {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.users-list-toolbar__search .req-manage-filters__icon-btn {
+    flex-shrink: 0;
+}

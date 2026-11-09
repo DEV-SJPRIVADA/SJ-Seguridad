@@ -1,0 +1,32 @@
+/* gh-cursos — capa 077
+   Tramo original. No cambies su sitio en resources/css/app.css.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* FEAT-032 Cursos registros */
+.app-main:has(.cursos-registros-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.cursos-registros-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.5rem;
+}
+
+.cursos-registros-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.cursos-registros-page__alert {
+    flex-shrink: 0;
+}

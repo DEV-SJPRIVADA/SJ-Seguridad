@@ -1,0 +1,10 @@
+/* Gestión Humana / Ficha empleados — capa 081
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Compartido entre tableros.
+*/
+
+.modal-card.ficha-empleados-masivos-modal.multi-cedula-modal {
+    padding: 1.15rem 1.25rem 1.2rem;
+    gap: 0.95rem;
+    overflow: visible;
+}

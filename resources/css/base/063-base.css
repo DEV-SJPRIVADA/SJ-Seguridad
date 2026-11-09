@@ -1,0 +1,62 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 063
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.split-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: 1.1fr 0.9fr;
+}
+
+.detail-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.section-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.text-muted {
+    color: var(--color-text-soft);
+}
+
+.text-small {
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.text-small--strong {
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.text-small--info {
+    color: #0c4a6e;
+}
+
+.text-caption {
+    font-size: 0.78rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--color-text-soft);
+}
+
+.action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}

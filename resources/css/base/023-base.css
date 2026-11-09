@@ -1,0 +1,187 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 023
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.searchable-select__label {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-right: 0.35rem;
+}
+
+.searchable-select__label--placeholder {
+    color: #94a3b8;
+}
+
+.searchable-select__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+
+.searchable-select__clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.15rem;
+    height: 1.15rem;
+    padding: 0;
+    border: none;
+    border-radius: 9999px;
+    background-color: #e2e8f0;
+    color: #64748b;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.searchable-select__clear:hover {
+    background-color: #cbd5e1;
+    color: #1e293b;
+}
+
+.searchable-select__clear-icon {
+    width: 0.75rem;
+    height: 0.75rem;
+}
+
+/* Dropdown teleportado a <body>: fixed desde el primer frame (JS fija top/left/width).
+   Con absolute aparecía bajo el viewport, mostraba la barra de scroll y el modal «vibraba». */
+.searchable-select__dropdown {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 16rem;
+    z-index: 10050;
+    background-color: #ffffff;
+    border: 1px solid var(--color-border-strong, #cbd5e1);
+    border-radius: var(--control-radius, 12px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    transform-origin: top;
+}
+
+.searchable-select-enter {
+    transition: opacity 0.12s ease-out, transform 0.12s ease-out;
+}
+.searchable-select-enter-start {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+}
+.searchable-select-enter-end {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+.searchable-select-leave {
+    transition: opacity 0.08s ease-in, transform 0.08s ease-in;
+}
+.searchable-select-leave-start {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+.searchable-select-leave-end {
+    opacity: 0;
+    transform: scale(0.97) translateY(-4px);
+}
+
+.searchable-select__search-wrap {
+    display: flex;
+    align-items: center;
+    padding: 0.4rem 0.5rem;
+    border-bottom: 1px solid var(--color-border, #e2e8f0);
+    background-color: #f8fafc;
+    gap: 0.35rem;
+}
+
+.searchable-select__search-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.searchable-select__search-input {
+    width: 100%;
+    min-width: 0;
+    padding: 0.25rem 0.35rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 6px;
+    background-color: #ffffff;
+    font-size: var(--control-font-size, 0.8125rem);
+    line-height: var(--control-line-height, 1.35);
+    color: var(--color-text, #0f172a);
+}
+
+.searchable-select__search-input:focus {
+    outline: none;
+    border-color: var(--color-sky, #0e7490);
+    box-shadow: 0 0 0 2px rgba(14, 116, 144, 0.15);
+}
+
+.searchable-select__options {
+    list-style: none;
+    margin: 0;
+    padding: 0.3rem 0;
+    max-height: 220px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.searchable-select__option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.45rem 0.75rem;
+    font-size: var(--control-font-size, 0.8125rem);
+    color: var(--color-text, #0f172a);
+    cursor: pointer;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+.searchable-select__option--highlighted {
+    background-color: #f1f5f9;
+    color: var(--brand-blue, #003366);
+}
+
+.searchable-select__option--selected {
+    background-color: rgba(14, 116, 144, 0.08);
+    font-weight: 600;
+    color: var(--color-sky, #0e7490);
+}
+
+.searchable-select__option-text {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.searchable-select__check-icon {
+    width: 1rem;
+    height: 1rem;
+    color: var(--color-sky, #0e7490);
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+}
+
+.searchable-select__empty {
+    padding: 0.75rem;
+    text-align: center;
+    color: #94a3b8;
+    font-size: var(--control-font-size, 0.8125rem);
+}
+
+/* Dropdown teleportado a <body> con position:fixed (JS): evita que contenedores
+   con overflow (modales, tablas, paneles) recorten las opciones. */
+.searchable-select__dropdown--fixed {
+    position: fixed;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin: 0;
+}

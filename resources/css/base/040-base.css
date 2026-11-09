@@ -1,0 +1,122 @@
+/* Chrome compartido (layout, formularios, tablas) — capa 040
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.req-manage-filters__meta {
+    margin: 0.5rem 0 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.req-manage-filters__meta strong {
+    color: #334155;
+}
+
+.req-manage-filters__extras {
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.req-manage-filters__field--compact {
+    flex: 0 1 auto;
+    min-width: min(100%, 260px);
+}
+
+.req-manage-filters__pills--start {
+    justify-content: flex-start;
+}
+
+/* Requisiciones ÃÂÃÂ¢ÃÂÃÂÃÂÃÂ gestion: layout tabla protagonista */
+.req-manage-page .panel {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 8.5rem);
+}
+
+.req-manage-page .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.req-manage-page .panel__header--compact {
+    flex-shrink: 0;
+    padding: 0.45rem 0.65rem;
+}
+
+.req-manage-page .panel-text--compact {
+    margin: 0.15rem 0 0;
+    font-size: 0.82rem;
+    line-height: 1.35;
+}
+
+.req-manage-shell {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-height: 0;
+}
+
+.req-manage-shell__filters {
+    flex-shrink: 0;
+}
+
+.req-manage-shell__table {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.req-manage-shell__table .dataTables_wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.req-manage-dt-top {
+    flex-shrink: 0;
+    background: var(--color-bg, #f4f7fb);
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--color-border, #dbe3ef);
+}
+
+.req-manage-dt-bottom {
+    flex-shrink: 0;
+}
+
+.req-manage-shell__pagination {
+    flex-shrink: 0;
+    padding-top: 0.35rem;
+}
+
+.req-manage-page .req-manage-shell__table.data-table-wrap {
+    overflow: visible;
+}
+
+.req-manage-table-scroll {
+    flex: 1 1 auto;
+    min-height: 220px;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    position: relative;
+}
+
+.req-manage-table-scroll > table.dataTable,
+.req-manage-table-scroll > .data-table,
+.req-manage-table-scroll table.dataTable,
+.req-manage-table-scroll .data-table {
+    width: 100% !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+}

@@ -1,0 +1,41 @@
+/* Gestión Humana / Acreditaciones — capa 089
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.av-cola-filters__count {
+    display: inline-flex;
+    align-items: center;
+    min-width: 1.75rem;
+    padding: 0 0.35rem;
+    font-size: 0.78rem;
+    color: var(--color-text-soft);
+}
+
+.av-cola-filters__count strong {
+    color: var(--brand-blue);
+    font-weight: 700;
+}
+
+.av-cola-panel__table.data-table-wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+}
+
+.acreditaciones-validaciones-page .av-cola-panel__table .dataTables_wrapper {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.acreditaciones-validaciones-page .av-cola-panel__table .req-manage-table-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    background: #fff;
+}
+
+.acreditaciones-validaciones-page .av-cola-panel__table .req-manage-dt-top,
+.acreditaciones-validaciones-page .av-cola-panel__table .req-manage-dt-bottom {
+    background: #fff;
+}

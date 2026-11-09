@@ -1,0 +1,39 @@
+---
+description: CSS por área y tablero — no volver a mezclar estilos en un solo archivo
+globs: resources/css/**/*.css,resources/views/**/*.blade.php
+alwaysApply: false
+---
+
+# CSS por área y tablero
+
+`resources/css/app.css` solo lista `@import`. El orden de esa lista es la cascada. Vite sigue entregando un solo CSS.
+
+## Dónde escribir
+
+| Qué | Dónde |
+| --- | --- |
+| Layout, pills, botones, formularios, tablas, icon-btn de chrome | `resources/css/base/` |
+| Un tablero o área | `resources/css/areas/{area}/` |
+| Requisiciones (módulo compartido) | `resources/css/modules/requisiciones/` |
+
+El número del archivo (`003-gh-ficha.css`) es su puesto en la cascada. El mismo tablero puede tener varias capas: las de número mayor pisan a las anteriores. No las fusiones.
+
+## Obligatorio
+
+1. Estilo **nuevo** de un tablero: archivo nuevo en la carpeta de ese tablero e `@import` **al final** de `app.css`.
+2. Ajuste de un selector que **ya existe**: editar la capa que ya lo contiene (buscar la clase). No copiarlo a otro archivo.
+3. No reordenar `@import` ya existentes. No meter reglas de un tablero en el archivo de otro.
+4. Chrome compartido (`.sidebar-link`, `.module-tab`, `.btn`, `.form-*`, `.panel`, `.req-manage-*`, `.searchable-select`, `.data-table`) solo en `base/`.
+5. No agregar `<style>` de módulo en Blade ni un CSS nuevo en `public/css/`.
+
+```css
+/* Mal: al final de areas/gestion-humana/003-gh-ficha.css */
+.servicio-cliente-form__nota { color: var(--color-text-soft); }
+
+/* Bien: areas/calidad/115-servicio-cliente-form.css
+   e @import al final de resources/css/app.css */
+```
+
+Tras tocar CSS: `npm run build`.
+
+Detalle: [`docs/modules/branding.md`](../../docs/modules/branding.md).

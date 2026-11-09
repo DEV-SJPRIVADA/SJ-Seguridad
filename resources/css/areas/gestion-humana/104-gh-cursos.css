@@ -1,0 +1,11 @@
+/* gh-cursos — capa 104
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   También nombra clases de: Gestión Humana / Selección.
+*/
+
+@media (max-width: 900px) {
+    .cursos-dashboard-page__charts,
+    .seleccion-dashboard-page__charts {
+        grid-template-columns: 1fr;
+    }
+}

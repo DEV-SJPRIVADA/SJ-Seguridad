@@ -1,0 +1,9 @@
+/* Gestión Humana / Ficha empleados — capa 010
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.ficha-empleados-page__alert.alert--warning,
+.ficha-empleados-import-result {
+    margin-bottom: 1rem;
+}

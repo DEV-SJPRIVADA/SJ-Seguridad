@@ -1,0 +1,42 @@
+/* Gestión Humana / Compartido entre tableros — capa 080
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+/* Multi-cÃ©dula filter (acreditaciones / cursos / export APO) */
+.multi-cedula-filter {
+    display: inline-flex;
+    align-items: center;
+    flex: 0 0 auto;
+    position: relative;
+    vertical-align: middle;
+}
+
+.multi-cedula-filter__trigger {
+    position: relative;
+}
+
+.multi-cedula-filter__badge {
+    position: absolute;
+    top: -0.35rem;
+    right: -0.35rem;
+    z-index: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    padding: 0 0.28rem;
+    border-radius: 999px;
+    background: #be123c;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1;
+    box-shadow: 0 0 0 2px #fff;
+    pointer-events: none;
+}
+
+.multi-cedula-filter__badge[hidden] {
+    display: none !important;
+}

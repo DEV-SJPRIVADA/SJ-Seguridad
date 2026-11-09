@@ -1,0 +1,62 @@
+/* Gestión Humana / Ficha empleados — capa 008
+   Continuación del mismo tablero. Estas reglas pisan las capas anteriores.
+   No mezcles aquí reglas de otro tablero.
+*/
+
+.modal-card.ficha-empleados-masivos-modal {
+    position: relative;
+}
+
+.ficha-empleados-masivos-modal__loading {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: inherit;
+}
+
+.ficha-empleados-masivos-modal__loading[hidden] {
+    display: none;
+}
+
+.ficha-empleados-masivos-modal__loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    max-width: 22rem;
+    text-align: center;
+}
+
+.ficha-empleados-masivos-modal__spinner,
+.ficha-empleados-masivos-modal__btn-spinner {
+    display: inline-block;
+    width: 1.35rem;
+    height: 1.35rem;
+    border: 2px solid rgba(0, 51, 102, 0.15);
+    border-top-color: var(--brand-blue);
+    border-radius: 999px;
+    animation: ficha-import-spin 0.75s linear infinite;
+}
+
+.ficha-empleados-masivos-modal__loading-title {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-text);
+}
+
+.ficha-empleados-masivos-modal__loading-text {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #64748b;
+    line-height: 1.45;
+}
+
+.ficha-empleados-masivos-modal .modal-card {
+    position: relative;
+}
