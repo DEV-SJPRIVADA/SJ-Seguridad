@@ -32,6 +32,7 @@ Route::middleware(['password.changed'])
     ->group(function (): void {
         Route::get('/dashboard', [GestionHumanaAreaDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard/metrics', [GestionHumanaAreaDashboardController::class, 'metrics'])->name('dashboard.metrics');
+        Route::post('/dashboard/export', [GestionHumanaAreaDashboardController::class, 'export'])->name('dashboard.export');
 
         // Catálogo conceptos/áreas ↔ cargos (mismo permiso del tablero).
         Route::get('/dashboard/conceptos', [GestionHumanaAreaDashboardController::class, 'conceptosIndex'])->name('dashboard.conceptos.index');
@@ -407,6 +408,7 @@ Route::middleware(['password.changed'])
         Route::get('/permisos/historial', [ReportesNovedadesPermisosController::class, 'historial'])->name('permisos.historial');
         Route::post('/permisos', [ReportesNovedadesPermisosController::class, 'store'])->name('permisos.store');
         Route::patch('/permisos/{permiso}', [ReportesNovedadesPermisosController::class, 'update'])->name('permisos.update');
+        Route::patch('/permisos/{permiso}/marca-gh', [ReportesNovedadesPermisosController::class, 'toggleMarcaGh'])->name('permisos.marca-gh');
         Route::patch('/permisos/{permiso}/review', [ReportesNovedadesPermisosController::class, 'review'])->name('permisos.review');
         Route::delete('/permisos/{permiso}', [ReportesNovedadesPermisosController::class, 'destroy'])->name('permisos.destroy');
     });

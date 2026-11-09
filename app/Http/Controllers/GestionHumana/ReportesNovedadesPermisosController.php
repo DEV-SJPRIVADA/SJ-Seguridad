@@ -140,6 +140,41 @@ class ReportesNovedadesPermisosController extends Controller
             ->with('status', 'Registro de permisos actualizado correctamente.');
     }
 
+    public function toggleMarcaGh(Request $request, ReportesNovedadesPermiso $permiso): JsonResponse
+    {
+        abort_unless($this->access->canEdit(auth()->user(), self::SHEET), 403);
+
+        $validated = $request->validate([
+            'marca_gh' => ['required', 'boolean'],
+        ]);
+
+        $before = $permiso->only(['marca_gh']);
+        $permiso->update([
+            'marca_gh' => (bool) $validated['marca_gh'],
+            'updated_by' => auth()->id(),
+        ]);
+
+        $this->auditLogService->logModelChange(
+            eventType: 'permisos_novedad',
+            action: 'update',
+            model: $permiso,
+            before: $before,
+            after: $permiso->only(['marca_gh']),
+            metadata: [
+                'sheet' => self::SHEET,
+                'id' => $permiso->id,
+                'document_number' => $permiso->document_number,
+                'field' => 'marca_gh',
+            ],
+            userId: (int) auth()->id(),
+        );
+
+        return response()->json([
+            'ok' => true,
+            'marca_gh' => (bool) $permiso->marca_gh,
+        ]);
+    }
+
     public function review(ReviewPermisoRequest $request, ReportesNovedadesPermiso $permiso): RedirectResponse
     {
         $before = $permiso->only(['observacion_nomina']);

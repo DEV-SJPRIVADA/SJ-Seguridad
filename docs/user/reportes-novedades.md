@@ -14,7 +14,7 @@ Aplica al tablero **MT-GH-04 Novedades** en el area **Gestion Humana**, con cuat
 - **Vacaciones** — registrar disfrute o compensacion, dias, fechas (inicio, fin, reintegro), periodos y firma para la carta Word; Nómina deja su observacion.
 - **Incapacidades** — tipo, dias, fechas de control y devolucion; **días entrega** se calcula solo (hoy − inicio, o envío final − inicio); Nómina solo completa su observación. Cada fila tiene **Adjuntos** (PDF o JPG) para consultar y descargar; quien edita puede agregarlos o quitarlos.
 - **Retiros** — altas manuales o automaticas al desvincular; motivo y fechas; Nómina observa.
-- **Permisos** — licencias, sanciones, permisos remunerados y demas novedades de la hoja de permisos/licencia.
+- **Permisos** – licencias, sanciones, permisos remunerados y demas novedades de la hoja de permisos/licencia. La columna **Marca GH** es un check que se guarda al hacer clic.
 
 En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de cambios de esa hoja o de una fila.
 
@@ -63,7 +63,7 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
    - **Limpiar** restaura mes y quincena actuales.
    - Con permiso, use también **Exportar** o **Historial**. En el Historial de la hoja puede filtrar por cédula/usuario, tipo de acción y rango de fechas.
 4. Con **Editar**: cree o corrija filas. En el alta, escriba la **cédula** y pulse buscar (o Enter / salga del campo): se precargan nombre, cargo y destino desde Ficha. En **Vacaciones**, al completar **días** y **fecha inicio** se sugieren **fecha fin** y **fecha reintegro** (sin domingos ni festivos; reintegro = dia siguiente a fin); complete **periodos** y **firma** como en Cartas Vacaciones. En acciones, use **Descargar carta Word** para generar el .docx del registro (requiere plantilla activa en Plantillas Word).
-5. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
+5. En **Permisos**, con **Editar**, marque o desmarque el check de la columna **Marca GH** directamente en el listado: el cambio se guarda al instante. Con Revisar o solo consulta, el check se ve deshabilitado. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
 6. En **Incapacidades**, el icono de clip abre **Adjuntos**. Ahí se ven el nombre, la fecha, quién lo subió y el tamaño, y se descarga el archivo. Con **Editar** puede agregar varios PDF o JPG (de una vez o en otro momento) y eliminar uno. Al eliminar la incapacidad se borran también sus archivos. Nómina y quien solo consulta pueden ver y descargar, no subir ni borrar.
 
 ### Retiros automaticos
@@ -74,6 +74,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-11-09 | Agent | Permisos: columna **Marca GH** como check editable en el listado; se guarda al instante (solo permiso Editar). |
 | 1.8 | 2026-11-06 | Agent | Incapacidades: adjuntos PDF/JPG por fila (subir y eliminar con Editar; ver y descargar con Ver o Nómina). |
 | 1.7 | 2026-11-04 | Agent | Vacaciones: fecha reintegro, periodos y firma en alta/edición; descarga carta Word por fila (permiso editar). |
 | 1.6 | 2026-11-03 | Agent | Vacaciones: la fecha fin se sugiere al ingresar días y fecha inicio (sin domingos ni festivos); el campo sigue editable. |

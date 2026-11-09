@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\GestionHumana;
 
+use App\Exports\GestionHumanaAreaDashboardExport;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\GestionHumana\ExportGestionHumanaAreaDashboardRequest;
 use App\Models\GhAreaDashboardConcepto;
 use App\Models\GhAreaDashboardConceptoCargo;
 use App\Services\GestionHumana\GestionHumanaAreaDashboardService;
@@ -10,6 +12,7 @@ use App\Services\GestionHumana\GhAreaDashboardConceptoService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Dashboard de área Gestión Humana (informe mensual KPI + gráficos + conceptos).
@@ -33,6 +36,7 @@ class GestionHumanaAreaDashboardController extends Controller
             'filters' => $payload['filters'],
             'initialPayload' => $payload,
             'metricsUrl' => route('gestion-humana.dashboard.metrics'),
+            'exportUrl' => route('gestion-humana.dashboard.export'),
             'conceptosUrl' => route('gestion-humana.dashboard.conceptos.index'),
             'conceptosStoreUrl' => route('gestion-humana.dashboard.conceptos.store'),
             'yearOptions' => $options['anios'],
@@ -50,6 +54,32 @@ class GestionHumanaAreaDashboardController extends Controller
         return response()->json(
             $this->dashboardService->metrics($this->filtersFromRequest($request))
         );
+    }
+
+    public function export(ExportGestionHumanaAreaDashboardRequest $request): StreamedResponse
+    {
+        $this->authorizeDashboard();
+
+        $validated = $request->validated();
+        $chartImages = [];
+        foreach (ExportGestionHumanaAreaDashboardRequest::CHART_IMAGE_KEYS as $key) {
+            $uri = trim((string) data_get($validated, 'chart_images.'.$key, ''));
+            if ($uri !== '') {
+                $chartImages[$key] = $uri;
+            }
+        }
+
+        return (new GestionHumanaAreaDashboardExport(
+            $this->dashboardService,
+            [
+                'anio' => trim((string) ($validated['anio'] ?? '')),
+                'mes' => trim((string) ($validated['mes'] ?? '')),
+                'ciudad' => trim((string) ($validated['ciudad'] ?? '')),
+                'cargo' => trim((string) ($validated['cargo'] ?? '')),
+                'cliente' => trim((string) ($validated['cliente'] ?? '')),
+            ],
+            $chartImages,
+        ))->download();
     }
 
     public function conceptosIndex(): JsonResponse

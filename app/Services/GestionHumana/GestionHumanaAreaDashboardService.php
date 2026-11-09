@@ -6,6 +6,7 @@ use App\Models\AcreditacionAcreditado;
 use App\Models\ClienteInternoSolicitud;
 use App\Models\EmployeeArchiveConsultationItem;
 use App\Models\EmployeeFichaProfile;
+use App\Models\FormacionRegistro;
 use App\Models\GhAreaDashboardConceptoCargo;
 use App\Models\MtSt04Registro;
 use Illuminate\Database\Eloquent\Builder;
@@ -274,9 +275,137 @@ final class GestionHumanaAreaDashboardService
     }
 
     /**
+     * Nombre de mes para UI / Excel (Enero…Diciembre).
+     */
+    public function monthName(int $mes): string
+    {
+        return self::MONTH_FULL_LABELS[$mes] ?? (string) $mes;
+    }
+
+    /**
+     * Consultas de detalle del Excel: mismas reglas y filtros que los KPI.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return array{
+     *     filters: array{anio: string, mes: string, ciudad: string, cargo: string, cliente: string},
+     *     eom: Carbon,
+     *     personal_activo: Builder<EmployeeFichaProfile>,
+     *     ingresos: Builder<EmployeeFichaProfile>,
+     *     desvinculaciones: Builder<EmployeeFichaProfile>,
+     *     acreditaciones: Builder<AcreditacionAcreditado>,
+     *     psicofisicos: Builder<MtSt04Registro>,
+     *     cliente_interno: Builder<ClienteInternoSolicitud>,
+     *     archivo: Builder<EmployeeArchiveConsultationItem>
+     * }
+     */
+    public function exportSourceQueries(array $filters): array
+    {
+        $normalized = $this->normalizeFilters($filters);
+        $anio = (int) $normalized['anio'];
+        $mes = (int) $normalized['mes'];
+        $eom = $this->endOfMonth($anio, $mes);
+
+        return [
+            'filters' => $normalized,
+            'eom' => $eom,
+            'personal_activo' => $this->activosEomQuery($eom, $normalized)
+                ->select('employee_ficha_profiles.*'),
+            'ingresos' => $this->hiresInMonthQuery($anio, $mes, $normalized)
+                ->select('employee_ficha_profiles.*'),
+            'desvinculaciones' => $this->terminationsInMonthQuery($anio, $mes, $normalized)
+                ->select('employee_ficha_profiles.*'),
+            'acreditaciones' => $this->acreditacionBaseQuery($normalized)
+                ->where('acreditacion_acreditados.estado', AcreditacionAcreditado::ESTADO_ACREDITADO)
+                ->select('acreditacion_acreditados.*'),
+            'psicofisicos' => $this->mtSt04BaseQuery($normalized)
+                ->where('mt_st_04_registros.estado_1', MtSt04Registro::ESTADO_VIGENTE)
+                ->select('mt_st_04_registros.*')
+                ->selectRaw(EmployeeFichaProfile::displayCitySql('ficha').' as ficha_ciudad')
+                ->selectRaw(self::displayClientSql('ficha').' as ficha_cliente')
+                ->addSelect([
+                    'ficha.full_name as ficha_full_name',
+                    'ficha.position_name as ficha_position_name',
+                ]),
+            'cliente_interno' => ClienteInternoSolicitud::query()
+                ->with(['tipoSolicitud', 'estado'])
+                ->where('anio', $anio)
+                ->where('mes', $mes),
+            'archivo' => EmployeeArchiveConsultationItem::query()
+                ->with(['consultation:id,consultation_types'])
+                ->whereYear('created_at', $anio)
+                ->where('month_number', $mes),
+        ];
+    }
+
+    /**
+     * Personas del ciclo Formación (unidad del KPI), con estado y cantidad de cursos del periodo.
+     *
+     * @param  array<string, mixed>  $filters
+     * @return list<array{numero_id: string, nombre_completo: string, estado_ciclo: string, cursos: int}>
+     */
+    public function formacionCicloPeople(array $filters): array
+    {
+        $normalized = $this->normalizeFilters($filters);
+        $anio = (int) $normalized['anio'];
+        $mes = (int) $normalized['mes'];
+        $classified = $this->formacionDashboardService->classifyPeopleByCiclo($anio, $mes);
+
+        $cicloById = [];
+        foreach ($classified['ids'] as $ciclo => $ids) {
+            $label = FormacionRegistro::CICLO_LABELS[$ciclo] ?? (string) $ciclo;
+            foreach ($ids as $id) {
+                $cicloById[(string) $id] = $label;
+            }
+        }
+
+        if ($cicloById === []) {
+            return [];
+        }
+
+        $names = [];
+        $courseCounts = [];
+        FormacionRegistro::query()
+            ->where('anio', $anio)
+            ->where('mes', $mes)
+            ->orderBy('id')
+            ->chunkById(500, function ($rows) use (&$names, &$courseCounts, $cicloById): void {
+                foreach ($rows as $row) {
+                    $id = trim((string) $row->numero_id);
+                    if ($id === '' || ! isset($cicloById[$id])) {
+                        continue;
+                    }
+
+                    $names[$id] = (string) $row->nombre_completo;
+                    $courseCounts[$id] = ($courseCounts[$id] ?? 0) + 1;
+                }
+            });
+
+        $rows = [];
+        foreach ($cicloById as $id => $ciclo) {
+            $rows[] = [
+                'numero_id' => $id,
+                'nombre_completo' => $names[$id] ?? '',
+                'estado_ciclo' => $ciclo,
+                'cursos' => $courseCounts[$id] ?? 0,
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
      * @param  array{ciudad: string, cargo: string, cliente: string}  $filters
      */
     private function countHiresInMonth(int $anio, int $mes, array $filters): int
+    {
+        return $this->hiresInMonthQuery($anio, $mes, $filters)->count();
+    }
+
+    /**
+     * @param  array{ciudad: string, cargo: string, cliente: string}  $filters
+     * @return Builder<EmployeeFichaProfile>
+     */
+    private function hiresInMonthQuery(int $anio, int $mes, array $filters): Builder
     {
         $query = EmployeeFichaProfile::query()
             ->whereNotNull('hire_date')
@@ -285,13 +414,22 @@ final class GestionHumanaAreaDashboardService
 
         $this->applyFichaDimensionFilters($query, $filters);
 
-        return $query->count();
+        return $query;
     }
 
     /**
      * @param  array{ciudad: string, cargo: string, cliente: string}  $filters
      */
     private function countTerminationsInMonth(int $anio, int $mes, array $filters): int
+    {
+        return $this->terminationsInMonthQuery($anio, $mes, $filters)->count();
+    }
+
+    /**
+     * @param  array{ciudad: string, cargo: string, cliente: string}  $filters
+     * @return Builder<EmployeeFichaProfile>
+     */
+    private function terminationsInMonthQuery(int $anio, int $mes, array $filters): Builder
     {
         $query = EmployeeFichaProfile::query()
             ->whereNotNull('termination_date')
@@ -300,7 +438,7 @@ final class GestionHumanaAreaDashboardService
 
         $this->applyFichaDimensionFilters($query, $filters);
 
-        return $query->count();
+        return $query;
     }
 
     /**

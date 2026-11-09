@@ -49,6 +49,8 @@
                         </div>
                     </details>
 
+                    <div class="alert alert--danger" x-cloak x-show="marcaGhError" x-text="marcaGhError"></div>
+
                     <div class="cursos-registros-page__table-toolbar">
                         <p class="req-manage-filters__meta">
                             <strong id="rn-permisos-count">…</strong>
@@ -265,6 +267,7 @@
                     lookupMessage: '',
                     lookupOk: false,
                     lookupLoading: false,
+                    marcaGhError: '',
                     historialLoading: false,
                     historialItems: [],
                     historialFilterable: false,
@@ -365,6 +368,47 @@
                             this.lookupMessage = 'No se pudo consultar Ficha.';
                         } finally {
                             this.lookupLoading = false;
+                        }
+                    },
+                    async toggleMarcaGh(input) {
+                        if (! this.canEdit || ! input) {
+                            return;
+                        }
+
+                        const url = input.getAttribute('data-url') || '';
+                        if (! url) {
+                            return;
+                        }
+
+                        const desired = !! input.checked;
+                        input.disabled = true;
+                        this.marcaGhError = '';
+
+                        try {
+                            const response = await fetch(url, {
+                                method: 'PATCH',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify({ marca_gh: desired }),
+                            });
+
+                            if (! response.ok) {
+                                const data = await response.json().catch(() => ({}));
+                                throw new Error(data.message || 'No se pudo actualizar Marca GH.');
+                            }
+
+                            const data = await response.json().catch(() => ({}));
+                            input.checked = typeof data.marca_gh === 'boolean' ? data.marca_gh : desired;
+                        } catch (e) {
+                            input.checked = ! desired;
+                            this.marcaGhError = e.message || 'No se pudo actualizar Marca GH.';
+                        } finally {
+                            input.disabled = false;
                         }
                     },
                     historialActionKind(item) {
@@ -517,7 +561,10 @@
                     pageLength: 25,
                     responsive: false,
                     order: [[6, 'desc']],
-                    columnDefs: [{ targets: [10], orderable: false, searchable: false }],
+                    columnDefs: [
+                        { targets: [8], orderable: false, className: 'rn-permisos-table__check-td' },
+                        { targets: [10], orderable: false, searchable: false },
+                    ],
                 });
 
                 api.on('xhr.dt', function (_event, _settings, json) {
@@ -526,6 +573,15 @@
                     if (el && json && typeof json.recordsFiltered !== 'undefined') {
                         el.textContent = json.recordsFiltered;
                     }
+                });
+
+                $table.on('change', '.js-rn-permiso-marca-gh', function () {
+                    const root = document.querySelector('.reportes-novedades-page');
+                    const data = root && window.Alpine ? window.Alpine.$data(root) : null;
+                    if (! data || ! data.canEdit) {
+                        return;
+                    }
+                    data.toggleMarcaGh(this);
                 });
 
                 $table.on('click', '.js-rn-permiso-edit', function () {

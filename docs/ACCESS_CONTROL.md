@@ -412,7 +412,7 @@ Permisos funcionales (independientes de Ficha empleados):
 
 ### Dashboard de área Gestión Humana (FEAT-046)
 
-El tablero sidebar **Dashboard** (`view.board.gestion_humana.dashboard`) ya no abre el placeholder genérico: redirige a la pantalla real del informe mensual (KPIs + gráficos) en `/gestion-humana/dashboard` (+ JSON `/gestion-humana/dashboard/metrics`).
+El tablero sidebar **Dashboard** (`view.board.gestion_humana.dashboard`) ya no abre el placeholder genérico: redirige a la pantalla real del informe mensual (KPIs + gráficos) en `/gestion-humana/dashboard` (+ JSON `/gestion-humana/dashboard/metrics` + POST Excel `/gestion-humana/dashboard/export`). El export usa el mismo permiso de tablero; no hay clave nueva.
 
 - **Sin permiso nuevo** y **sin** cambios a `config/access.php` por esta feature.
 - Gate: `view.board.gestion_humana.dashboard` ∨ bypass `manage.users`.

@@ -17,6 +17,8 @@ use Database\Seeders\GhAreaDashboardConceptoSeeder;
 use Database\Seeders\RoleAndPermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Tests\TestCase;
 
 class GestionHumanaAreaDashboardTest extends TestCase
@@ -48,6 +50,13 @@ class GestionHumanaAreaDashboardTest extends TestCase
 
         $this->actingAs($user)
             ->getJson(route('gestion-humana.dashboard.metrics'))
+            ->assertForbidden();
+
+        $this->actingAs($user)
+            ->postJson(route('gestion-humana.dashboard.export'), [
+                'anio' => '2026',
+                'mes' => '10',
+            ])
             ->assertForbidden();
     }
 
@@ -100,6 +109,8 @@ class GestionHumanaAreaDashboardTest extends TestCase
             ->assertSee('dash_ciudad', false)
             ->assertSee('dash_cliente', false)
             ->assertSee('Tableros del area', false)
+            ->assertSee('Exportar Excel', false)
+            ->assertSee('exportUrl', false)
             ->assertDontSee('select2', false)
             ->assertDontSee('excelHtml5', false);
     }
@@ -495,6 +506,206 @@ class GestionHumanaAreaDashboardTest extends TestCase
             ->assertOk();
 
         $this->assertDatabaseMissing('gh_area_dashboard_conceptos', ['id' => $concepto->id]);
+    }
+
+    public function test_export_excel_includes_kpi_sheet_source_sheets_and_chart_image(): void
+    {
+        $viewer = $this->viewerUser();
+
+        $this->createFicha('2001', 'Activo Bogota', [
+            'hire_date' => '2026-01-10',
+            'termination_date' => null,
+            'position_name' => 'GUARDA',
+            'work_city_name' => 'BOGOTA',
+            'work_center_name' => 'Cliente Alpha',
+        ]);
+        $this->createFicha('2002', 'Activo Cali', [
+            'hire_date' => '2025-06-01',
+            'termination_date' => null,
+            'position_name' => 'ANALISTA',
+            'work_city_name' => 'CALI',
+            'work_center_name' => 'Cliente Beta',
+        ]);
+        $this->createFicha('2003', 'Nuevo Mes', [
+            'hire_date' => '2026-10-05',
+            'termination_date' => null,
+            'position_name' => 'OPERADOR',
+            'work_city_name' => 'BOGOTA',
+            'work_center_name' => 'Cliente Alpha',
+        ]);
+        $this->createFicha('2004', 'Baja Mes', [
+            'hire_date' => '2024-01-01',
+            'termination_date' => '2026-10-12',
+            'position_name' => 'GUARDA',
+            'work_city_name' => 'BOGOTA',
+            'work_center_name' => 'Cliente Alpha',
+        ]);
+
+        MtSt04Registro::factory()->create([
+            'document_number' => '2001',
+            'estado_1' => MtSt04Registro::ESTADO_VIGENTE,
+        ]);
+        AcreditacionAcreditado::factory()->create([
+            'document_number' => '2001',
+            'full_name' => 'Activo Bogota',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+        ]);
+        ClienteInternoSolicitud::factory()->create([
+            'anio' => 2026,
+            'mes' => 10,
+            'nombre_apellidos' => 'Solicitante CI',
+            'cedula' => '555001',
+        ]);
+        FormacionRegistro::factory()->create([
+            'anio' => 2026,
+            'mes' => 10,
+            'fecha_inicio' => '2026-10-01',
+            'numero_id' => '800001',
+            'nombre_completo' => 'Alumno Uno',
+            'nombre_curso' => 'Inducción SST',
+            'calificacion' => '9',
+        ]);
+        $archiveConsultation = EmployeeArchiveConsultation::query()->create([
+            'user_id' => $viewer->id,
+            'document_numbers' => ['2001'],
+            'consultation_types' => ['juridico'],
+            'documents_requested' => 1,
+            'documents_matched' => 1,
+            'delivered_to' => 'GH',
+            'created_at' => '2026-10-08 10:00:00',
+            'updated_at' => '2026-10-08 10:00:00',
+        ]);
+        EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $archiveConsultation->id,
+            'document_number' => '2001',
+            'full_name' => 'Activo Bogota',
+            'concept' => 'Consulta prueba',
+            'delivered_to' => 'GH',
+            'week_of_month' => 2,
+            'month_number' => 10,
+            'month_label' => 'Octubre',
+            'created_at' => '2026-10-08 10:00:00',
+            'updated_at' => '2026-10-08 10:00:00',
+        ]);
+
+        $png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+
+        $response = $this->actingAs($viewer)
+            ->postJson(route('gestion-humana.dashboard.export'), [
+                'anio' => '2026',
+                'mes' => '10',
+                'chart_images' => [
+                    'evolucion_personal' => $png,
+                    'personal_por_concepto' => $png,
+                    'estado_psicofisicos' => $png,
+                    'estado_acreditacion' => $png,
+                    'consultas_archivo' => $png,
+                ],
+            ]);
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $temp = tempnam(sys_get_temp_dir(), 'ghdashx');
+        $this->assertNotFalse($temp);
+        file_put_contents($temp, $response->streamedContent());
+
+        try {
+            $spreadsheet = IOFactory::load($temp);
+            $this->assertSame([
+                'Informe',
+                'Personal activo',
+                'Ingresos',
+                'Desvinculaciones',
+                'Acreditaciones',
+                'Psicofísicos',
+                'Cliente interno',
+                'Formación',
+                'Archivo',
+            ], $spreadsheet->getSheetNames());
+
+            $informe = $spreadsheet->getSheetByName('Informe');
+            $this->assertNotNull($informe);
+            $informeText = $this->sheetValues($informe);
+            $this->assertStringContainsString('Personal Activo', $informeText);
+            $this->assertStringContainsString('Octubre 2026', $informeText);
+            $this->assertSame('Personal Activo', (string) $informe->getCell('B4')->getValue());
+            $this->assertSame('Archivo', (string) $informe->getCell('T4')->getValue());
+            $this->assertSame('Evolución de Personal', (string) $informe->getCell('A8')->getValue());
+            $this->assertSame('Ingreso Vs Desvinculaciones', (string) $informe->getCell('H8')->getValue());
+            $this->assertSame('Evolución Formación', (string) $informe->getCell('O8')->getValue());
+            $this->assertSame('Personal por concepto / área', (string) $informe->getCell('A18')->getValue());
+            $this->assertSame('Consultas Archivo', (string) $informe->getCell('P18')->getValue());
+            $this->assertGreaterThan(0, $informe->getDrawingCollection()->count());
+            $bottomColumns = [];
+            foreach ($informe->getDrawingCollection() as $drawing) {
+                if (str_ends_with($drawing->getCoordinates(), '19')) {
+                    $bottomColumns[] = preg_replace('/\d+$/', '', $drawing->getCoordinates());
+                }
+            }
+            $this->assertCount(4, $bottomColumns);
+            $this->assertCount(4, array_unique($bottomColumns));
+
+            $activos = $this->sheetValues($spreadsheet->getSheetByName('Personal activo'));
+            $this->assertStringContainsString('2001', $activos);
+            $this->assertStringContainsString('2002', $activos);
+            $this->assertStringContainsString('2003', $activos);
+            $this->assertStringNotContainsString('2004', $activos);
+
+            $ingresos = $this->sheetValues($spreadsheet->getSheetByName('Ingresos'));
+            $this->assertStringContainsString('2003', $ingresos);
+            $this->assertStringContainsString('Nuevo Mes', $ingresos);
+
+            $bajas = $this->sheetValues($spreadsheet->getSheetByName('Desvinculaciones'));
+            $this->assertStringContainsString('2004', $bajas);
+
+            $this->assertStringContainsString('2001', $this->sheetValues($spreadsheet->getSheetByName('Acreditaciones')));
+            $this->assertStringContainsString('2001', $this->sheetValues($spreadsheet->getSheetByName('Psicofísicos')));
+            $this->assertStringContainsString('555001', $this->sheetValues($spreadsheet->getSheetByName('Cliente interno')));
+            $this->assertStringContainsString('800001', $this->sheetValues($spreadsheet->getSheetByName('Formación')));
+            $this->assertStringContainsString('2001', $this->sheetValues($spreadsheet->getSheetByName('Archivo')));
+        } finally {
+            @unlink($temp);
+        }
+
+        $filtered = $this->actingAs($viewer)
+            ->postJson(route('gestion-humana.dashboard.export'), [
+                'anio' => '2026',
+                'mes' => '10',
+                'ciudad' => 'BOGOTA',
+            ]);
+        $filtered->assertOk();
+        $tempFiltered = tempnam(sys_get_temp_dir(), 'ghdashf');
+        $this->assertNotFalse($tempFiltered);
+        file_put_contents($tempFiltered, $filtered->streamedContent());
+
+        try {
+            $spreadsheet = IOFactory::load($tempFiltered);
+            $activos = $this->sheetValues($spreadsheet->getSheetByName('Personal activo'));
+            $this->assertStringContainsString('2001', $activos);
+            $this->assertStringContainsString('2003', $activos);
+            $this->assertStringNotContainsString('2002', $activos);
+            $this->assertStringNotContainsString('Activo Cali', $activos);
+
+            $ci = $this->sheetValues($spreadsheet->getSheetByName('Cliente interno'));
+            $this->assertStringContainsString('555001', $ci);
+            $formacion = $this->sheetValues($spreadsheet->getSheetByName('Formación'));
+            $this->assertStringContainsString('800001', $formacion);
+            $archivo = $this->sheetValues($spreadsheet->getSheetByName('Archivo'));
+            $this->assertStringContainsString('2001', $archivo);
+        } finally {
+            @unlink($tempFiltered);
+        }
+    }
+
+    private function sheetValues(Worksheet $sheet): string
+    {
+        $values = [];
+        foreach ($sheet->toArray(null, true, true, true) as $row) {
+            $values[] = implode('|', array_map(static fn ($v): string => trim((string) $v), $row));
+        }
+
+        return implode("\n", $values);
     }
 
     /**

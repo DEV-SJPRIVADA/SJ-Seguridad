@@ -9,13 +9,14 @@ Mapa editable cargo → concepto (tablas `gh_area_dashboard_conceptos` + `gh_are
 Modal UI (`gh-area-conceptos-modal`): chrome alineado a Generar cartas (header con icono/badge, pasos 1–3, chips de cargos, bloque ámbar de sin asignar, footer de acciones).
 
 - UI: botón capas en filtros del dashboard → modal CRUD (mismo permiso `view.board.gestion_humana.dashboard`).
+- Export Excel: botón icono Excel a la derecha de Conceptos / áreas. Mismo permiso de tablero.
 - Seed inicial: `php artisan db:seed --class=GhAreaDashboardConceptoSeeder`.
 - Cargos sin mapa → bucket **OTROS**. Un cargo solo en un concepto (`position_key` unique, UPPER/TRIM).
 - Chart JSON: `charts.personal_por_concepto` (orden por volumen).
 
 ## Objetivo
 
-Sustituir el placeholder generico del tablero **Dashboard** de Gestion Humana por un **informe mensual** con 10 KPIs y 7 graficos (ApexCharts), filtrable por ano / mes / ciudad / cargo / cliente. Mutaciones limitadas al catalogo conceptos↔cargos; sin export Excel en V1.
+Sustituir el placeholder generico del tablero **Dashboard** de Gestion Humana por un **informe mensual** con 10 KPIs y 7 graficos (ApexCharts), filtrable por ano / mes / ciudad / cargo / cliente. Mutaciones limitadas al catalogo conceptos↔cargos. Export Excel del informe (KPIs + capturas de graficos + hojas de detalle).
 
 ## Alcance actual
 
@@ -27,7 +28,7 @@ Sustituir el placeholder generico del tablero **Dashboard** de Gestion Humana po
 - Navegacion: `NavigationResolver` apunta el tablero Dashboard a `gestion-humana.dashboard` (URL + active + area GH activa), igual que Comercial/Compras; sin esto la franja de tableros no aparece en la vista dedicada.
 - Fuentes de datos (lectura): Ficha empleados, MT-ST-04, Acreditaciones, Cliente interno, Formacion, Archivo (consultas).
 - Filtros parciales V1: Cliente interno, Formacion y Archivo **solo** respetan ano/mes; ciudad/cargo/cliente se ignoran en esas fuentes (`meta.filters_parciales_nota`).
-- Fuera V1: export Excel/PDF, KPI At-Guarda, snapshot fisico de headcount, filtros dim ficha en CI/Formacion/Archivo, subnav de pestanas.
+- Fuera de alcance: PDF, KPI At-Guarda, snapshot fisico de headcount, filtros dim ficha en CI/Formacion/Archivo, subnav de pestanas.
 
 ## Rutas
 
@@ -39,6 +40,7 @@ Middleware grupo: `auth`, `active` (via `web.php`) + `password.changed`.
 | --- | --- | --- | --- |
 | GET | `/gestion-humana/dashboard` | `gestion-humana.dashboard` | `view.board.gestion_humana.dashboard` ∨ `manage.users` |
 | GET | `/gestion-humana/dashboard/metrics` | `gestion-humana.dashboard.metrics` | idem |
+| POST | `/gestion-humana/dashboard/export` | `gestion-humana.dashboard.export` | idem (Excel: KPIs + PNG de gráficos + detalle) |
 | GET/POST/PATCH/DELETE | `/gestion-humana/dashboard/conceptos…` | `gestion-humana.dashboard.conceptos.*` | idem (CRUD conceptos + asignar cargos) |
 
 **Redirect (shared):** en el closure `dashboard` de `routes/web.php`:
@@ -62,9 +64,10 @@ if ($selectedModuleKey === 'gestion_humana' && $selectedBoardKey === 'dashboard'
 
 | Clase | Responsabilidad |
 | --- | --- |
-| `App\Http\Controllers\GestionHumana\GestionHumanaAreaDashboardController` | `index` (Blade + `initialPayload`) y `metrics` (JSON); normaliza query params; auth |
+| `App\Http\Controllers\GestionHumana\GestionHumanaAreaDashboardController` | `index` (Blade + `initialPayload`), `metrics` (JSON) y `export` (Excel); normaliza query params; auth |
+| `App\Http\Requests\GestionHumana\ExportGestionHumanaAreaDashboardRequest` | Filtros + `chart_images` (data URI). No persiste; sin `UppercasesValidatedText`. |
 
-Sin Form Request en V1: normalizacion ano/mes (defaults TZ `America/Bogota`) en el servicio.
+Normalizacion ano/mes (defaults TZ `America/Bogota`) en el servicio.
 
 ## Vistas
 
@@ -72,7 +75,7 @@ Sin Form Request en V1: normalizacion ano/mes (defaults TZ `America/Bogota`) en 
 | --- | --- |
 | `areas/gestion_humana/dashboard.blade.php` | Informe mensual: filtros searchable-select, 10 KPI cards, 7 charts, Alpine refresh via `metricsUrl` |
 
-Patron UI: chrome Formacion / Cursos (`formacion-dashboard-page` / `cursos-dashboard-page` + `gh-area-dashboard-page`). Titulo visible: **«Dashboard de Gestión Humana – Informe Mensual»**. Icon-btn canonico para limpiar filtros. Sin Select2 / `excelHtml5` / familia `*__icon-btn` propia.
+Patron UI: chrome Formacion / Cursos (`formacion-dashboard-page` / `cursos-dashboard-page` + `gh-area-dashboard-page`). Titulo visible: **«Dashboard de Gestión Humana – Informe Mensual»**. Icon-btn canonico para limpiar filtros, conceptos y **export Excel** (`<x-selfhst-microsoft-excel-2013>`). Sin Select2 / `excelHtml5` / familia `*__icon-btn` propia.
 
 ## Modelos y tablas
 
@@ -91,7 +94,8 @@ Sin tablas propias. Lectura agregada:
 
 | Clase | Responsabilidad |
 | --- | --- |
-| `App\Services\GestionHumana\GestionHumanaAreaDashboardService` | `metrics()`, `filterSelectOptions()`, EOM, rotacion, lista operativa, charts |
+| `App\Services\GestionHumana\GestionHumanaAreaDashboardService` | `metrics()`, `filterSelectOptions()`, `exportSourceQueries()`, `formacionCicloPeople()`, EOM, rotacion, lista operativa, charts |
+| `App\Exports\GestionHumanaAreaDashboardExport` | Libro xlsx: hoja Informe (KPIs + PNG) + 8 hojas de detalle vía `BaseExport::writeTo` |
 
 Constante publica: `OPERATIVE_POSITIONS` (lista canonica). Helper SQL cliente: `displayClientSql()` = `COALESCE(NULLIF(TRIM(work_center_name), ''), cost_center_name)`.
 
@@ -207,8 +211,8 @@ Query: `anio`, `mes`, `ciudad`, `cargo`, `cliente`.
 
 | Asset | Rol |
 | --- | --- |
-| Alpine en la Blade | `initialPayload`, `metricsUrl`, refresh al cambiar filtros / limpiar |
-| `resources/js/gh-area-dashboard-charts.js` | Render/update ApexCharts (7 instancias) |
+| Alpine en la Blade | `initialPayload`, `metricsUrl`, `exportUrl`, refresh al cambiar filtros / limpiar, `exportExcel()` |
+| `resources/js/gh-area-dashboard-charts.js` | Render/update ApexCharts (7 instancias) + `captureGhAreaDashboardChartImages()` |
 | `resources/js/charts/apex-defaults.js` | Colores / `sharedChart` |
 | `vite.config.js` | Entry `gh-area-dashboard-charts.js` |
 
@@ -216,7 +220,23 @@ Tras cambios Vite/CSS: `npm run build`.
 
 ## Export Excel (si aplica)
 
-No aplica en V1.
+Botón icono Excel a la derecha de Conceptos / áreas. POST JSON `gestion-humana.dashboard.export` con los filtros actuales y `chart_images` (data URI PNG de Apex `dataURI()`). Mismo permiso del tablero.
+
+Hojas:
+
+| Hoja | Contenido |
+| --- | --- |
+| Informe | Mismo layout que la página: título, filtros, 10 KPIs en una fila (franja de color) y gráficos 3+4 con título centrado |
+| Personal activo | Ficha EOM (misma regla que el KPI) |
+| Ingresos | Altas `hire_date` año/mes |
+| Desvinculaciones | Bajas `termination_date` año/mes |
+| Acreditaciones | Estado `ACREDITADO` |
+| Psicofísicos | MT-ST-04 `estado_1 = VIGENTE` |
+| Cliente interno | Solicitudes año/mes |
+| Formación | Personas del ciclo (unidad del KPI) |
+| Archivo | Ítems del historial año + `month_number` |
+
+Cliente / cargo / ciudad se aplican igual que en pantalla (CI, Formación y Archivo solo año/mes). Cada PNG se escala para caber en su panel (no se monta sobre el de al lado). Los 4 de abajo se capturan al mismo lienzo (720×520) y se colocan en cuatro franjas de igual ancho en píxeles, porque las columnas del KPI no miden lo mismo. Antes de capturar, las donas se redibujan más grandes para que porcentajes y leyenda se lean; al terminar se restaura el tamaño de la pantalla. Si Apex no entrega una imagen, ese panel queda vacío y el resto del libro se genera igual.
 
 ## Validacion local
 
@@ -225,7 +245,8 @@ No aplica en V1.
 3. Cambiar ano/mes/ciudad/cargo/cliente; KPIs/graficos refrescan via metrics.
 4. Sin permiso → 403 en pagina y metrics.
 5. `php artisan test --compact --filter=GestionHumanaAreaDashboard`
-6. Smoke UI: **cerrado** 2026-11-04 (validación manual producción, sin errores).
+6. Export: icono Excel a la derecha de Conceptos; el xlsx trae 9 hojas y respeta filtros.
+7. Smoke UI: **cerrado** 2026-11-04 (validación manual producción, sin errores). Extra pendiente: probar descarga Excel en pantalla.
 
 ## Riesgos y pendientes
 

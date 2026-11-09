@@ -38,6 +38,7 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | POST | `/{hoja}` | `{hoja}.store` | create GH. edit |
 | PATCH | `/{hoja}/{row}` | `{hoja}.update` | update GH. edit (no persiste cols Nómina) |
 | PATCH | `/{hoja}/{row}/review` | `{hoja}.review` | cols Nómina. review |
+| PATCH | `/permisos/{permiso}/marca-gh` | `permisos.marca-gh` | Toggle **Marca GH** desde el listado. **edit** (JSON) |
 | DELETE | `/{hoja}/{row}` | `{hoja}.destroy` | edit (Retiros: soft-delete) |
 | GET | `/vacaciones/{vacacion}/carta-word` | `vacaciones.carta-word` | Descarga .docx carta vacaciones (plantilla `cartas_vacaciones`). **edit** vacaciones |
 | GET | `/incapacidades/{incapacidad}/adjuntos` | `incapacidades.attachments.index` | JSON de adjuntos. view∨edit∨review |
@@ -190,7 +191,8 @@ Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja
 10. `observacion_nomina` con valor: celda del listado en pill verde (`status-pill--success`); input del modal con fondo verde (`.rn-novedad-form__input--nomina-filled`).
 11. Vacaciones (alta/edición GH): al ingresar **días** y **fecha inicio**, el modal sugiere `fecha_fin` = inicio + N días hábiles (sin domingos ni festivos CO) y `fecha_reintegro` = día siguiente a fin; el usuario puede editar ambas. También persisten **períodos** y **firma** (`signatory_id`, catálogo `firmas`) para regenerar la carta Word; no se muestran en el listado.
 12. Vacaciones: acción **Descargar carta Word** por fila (solo `reportes_novedades.vacaciones.edit`); usa `ClienteInternoCartasVacacionesGeneratorService` + plantilla activa `cartas_vacaciones`.
-13. Incapacidades: acción **Adjuntos** en cada fila. Quien ve la hoja (ver, editar o revisar) consulta y descarga. Solo **edit** sube (PDF o JPG, en lote o en varios envíos; máx. 10 por envío y 10 MB c/u) o elimina un archivo. Borrar la incapacidad borra sus archivos. No van al Excel.
+13. Permisos: la columna **Marca GH** del listado es un checkbox que persiste al instante vía `PATCH /permisos/{permiso}/marca-gh` (JSON). Solo `edit`; para `review`/`view` se muestra deshabilitado. Genera evento de auditoría `update` con `metadata.field = marca_gh`.
+14. Incapacidades: acción **Adjuntos** en cada fila. Quien ve la hoja (ver, editar o revisar) consulta y descarga. Solo **edit** sube (PDF o JPG, en lote o en varios envíos; máx. 10 por envío y 10 MB c/u) o elimina un archivo. Borrar la incapacidad borra sus archivos. No van al Excel.
 
 ## JavaScript / assets
 

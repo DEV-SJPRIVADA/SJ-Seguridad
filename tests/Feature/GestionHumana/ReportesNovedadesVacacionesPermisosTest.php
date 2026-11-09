@@ -463,6 +463,47 @@ class ReportesNovedadesVacacionesPermisosTest extends TestCase
         $this->assertDatabaseMissing('reportes_novedades_permisos', ['id' => $row->id]);
     }
 
+    public function test_permisos_toggle_marca_gh_updates_database_and_requires_edit(): void
+    {
+        $editor = $this->editorUser('permisos');
+        $reviewer = $this->reviewerUser('permisos');
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.reportes-novedades.permisos.store'), $this->permisoPayload([
+                'document_number' => '5050505050',
+            ]))
+            ->assertRedirect();
+
+        $row = ReportesNovedadesPermiso::query()->where('document_number', '5050505050')->firstOrFail();
+        $this->assertFalse((bool) $row->marca_gh);
+
+        $this->actingAs($editor)
+            ->patchJson(route('gestion-humana.reportes-novedades.permisos.marca-gh', $row), [
+                'marca_gh' => true,
+            ])
+            ->assertOk()
+            ->assertJson(['ok' => true, 'marca_gh' => true]);
+
+        $this->assertTrue((bool) $row->fresh()->marca_gh);
+
+        $this->actingAs($reviewer)
+            ->patchJson(route('gestion-humana.reportes-novedades.permisos.marca-gh', $row), [
+                'marca_gh' => false,
+            ])
+            ->assertForbidden();
+
+        $this->assertTrue((bool) $row->fresh()->marca_gh);
+
+        $this->actingAs($editor)
+            ->patchJson(route('gestion-humana.reportes-novedades.permisos.marca-gh', $row), [
+                'marca_gh' => false,
+            ])
+            ->assertOk()
+            ->assertJson(['marca_gh' => false]);
+
+        $this->assertFalse((bool) $row->fresh()->marca_gh);
+    }
+
     private function editorUser(string $sheet): User
     {
         $user = User::factory()->create(['must_change_password' => false]);

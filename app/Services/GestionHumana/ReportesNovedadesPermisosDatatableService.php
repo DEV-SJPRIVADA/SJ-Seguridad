@@ -114,7 +114,7 @@ final class ReportesNovedadesPermisosDatatableService
             e((string) $row->dias_novedad),
             e(DisplayDate::date($row->fecha_inicio)),
             e(DisplayDate::date($row->fecha_fin)),
-            e($row->marca_gh ? 'Si' : 'No'),
+            $this->formatMarcaGhCell($row, $canEdit),
             ReportesNovedadesUi::observacionNominaCell($row->observacion_nomina),
         ];
 
@@ -125,6 +125,19 @@ final class ReportesNovedadesPermisosDatatableService
         }
 
         return $cells;
+    }
+
+    private function formatMarcaGhCell(ReportesNovedadesPermiso $row, bool $canEdit): string
+    {
+        return sprintf(
+            '<input type="checkbox" class="rn-permisos-table__check js-rn-permiso-marca-gh" '.
+            'data-id="%d" data-url="%s" aria-label="Marca GH" title="%s"%s%s>',
+            $row->id,
+            e(route('gestion-humana.reportes-novedades.permisos.marca-gh', $row)),
+            e($row->marca_gh ? 'Marcado' : 'Sin marcar'),
+            $row->marca_gh ? ' checked' : '',
+            $canEdit ? '' : ' disabled',
+        );
     }
 
     private function formatActionsCell(ReportesNovedadesPermiso $row, bool $canEdit, bool $canReview): string

@@ -10,6 +10,7 @@
         class="page-section cursos-dashboard-page formacion-dashboard-page gh-area-dashboard-page"
         x-data="ghAreaDashboardPage(@js([
             'metricsUrl' => $metricsUrl,
+            'exportUrl' => $exportUrl,
             'conceptosUrl' => $conceptosUrl,
             'conceptosStoreUrl' => $conceptosStoreUrl,
             'initial' => $initialPayload,
@@ -104,7 +105,19 @@
                             >
                                 <x-lucide-layers width="18" height="18" aria-hidden="true" />
                             </button>
+                            {{-- Excel del informe: KPIs + capturas de gráficos y hojas de detalle --}}
+                            <button
+                                type="button"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Exportar Excel"
+                                aria-label="Exportar Excel"
+                                x-on:click="exportExcel()"
+                                x-bind:disabled="exporting || loading"
+                            >
+                                <x-selfhst-microsoft-excel-2013 width="18" height="18" aria-hidden="true" />
+                            </button>
                             <span class="panel-text" x-show="loading" x-cloak>Actualizando…</span>
+                            <span class="panel-text" x-show="exporting" x-cloak>Generando Excel…</span>
                             <span class="panel-text formacion-dashboard-page__error" x-show="!loading && error" x-text="error" x-cloak></span>
                         </div>
                     </div>
@@ -512,8 +525,12 @@
                     filters_parciales_nota: 'Cliente interno, Formación y Archivo solo filtran por año/mes.',
                 };
 
+                const csrf = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
                 return {
                     metricsUrl: config.metricsUrl,
+                    exportUrl: config.exportUrl,
+                    exporting: false,
                     filters: {
                         anio: String(config.filters?.anio ?? ''),
                         mes: String(config.filters?.mes ?? ''),
@@ -534,6 +551,60 @@
                     },
                     openConceptosModal() {
                         this.$dispatch('open-modal', 'gh-area-conceptos');
+                    },
+                    async exportExcel() {
+                        if (this.exporting) {
+                            return;
+                        }
+                        this.exporting = true;
+                        this.error = '';
+                        try {
+                            const images = typeof window.captureGhAreaDashboardChartImages === 'function'
+                                ? await window.captureGhAreaDashboardChartImages()
+                                : {};
+                            const res = await fetch(this.exportUrl, {
+                                method: 'POST',
+                                headers: {
+                                    Accept: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/json',
+                                    'Content-Type': 'application/json',
+                                    'X-CSRF-TOKEN': csrf(),
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                },
+                                credentials: 'same-origin',
+                                body: JSON.stringify({
+                                    anio: this.filters.anio,
+                                    mes: this.filters.mes,
+                                    ciudad: this.filters.ciudad,
+                                    cargo: this.filters.cargo,
+                                    cliente: this.filters.cliente,
+                                    chart_images: images,
+                                }),
+                            });
+                            const contentType = res.headers.get('Content-Type') || '';
+                            if (! res.ok) {
+                                if (contentType.includes('application/json')) {
+                                    const payload = await res.json().catch(() => ({}));
+                                    throw new Error(payload.message || 'No se pudo generar el Excel.');
+                                }
+                                throw new Error('No se pudo generar el Excel.');
+                            }
+                            const blob = await res.blob();
+                            const disposition = res.headers.get('Content-Disposition') || '';
+                            const match = disposition.match(/filename\*=UTF-8''([^;]+)|filename="?([^";]+)"?/i);
+                            const filename = decodeURIComponent(match?.[1] || match?.[2] || 'dashboard_gh.xlsx');
+                            const url = URL.createObjectURL(blob);
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.download = filename;
+                            document.body.appendChild(link);
+                            link.click();
+                            link.remove();
+                            URL.revokeObjectURL(url);
+                        } catch (e) {
+                            this.error = e?.message || 'Error al exportar.';
+                        } finally {
+                            this.exporting = false;
+                        }
                     },
                     waitForChartsReady(onReady) {
                         const run = () => {

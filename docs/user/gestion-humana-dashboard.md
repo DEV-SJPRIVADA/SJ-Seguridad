@@ -15,11 +15,12 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 - Filtrar por año, mes, ciudad, cargo y cliente.
 - Consultar 10 indicadores (tarjetas) y 7 gráficos.
 - Actualizar los números al cambiar filtros (sin salir de la pantalla).
+- Descargar un Excel del informe (indicadores, gráficos de la pantalla y el detalle de cada fuente).
 
 **Límites:**
 
-- Solo consulta: no se editan datos desde este informe.
-- No hay exportación a Excel ni PDF desde esta pantalla.
+- Solo consulta: no se editan datos desde este informe (salvo el mapa de conceptos / áreas).
+- No hay exportación a PDF desde esta pantalla.
 - Ciudad, cargo y cliente **sí** afectan personal (ficha), acreditaciones y psicofísicos.
 - Ciudad, cargo y cliente **no** afectan las tarjetas/gráficos de Cliente interno, Formación ni Archivo: esas tres fuentes solo miran el **año y el mes** (el sistema lo indica en pantalla).
 
@@ -78,6 +79,13 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 6. **Estado acreditación:** Acreditado / En proceso / Por vencer.
 7. **Consultas archivo:** motivos del mes sobre las mismas cédulas del KPI Archivo (si una consulta tiene varios motivos, cada cédula suma en cada motivo).
 
+### Descargar el Excel
+
+1. Aplique los filtros que desea ver en el informe.
+2. En la barra de filtros, a la derecha del icono de **Conceptos / áreas**, pulse el icono de **Excel**.
+3. El archivo incluye una primera hoja con el mismo orden de la pantalla (indicadores en una fila y gráficos en dos filas) y una hoja por fuente: personal activo, ingresos, desvinculaciones, acreditaciones, psicofísicos, cliente interno, formación y archivo.
+4. Esas hojas de detalle respetan los mismos filtros de la pantalla (cliente interno, formación y archivo solo año y mes).
+
 ### Administrar conceptos / áreas
 
 1. En la barra de filtros, pulse el icono de **capas** (Conceptos / áreas).
@@ -101,3 +109,7 @@ Aplica al tablero **Dashboard** del menú **Gestión Humana**.
 | 1.5 | 2026-10-13 | Feature | Gráficos de tendencia: año vigente hasta mes actual; años pasados Ene–Dic. |
 | 1.6 | 2026-10-13 | Feature | Etiquetas numéricas en gráficos de barra y de tendencia. |
 | 1.7 | 2026-10-13 | Feature | Etiquetas con fondo blanco; verticales en Personal, Ingresos vs Desvinculaciones y Formación. |
+| 1.8 | 2026-11-09 | Feature | Export Excel del informe (KPIs, gráficos y hojas de detalle). |
+| 1.9 | 2026-11-09 | Feature | Hoja Informe del Excel con el mismo layout que el dashboard (10 KPIs + gráficos 3+4). |
+| 1.10 | 2026-11-09 | Feature | Gráficos del Excel sin montarse; donas más grandes y con datos legibles. |
+| 1.11 | 2026-11-09 | Feature | Los 4 gráficos inferiores del Excel quedan del mismo tamaño. |

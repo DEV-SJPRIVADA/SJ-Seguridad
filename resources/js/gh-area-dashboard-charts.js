@@ -377,7 +377,10 @@ function renderDonut(elSelector, key, data, colors) {
     chartInstances[key].render();
 }
 
+let lastRenderedCharts = null;
+
 window.renderGhAreaDashboardCharts = function renderGhAreaDashboardCharts(charts) {
+    lastRenderedCharts = charts;
     renderLine(
         '#gh-area-chart-evolucion-personal',
         'evolucionPersonal',
@@ -416,6 +419,82 @@ window.renderGhAreaDashboardCharts = function renderGhAreaDashboardCharts(charts
         charts?.consultas_archivo || { labels: [], data: [] },
         [BRAND_BLUE, BRAND_NAVY, STATUS_GREEN, STATUS_ORANGE, STATUS_RED, STATUS_NEUTRAL, '#0d9488', '#7c3aed'],
     );
+};
+
+/**
+ * Captura PNG de los 7 gráficos para el Excel.
+ * Cada uno se redibuja más grande (las donas, con etiquetas legibles) y luego se restaura la pantalla.
+ */
+window.captureGhAreaDashboardChartImages = async function captureGhAreaDashboardChartImages() {
+    const order = [
+        ['evolucionPersonal', 'evolucion_personal'],
+        ['ingresosVsDesvinculaciones', 'ingresos_vs_desvinculaciones'],
+        ['evolucionFormacion', 'evolucion_formacion'],
+        ['personalPorCargos', 'personal_por_concepto'],
+        ['estadoPsicofisicos', 'estado_psicofisicos'],
+        ['estadoAcreditacion', 'estado_acreditacion'],
+        ['consultasArchivo', 'consultas_archivo'],
+    ];
+    const images = {};
+
+    const bottomKeys = ['personal_por_concepto', 'estado_psicofisicos', 'estado_acreditacion', 'consultas_archivo'];
+
+    const exportSize = (key) => {
+        if (bottomKeys.includes(key)) {
+            return {
+                width: 720,
+                height: 520,
+                donut: key !== 'personal_por_concepto',
+            };
+        }
+
+        return { width: 1000, height: 440, donut: false };
+    };
+
+    try {
+        for (const [instanceKey, payloadKey] of order) {
+            const chart = chartInstances[instanceKey];
+            if (!chart || typeof chart.dataURI !== 'function' || typeof chart.updateOptions !== 'function') {
+                continue;
+            }
+
+            const size = exportSize(payloadKey);
+            try {
+                await chart.updateOptions({
+                    chart: {
+                        width: size.width,
+                        height: size.height,
+                        animations: { enabled: false },
+                    },
+                    dataLabels: {
+                        style: {
+                            fontSize: size.donut ? '18px' : '14px',
+                            fontWeight: 700,
+                        },
+                    },
+                    legend: {
+                        fontSize: size.donut ? '15px' : '13px',
+                    },
+                }, true, false);
+                await new Promise((resolve) => {
+                    setTimeout(resolve, 80);
+                });
+                const result = await chart.dataURI({ scale: 2 });
+                const uri = result?.imgURI || '';
+                if (typeof uri === 'string' && uri.startsWith('data:image/')) {
+                    images[payloadKey] = uri;
+                }
+            } catch {
+                // Si Apex no serializa un gráfico, el Excel igual lleva KPIs y detalle.
+            }
+        }
+    } finally {
+        if (lastRenderedCharts) {
+            window.renderGhAreaDashboardCharts(lastRenderedCharts);
+        }
+    }
+
+    return images;
 };
 
 // Avisa a Alpine que el módulo Vite ya expuso el renderer (evita primer paint vacío).
