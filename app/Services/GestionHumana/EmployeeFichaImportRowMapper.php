@@ -80,6 +80,27 @@ class EmployeeFichaImportRowMapper
             'codigo_ciudad_trabajo' => $profile?->work_city_code,
             'ciudad_trabajo' => $profile?->work_city_name,
             'codigo_requisicion' => $entry->requisitionCode(),
+            'lugar_nacimiento' => $profile?->birth_place,
+            'telefono_2' => $profile?->phone_secondary,
+            'codigo_centro_trabajo' => $profile?->payrollExtraValue('work_center_code'),
+            'codigo_caja_compensacion' => $profile?->payrollExtraValue('ccf_code'),
+            'codigo_arp' => $profile?->payrollExtraValue('arp_code'),
+            'fecha_ingreso_eps' => $this->looseDate($profile?->payrollExtraValue('eps_start_date')),
+            'fecha_ingreso_afp' => $this->looseDate($profile?->payrollExtraValue('afp_start_date')),
+            'jornada' => $profile?->payrollExtraValue('workday'),
+            'tipo_retencion' => $profile?->payrollExtraValue('withholding_type'),
+            'tipo_gasto' => $profile?->payrollExtraValue('expense_type'),
+            'codigo_sucursal' => $profile?->payrollExtraValue('branch_code'),
+            'nombre_sucursal' => $profile?->payrollExtraValue('branch_name'),
+            'codigo_destino' => $profile?->payrollExtraValue('destination_code'),
+            'nombre_destino' => $profile?->payrollExtraValue('destination_name'),
+            'codigo_zona' => $profile?->payrollExtraValue('zone_code'),
+            'nombre_zona' => $profile?->payrollExtraValue('zone_name'),
+            'codigo_admon_cesantias' => $profile?->payrollExtraValue('severance_admin_code'),
+            'nombre_admon_cesantias' => $profile?->payrollExtraValue('severance_admin_name'),
+            'fecha_base_vacaciones' => $this->looseDate($profile?->payrollExtraValue('vacation_base_date')),
+            'libreta_militar' => $profile?->payrollExtraValue('military_book'),
+            'excluir_auxilio_transporte' => $profile?->payrollExtraValue('exclude_transport_allowance'),
         ];
     }
 
@@ -97,5 +118,16 @@ class EmployeeFichaImportRowMapper
     private function dateString(?CarbonInterface $value): ?string
     {
         return $value?->toDateString();
+    }
+
+    private function looseDate(mixed $value): ?string
+    {
+        if ($value instanceof CarbonInterface) {
+            return $value->toDateString();
+        }
+
+        $value = trim((string) ($value ?? ''));
+
+        return $value === '' ? null : $value;
     }
 }

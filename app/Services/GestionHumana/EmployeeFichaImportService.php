@@ -10,6 +10,7 @@ use App\Support\ColombianCurrencyParser;
 use App\Support\ImportFailureRow;
 use App\Support\SpanishNameEncodingFixer;
 use App\Support\SpreadsheetCellReader;
+use App\Support\UppercaseFormText;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -248,6 +249,17 @@ class EmployeeFichaImportService
             $payload['sex'] = $this->valueNormalizer->sex($data['sexo'] ?? null);
         }
 
+        // Lugar de nacimiento y teléfono 2: solo si la celda trae valor (vacío no borra lo guardado en ficha).
+        $birthPlace = $this->uppercaseOrNull($data['lugar_nacimiento'] ?? null);
+        if ($birthPlace !== null) {
+            $payload['birth_place'] = $birthPlace;
+        }
+
+        $phoneSecondary = $this->stringOrNull($data['telefono_2'] ?? null);
+        if ($phoneSecondary !== null) {
+            $payload['phone_secondary'] = $phoneSecondary;
+        }
+
         $this->seedCatalogPairsFromRow($data, $payload);
 
         return $payload;
@@ -363,7 +375,83 @@ class EmployeeFichaImportService
             }
         }
 
+        // Catálogos de nómina avanzada: código o nombre. Celda vacía no entra al arreglo (el merge conserva lo ya guardado).
+        foreach ([
+            'codigo_centro_trabajo' => ['work_center', 'work_center_code', 'nombre_centro_trabajo'],
+            'codigo_caja_compensacion' => ['ccf', 'ccf_code', 'nombre_caja_compensacion'],
+            'codigo_arp' => ['arp', 'arp_code', 'nombre_arp'],
+            'jornada' => ['workday', 'workday', null],
+            'tipo_retencion' => ['withholding_type', 'withholding_type', null],
+            'tipo_gasto' => ['expense_type', 'expense_type', null],
+            'codigo_sucursal' => ['branch', 'branch_code', 'nombre_sucursal'],
+            'codigo_destino' => ['destination', 'destination_code', 'nombre_destino'],
+            'codigo_zona' => ['zone', 'zone_code', 'nombre_zona'],
+            'codigo_admon_cesantias' => ['severance_admin', 'severance_admin_code', 'nombre_admon_cesantias'],
+        ] as $codeColumn => [$catalogType, $extraKey, $nameColumn]) {
+            $code = $this->importCatalogCode(
+                $catalogType,
+                $data[$codeColumn] ?? null,
+                $nameColumn !== null ? ($data[$nameColumn] ?? null) : null,
+            );
+            if ($code !== null) {
+                $extra[$extraKey] = $code;
+            }
+        }
+
+        foreach ([
+            'fecha_ingreso_eps' => 'eps_start_date',
+            'fecha_ingreso_afp' => 'afp_start_date',
+            'fecha_base_vacaciones' => 'vacation_base_date',
+        ] as $importKey => $extraKey) {
+            $date = $this->parseDate($data[$importKey] ?? null);
+            if ($date !== null) {
+                $extra[$extraKey] = $date;
+            }
+        }
+
+        $militaryBook = $this->uppercaseOrNull($data['libreta_militar'] ?? null);
+        if ($militaryBook !== null) {
+            $extra['military_book'] = $militaryBook;
+        }
+
+        $excludeTransport = $this->valueNormalizer->excludeTransportAllowance($data['excluir_auxilio_transporte'] ?? null);
+        if ($excludeTransport !== null) {
+            $extra['exclude_transport_allowance'] = $excludeTransport;
+        }
+
         return $extra;
+    }
+
+    /**
+     * Resuelve código de catálogo (por código o nombre) y lo da de alta si aún no existe.
+     * Si solo viene el código y el ítem ya está en catálogo, conserva el nombre registrado.
+     */
+    private function importCatalogCode(string $catalogType, mixed $codeValue, mixed $nameValue): ?string
+    {
+        $name = $this->uppercaseOrNull($nameValue);
+        $code = $this->valueNormalizer->catalogCode($catalogType, $codeValue);
+
+        if ($code === null && $name !== null) {
+            $code = $this->valueNormalizer->catalogCode($catalogType, $name);
+        }
+
+        if ($code === null && $name === null) {
+            return null;
+        }
+
+        if ($name === null && $code !== null) {
+            $existingName = PayrollCatalogItem::query()
+                ->ofType($catalogType)
+                ->where('code', $code)
+                ->value('name');
+            $name = is_string($existingName) && $existingName !== '' ? $existingName : $code;
+        }
+
+        $item = PayrollCatalogItem::upsertPair($catalogType, $code, $name);
+
+        $resolved = $item?->code;
+
+        return is_string($resolved) && $resolved !== '' ? $resolved : null;
     }
 
     /**
@@ -504,7 +592,7 @@ class EmployeeFichaImportService
         PayrollCatalogItem::upsertPair('cost_center', $this->stringOrNull($data['ccosto'] ?? null), $this->stringOrNull($data['nombre_ccosto'] ?? null));
         PayrollCatalogItem::upsertPair('eps', $this->stringOrNull($data['codigo_eps'] ?? null), $this->stringOrNull($data['nombre_eps'] ?? null));
         PayrollCatalogItem::upsertPair('afp', $this->stringOrNull($data['codigo_afp'] ?? null), $this->stringOrNull($data['nombre_afp'] ?? null));
-        PayrollCatalogItem::upsertPair('arp', null, $this->stringOrNull($data['nombre_arp'] ?? null));
+        // ARP, centro de trabajo y caja se dan de alta en mapPayrollExtraFromImport (código + nombre).
         PayrollCatalogItem::upsertPair('bank', $payload['bank_code'] ?? null, $this->stringOrNull($data['banco'] ?? null));
         PayrollCatalogItem::upsertPair('payment_method', $payload['payment_method_code'] ?? null, $this->stringOrNull($data['forma_pago'] ?? null));
         PayrollCatalogItem::upsertPair('contract_type', $payload['contract_type_code'] ?? null, $this->stringOrNull($data['tipo_contrato'] ?? null));
@@ -525,6 +613,13 @@ class EmployeeFichaImportService
         $value = trim(SpanishNameEncodingFixer::normalizeEncoding((string) ($value ?? '')));
 
         return $value === '' ? null : $value;
+    }
+
+    private function uppercaseOrNull(mixed $value): ?string
+    {
+        $value = $this->stringOrNull($value);
+
+        return $value === null ? null : UppercaseFormText::uppercaseString($value);
     }
 
     private function numericOrNull(mixed $value): ?float

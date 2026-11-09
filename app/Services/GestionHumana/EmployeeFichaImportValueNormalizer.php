@@ -147,6 +147,33 @@ class EmployeeFichaImportValueNormalizer
         return $this->resolveCatalogCode('linkage_type', $raw) ?? $raw;
     }
 
+    /**
+     * Código de catálogo: coincide por código o por nombre. Si no existe, devuelve el texto recortado.
+     */
+    public function catalogCode(string $catalogType, mixed $value): ?string
+    {
+        return $this->resolvePreferringShortCode($catalogType, $value);
+    }
+
+    /**
+     * 1 = excluir auxilio, 0 = no excluir. Vacío o no reconocible → null (no pisa el valor guardado).
+     */
+    public function excludeTransportAllowance(mixed $value): ?string
+    {
+        $raw = $this->trimOrNull($value);
+        if ($raw === null) {
+            return null;
+        }
+
+        $compact = str_replace([' ', '.'], '', mb_strtoupper($raw, 'UTF-8'));
+
+        return match (true) {
+            in_array($compact, ['1', 'SI', 'SÍ', 'YES', 'TRUE'], true) => '1',
+            in_array($compact, ['0', 'NO', 'FALSE'], true) => '0',
+            default => null,
+        };
+    }
+
     private function resolvePreferringShortCode(string $catalogType, mixed $value): ?string
     {
         $raw = $this->trimOrNull($value);

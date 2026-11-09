@@ -169,10 +169,14 @@ class EmployeeFichaPlantillasTest extends TestCase
             ['cedula', 'nombre', 'primer_apellido', 'segundo_apellido', 'primer_nombre', 'segundo_nombre'],
             array_slice($columns, 0, 6),
         );
+        $requisicionAt = array_search('codigo_requisicion', $columns, true);
+        $this->assertIsInt($requisicionAt);
         $this->assertSame(
             ['codigo_ciudad_trabajo', 'ciudad_trabajo', 'codigo_requisicion'],
-            array_slice($columns, -3),
+            array_slice($columns, $requisicionAt - 2, 3),
         );
+        $this->assertSame('lugar_nacimiento', $columns[$requisicionAt + 1]);
+        $this->assertSame('excluir_auxilio_transporte', $columns[array_key_last($columns)]);
     }
 
     public function test_import_creates_profile_and_ficha_entry(): void
@@ -475,7 +479,7 @@ class EmployeeFichaPlantillasTest extends TestCase
         $this->actingAs($manager)
             ->get(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
             ->assertOk()
-            ->assertSee('Ficha —')
+            ->assertSee('Ficha de empleado')
             ->assertSee('Género');
     }
 
@@ -521,6 +525,78 @@ class EmployeeFichaPlantillasTest extends TestCase
         $this->assertSame('Dependiente', $profile->payrollExtraValue('contributor_type'));
         $this->assertSame('A1', $profile->payrollExtraValue('salary_scale'));
         $this->assertSame(20.0, (float) $profile->payrollExtraValue('total_vacation_days'));
+    }
+
+    public function test_import_optional_form_fields_and_blank_cells_do_not_wipe_them(): void
+    {
+        $manager = $this->managerUser();
+        PayrollCatalogItem::upsertPair('ccf', 'CCF01', 'CAJA PRUEBA');
+        PayrollCatalogItem::upsertPair('workday', '1', 'COMPLETA');
+        PayrollCatalogItem::upsertPair('work_center', 'CT01', 'SEDE NORTE');
+
+        $path = $this->makeImportSpreadsheet([
+            'cedula' => '55667788',
+            'nombre' => 'CAMPOS EXTRA',
+            'lugar_nacimiento' => 'bogotá',
+            'telefono_2' => '3001112233',
+            'codigo_caja_compensacion' => 'CAJA PRUEBA',
+            'codigo_centro_trabajo' => 'CT01',
+            'jornada' => 'COMPLETA',
+            'fecha_ingreso_eps' => '2024-03-01',
+            'codigo_sucursal' => 'S01',
+            'nombre_sucursal' => 'norte',
+            'libreta_militar' => 'lm-9',
+            'excluir_auxilio_transporte' => 'Sí',
+            'fecha_ingreso' => '2026-01-10',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($path, 'import.xlsx', null, null, true),
+        ])->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertSessionHas('import_result', function (array $result): bool {
+                return ($result['imported'] ?? 0) === 1 && ($result['failed'] ?? 0) === 0;
+            });
+
+        $profile = EmployeeFichaProfile::query()->where('document_number', '55667788')->firstOrFail();
+
+        $this->assertSame('BOGOTÁ', $profile->birth_place);
+        $this->assertSame('3001112233', $profile->phone_secondary);
+        $this->assertSame('CCF01', $profile->payrollExtraValue('ccf_code'));
+        $this->assertSame('CAJA PRUEBA', $profile->compensation_fund_name);
+        $this->assertSame('CT01', $profile->payrollExtraValue('work_center_code'));
+        $this->assertSame('SEDE NORTE', $profile->work_center_name);
+        $this->assertSame('1', $profile->payrollExtraValue('workday'));
+        $this->assertSame('2024-03-01', $profile->payrollExtraValue('eps_start_date'));
+        $this->assertSame('S01', $profile->payrollExtraValue('branch_code'));
+        $this->assertSame('NORTE', $profile->payrollExtraValue('branch_name'));
+        $this->assertSame('LM-9', $profile->payrollExtraValue('military_book'));
+        $this->assertSame('1', $profile->payrollExtraValue('exclude_transport_allowance'));
+
+        $blank = $this->makeImportSpreadsheet([
+            'cedula' => '55667788',
+            'nombre' => 'CAMPOS EXTRA',
+        ]);
+
+        $this->actingAs($manager)->post(route('gestion-humana.ficha-empleados.employees.import'), [
+            'import_file' => new UploadedFile($blank, 'import-blank.xlsx', null, null, true),
+        ])->assertRedirect(route('gestion-humana.ficha-empleados.employees.index'))
+            ->assertSessionHas('import_result', function (array $result): bool {
+                return ($result['updated'] ?? 0) === 1 && ($result['failed'] ?? 0) === 0;
+            });
+
+        $profile->refresh();
+
+        $this->assertSame('BOGOTÁ', $profile->birth_place);
+        $this->assertSame('3001112233', $profile->phone_secondary);
+        $this->assertSame('CCF01', $profile->payrollExtraValue('ccf_code'));
+        $this->assertSame('CAJA PRUEBA', $profile->compensation_fund_name);
+        $this->assertSame('CT01', $profile->payrollExtraValue('work_center_code'));
+        $this->assertSame('1', $profile->payrollExtraValue('workday'));
+        $this->assertSame('2024-03-01', $profile->payrollExtraValue('eps_start_date'));
+        $this->assertSame('S01', $profile->payrollExtraValue('branch_code'));
+        $this->assertSame('NORTE', $profile->payrollExtraValue('branch_name'));
+        $this->assertSame('LM-9', $profile->payrollExtraValue('military_book'));
+        $this->assertSame('1', $profile->payrollExtraValue('exclude_transport_allowance'));
     }
 
     public function test_import_ignores_sexo_no_aplica_and_keeps_existing_sex(): void
