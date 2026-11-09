@@ -28,6 +28,7 @@ final class ReportesNovedadesVacacionesDatatableService
 
         $query = $this->filteredQuery($filters);
         $recordsFiltered = (clone $query)->count();
+        $duplicateDocuments = ReportesNovedadesUi::duplicateDocumentNumbers(clone $query);
 
         if ($length !== -1) {
             $query->skip($start)->take(max(1, min(100, $length)));
@@ -39,7 +40,7 @@ final class ReportesNovedadesVacacionesDatatableService
         $rows = $query->get();
 
         $data = $rows
-            ->map(fn (ReportesNovedadesVacacion $row): array => $this->formatRow($row, $canEdit, $canReview))
+            ->map(fn (ReportesNovedadesVacacion $row): array => $this->formatRow($row, $canEdit, $canReview, $duplicateDocuments))
             ->values()
             ->all();
 
@@ -99,12 +100,16 @@ final class ReportesNovedadesVacacionesDatatableService
     }
 
     /**
+     * @param  array<string, true>  $duplicateDocuments
      * @return list<string>
      */
-    private function formatRow(ReportesNovedadesVacacion $row, bool $canEdit, bool $canReview): array
+    private function formatRow(ReportesNovedadesVacacion $row, bool $canEdit, bool $canReview, array $duplicateDocuments): array
     {
         $cells = [
-            e((string) $row->document_number),
+            ReportesNovedadesUi::cedulaCell(
+                $row->document_number,
+                isset($duplicateDocuments[trim((string) $row->document_number)]),
+            ),
             e((string) $row->employee_name),
             e((string) ($row->cargo ?: '—')),
             e((string) ($row->destino ?: '—')),

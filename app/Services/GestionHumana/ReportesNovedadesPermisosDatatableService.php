@@ -27,6 +27,7 @@ final class ReportesNovedadesPermisosDatatableService
 
         $query = $this->filteredQuery($filters);
         $recordsFiltered = (clone $query)->count();
+        $duplicateDocuments = ReportesNovedadesUi::duplicateDocumentNumbers(clone $query);
 
         if ($length !== -1) {
             $query->skip($start)->take(max(1, min(100, $length)));
@@ -38,7 +39,7 @@ final class ReportesNovedadesPermisosDatatableService
         $rows = $query->get();
 
         $data = $rows
-            ->map(fn (ReportesNovedadesPermiso $row): array => $this->formatRow($row, $canEdit, $canReview))
+            ->map(fn (ReportesNovedadesPermiso $row): array => $this->formatRow($row, $canEdit, $canReview, $duplicateDocuments))
             ->values()
             ->all();
 
@@ -101,12 +102,16 @@ final class ReportesNovedadesPermisosDatatableService
     }
 
     /**
+     * @param  array<string, true>  $duplicateDocuments
      * @return list<string>
      */
-    private function formatRow(ReportesNovedadesPermiso $row, bool $canEdit, bool $canReview): array
+    private function formatRow(ReportesNovedadesPermiso $row, bool $canEdit, bool $canReview, array $duplicateDocuments): array
     {
         $cells = [
-            e((string) $row->document_number),
+            ReportesNovedadesUi::cedulaCell(
+                $row->document_number,
+                isset($duplicateDocuments[trim((string) $row->document_number)]),
+            ),
             e((string) $row->employee_name),
             e((string) ($row->tipo ?: '—')),
             e((string) ($row->cargo ?: '—')),

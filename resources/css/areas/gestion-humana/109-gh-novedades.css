@@ -421,3 +421,9 @@
     cursor: not-allowed;
     opacity: 0.65;
 }
+
+/* Cédula duplicada en el listado filtrado: texto rojo para detectarla de inmediato. */
+.rn-cedula-duplicada {
+    color: var(--color-danger, #be123c);
+    font-weight: 700;
+}

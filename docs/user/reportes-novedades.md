@@ -65,6 +65,7 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
 4. Con **Editar**: cree o corrija filas. En el alta, escriba la **cédula** y pulse buscar (o Enter / salga del campo): se precargan nombre, cargo y destino desde Ficha. En **Vacaciones**, al completar **días** y **fecha inicio** se sugieren **fecha fin** y **fecha reintegro** (sin domingos ni festivos; reintegro = dia siguiente a fin); complete **periodos** y **firma** como en Cartas Vacaciones. En acciones, use **Descargar carta Word** para generar el .docx del registro (requiere plantilla activa en Plantillas Word).
 5. En **Permisos**, con **Editar**, marque o desmarque el check de la columna **Marca GH** directamente en el listado: el cambio se guarda al instante. Con Revisar o solo consulta, el check se ve deshabilitado. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
 6. En **Incapacidades**, el icono de clip abre **Adjuntos**. Ahí se ven el nombre, la fecha, quién lo subió y el tamaño, y se descarga el archivo. Con **Editar** puede agregar varios PDF o JPG (de una vez o en otro momento) y eliminar uno. Al eliminar la incapacidad se borran también sus archivos. Nómina y quien solo consulta pueden ver y descargar, no subir ni borrar.
+7. En cualquier pestana, si una **cédula** aparece en más de una fila del listado filtrado, el valor de la columna **Cédula** se muestra en **rojo** para que detecte los duplicados de inmediato. La marca se calcula sobre todos los registros del filtro (no solo la página visible) y no se incluye en el export a Excel.
 
 ### Retiros automaticos
 
@@ -74,6 +75,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.10 | 2026-11-09 | Agent | En las cuatro hojas, la cédula se muestra en **rojo** cuando está duplicada dentro del listado filtrado. |
 | 1.9 | 2026-11-09 | Agent | Permisos: columna **Marca GH** como check editable en el listado; se guarda al instante (solo permiso Editar). |
 | 1.8 | 2026-11-06 | Agent | Incapacidades: adjuntos PDF/JPG por fila (subir y eliminar con Editar; ver y descargar con Ver o Nómina). |
 | 1.7 | 2026-11-04 | Agent | Vacaciones: fecha reintegro, periodos y firma en alta/edición; descarga carta Word por fila (permiso editar). |

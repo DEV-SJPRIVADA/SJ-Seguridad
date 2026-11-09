@@ -64,7 +64,7 @@
                     class="form-input"
                     @if ($canEditGh) required @endif
                     @disabled(! $canEditGh)
-                    @if ($alpine) x-model="form.dias" @else value="{{ $v['dias'] ?? '' }}" @endif
+                    @if ($alpine) x-model="form.dias" x-on:input="calcFechaFin()" @else value="{{ $v['dias'] ?? '' }}" @endif
                 >
             </div>
 
@@ -77,7 +77,7 @@
                     class="form-input"
                     @if ($canEditGh) required @endif
                     @disabled(! $canEditGh)
-                    @if ($alpine) x-model="form.fecha_inicio" @else value="{{ $v['fecha_inicio'] ?? '' }}" @endif
+                    @if ($alpine) x-model="form.fecha_inicio" x-on:input="calcFechaFin()" @else value="{{ $v['fecha_inicio'] ?? '' }}" @endif
                 >
             </div>
 

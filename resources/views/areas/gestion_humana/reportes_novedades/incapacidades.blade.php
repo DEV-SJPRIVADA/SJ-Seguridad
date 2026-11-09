@@ -383,6 +383,22 @@
                     adjuntosStoreUrl: '',
                     historialFilterable: false,
                     historialBaseUrl: '',
+                    calcFechaFin() {
+                        const dias = parseInt(this.form.dias, 10);
+                        const inicio = (this.form.fecha_inicio || '').trim();
+                        if (!inicio || !Number.isFinite(dias) || dias <= 0) {
+                            return;
+                        }
+                        const d = new Date(inicio + 'T00:00:00');
+                        if (Number.isNaN(d.getTime())) {
+                            return;
+                        }
+                        d.setDate(d.getDate() + (dias - 1));
+                        const y = d.getFullYear();
+                        const m = String(d.getMonth() + 1).padStart(2, '0');
+                        const day = String(d.getDate()).padStart(2, '0');
+                        this.form.fecha_fin = `${y}-${m}-${day}`;
+                    },
                     historialFilters: {
                         q: '',
                         action: '',
