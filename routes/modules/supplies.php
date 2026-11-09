@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Supplies\SupplyProductController;
 use App\Http\Controllers\Supplies\SupplyRequestController;
+use App\Http\Controllers\Supplies\SupplySeguimientoController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{module}')->name('supplies.')->group(function () {
@@ -29,6 +30,14 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{mod
         Route::get('/insumos-aprobados', [SupplyRequestController::class, 'approvedIndex'])->name('approved.index');
         Route::get('/insumos-aprobados/exportar', [SupplyRequestController::class, 'approvedExportAll'])->name('approved.export-all');
         Route::get('/insumos-aprobados/{supply_request}/exportar', [SupplyRequestController::class, 'approvedExport'])->name('approved.export');
+    });
+
+    Route::middleware(['supply.tab:seguimiento'])->group(function () {
+        Route::get('/seguimiento/historial', [SupplySeguimientoController::class, 'historial'])->name('seguimiento.historial');
+        Route::get('/seguimiento/historial/exportar', [SupplySeguimientoController::class, 'historialExport'])->name('seguimiento.historial.export');
+        Route::get('/seguimiento/ordenes', [SupplySeguimientoController::class, 'ordenes'])->name('seguimiento.ordenes');
+        Route::get('/seguimiento/gasto', [SupplySeguimientoController::class, 'gasto'])->name('seguimiento.gasto');
+        Route::get('/seguimiento/gasto/exportar', [SupplySeguimientoController::class, 'gastoExport'])->name('seguimiento.gasto.export');
     });
 
     Route::middleware(['supply.tab:catalog'])->group(function () {

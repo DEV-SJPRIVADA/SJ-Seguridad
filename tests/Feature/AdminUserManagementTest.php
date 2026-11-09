@@ -114,6 +114,7 @@ class AdminUserManagementTest extends TestCase
         $response->assertSee('Solicitar requisiciones de personal');
         $response->assertSee('Suministros — Calidad (aprobación)');
         $response->assertSee('Suministros — Compras (catálogo)');
+        $response->assertSee('Suministros — Seguimiento');
         $response->assertSee('Documentos de Calidad');
         $response->assertDontSee('Biblioteca en Operaciones');
         $response->assertSee('Compras');

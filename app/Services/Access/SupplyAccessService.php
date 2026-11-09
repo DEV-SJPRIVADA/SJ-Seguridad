@@ -36,11 +36,26 @@ class SupplyAccessService
             return true;
         }
 
+        if ($areaKey === 'compras' && $this->canViewSeguimiento($user)) {
+            return true;
+        }
+
         return $this->baseAreaBoardVisible($user, $areaKey);
+    }
+
+    public function canViewSeguimiento(User $user): bool
+    {
+        return $this->isAdminBypass($user)
+            || $user->can('supply.tab.seguimiento');
     }
 
     public function canAccessTab(User $user, string $module, string $tab): bool
     {
+        // Historial, Órdenes y Gasto viven solo en Compras; el permiso abre ese hogar sin tablero extra.
+        if ($tab === 'seguimiento') {
+            return $module === 'compras' && $this->canViewSeguimiento($user);
+        }
+
         if ($this->isAdminBypass($user)) {
             return true;
         }
@@ -73,6 +88,12 @@ class SupplyAccessService
 
         if ($this->canAccessTab($user, $moduleKey, 'quality')) {
             $tabs[] = 'aprobacion_insumos';
+        }
+
+        if ($this->canAccessTab($user, $moduleKey, 'seguimiento')) {
+            $tabs[] = 'seguimiento_historial';
+            $tabs[] = 'seguimiento_ordenes';
+            $tabs[] = 'seguimiento_gasto';
         }
 
         return array_values(array_unique($tabs));

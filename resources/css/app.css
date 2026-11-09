@@ -235,3 +235,5 @@
 @import './areas/calidad/114-calidad-servicio-cliente.css';
 /* 115 Gestión Humana / Selección */
 @import './areas/gestion-humana/115-gh-seleccion.css';
+/* 116 Compras / Suministros seguimiento */
+@import './areas/compras/116-compras-suministros-seguimiento.css';

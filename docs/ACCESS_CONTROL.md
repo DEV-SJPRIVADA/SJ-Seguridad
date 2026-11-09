@@ -39,6 +39,7 @@ Permisos del modulo de suministros:
 - `supply.tab.my_requests`
 - `supply.tab.quality` (Aprobacion Insumos)
 - `supply.tab.catalog`
+- `supply.tab.seguimiento` (Historial, Órdenes y Gasto en **Compras → Suministros**; consulta de todas las áreas; se asigna a mano en Admin; `super-admin` lo recibe con el catálogo)
 - `manage.supply.catalog`
 - `approve.supply.quality`
 
@@ -62,6 +63,8 @@ Tableros: `view.board.{area}.solicitudes_compra`, `view.board.compras.bandeja_co
 **Devolver al solicitante (2026-10-21):** usa `purchase.tab.processing` (sin clave nueva) y solo aplica en Por comprar sin órdenes.
 
 **FEAT-048 (2026-10-20):** no hay claves nuevas. **Pedidos**, **Órdenes** y **Catálogos** son los tableros `bandeja_compras`, `ordenes_compra` y `proveedores` reetiquetados. `view.board.compras.bandeja_compras` sigue existiendo; el rótulo del menú sale de `boards`. Pedidos y Órdenes se ven con `purchase.tab.processing`. Catálogos se ve con `purchase.providers.view` o `supply.tab.catalog` (pestaña Proveedores o Insumos). Solicitudes de compra ya no incluye la pestaña Bandeja. Calidad, con `supply.tab.quality`, solo muestra Por aprobar: ya no abre Insumos aprobados. El diccionario `purchase_tabs` / `supply_tabs` aún nombra «Bandeja compras», «Insumos aprobados» y «Catalogo»; `visibleTabsFor` no las devuelve y no son permisos nuevos.
+
+**Seguimiento de suministros (2026-11-09):** permiso `supply.tab.seguimiento`. Abre **Compras → Suministros** (pestañas Historial, Órdenes y Gasto) sin marcar `view.board.*.suministros` en otras áreas. No hay `edit` ni catálogos propios. No se migra a roles existentes; se asigna en Admin. `super-admin` lo obtiene al sincronizar el catálogo.
 
 Permisos del modulo de documentos de Calidad:
 

@@ -14,6 +14,7 @@ Aplica al tablero **Suministros** y, para Compras, a **Pedidos** y a la pestaña
 | Calidad | **Calidad** → Suministros → Por aprobar |
 | Compras (comprar el pedido) | **Compras** → **Pedidos** |
 | Quien administra el catálogo | **Compras** → **Catálogos** → Insumos |
+| Seguimiento de suministros | **Compras** → **Suministros** → Historial, Órdenes y Gasto |
 
 Según su perfil puede:
 
@@ -23,6 +24,7 @@ Según su perfil puede:
 - Administrar el catálogo de productos dentro de **Catálogos**
 - Ver el detalle y descargar el FO-AD-44 cuando Calidad ya aprobó
 - Comprar el insumo emitiendo la orden. El cierre lo hace la orden, no un costo unitario
+- Consultar el **historial mensual** de lo autorizado y el **gasto** frente a lo solicitado (quien tenga el permiso de seguimiento)
 
 ## Definiciones
 
@@ -48,7 +50,8 @@ Según su perfil puede:
 | Calidad | Revisar cantidades, aprobar o devolver, y dejar notas mientras el pedido no esté cerrado. Trabaja solo en Por aprobar. |
 | Compras | Ver el pedido en Pedidos, emitir la orden (ahí va el precio) y, si hace falta, cerrar el saldo con un motivo. |
 | Quien administra el catálogo | Crear, editar y activar o inactivar productos en Catálogos → Insumos. |
-| Admin usuarios | Asignar sede al usuario; gestionar catalogo de sedes. |
+| Admin usuarios | Asignar sede al usuario; gestionar catalogo de sedes; asignar el permiso **Suministros: Seguimiento** a quien deba ver Historial, Órdenes y Gasto. |
+| Seguimiento de suministros | Consultar, de todas las áreas, lo pedido y autorizado por mes, y si se compró (con el valor). No crea ni edita solicitudes. |
 
 ## Desarrollo
 
@@ -93,6 +96,16 @@ Compras también puede devolverlo si llegó mal diligenciado (solo antes de emit
 6. El pedido pasa a **Cerrado** cuando ya no queda cantidad por pedir y todas las órdenes tienen fecha de recibido. Si falta una fecha, sigue en Con orden.
 7. Si hay que cerrarlo antes, use la sección **Cerrar saldo** dentro de Procesar, con un motivo. El motivo queda en las notas. Después no se emite otra orden.
 
+### Consultar el seguimiento (Historial, Órdenes y Gasto)
+
+Quien tenga el permiso **Suministros: Seguimiento** entra por **Compras → Suministros**. No hace falta marcar el tablero en cada área.
+
+1. Abra **Historial**. Verá una fila por producto (también los que se pidieron fuera de catálogo) y, dentro de cada mes, tres columnas: **inventario**, **solicitud** y **autorizado**.
+2. El inventario es el último que declaró el solicitante. Si hubo varios pedidos del mismo producto en el mes, las cantidades se suman. Solo entran pedidos que Calidad ya autorizó. Aquí no hay precios.
+3. Use **Filtros** para elegir año, área, sede o **producto**. El icono de Excel descarga esa vista.
+4. Pulse un producto para abrir la pestaña **Órdenes**: número, fecha, folio del suministro, cantidad, valor (con IVA) y estado. Puede filtrar por **mes** (fecha de la orden). Al pie se ven los totales de cantidad y valor. Las órdenes anuladas no salen. En cada pestaña hay una sola tabla.
+5. Abra **Gasto** para comparar lo solicitado con lo comprado y el valor pagado (tres columnas por mes). Solo cuentan órdenes **recibidas** (con fecha de recibido). Lo solicitado se agrupa por el mes del pedido; lo comprado, por el mes en que se recibió. Todavía no se carga un presupuesto anual: se ve el gasto real frente a lo pedido.
+
 ### Administrar el catálogo
 
 1. Abra **Compras → Catálogos → Insumos**. Ya no está dentro de Suministros.
@@ -103,6 +116,12 @@ Compras también puede devolverlo si llegó mal diligenciado (solo antes de emit
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.17 | 2026-11-09 | Compras | La columna Valor en Órdenes y Gasto se muestra como moneda ($ 0.000,00). |
+| 1.16 | 2026-11-09 | Compras | Órdenes: filtro por mes y totales de cantidad y valor al pie de la tabla. |
+| 1.15 | 2026-11-09 | Compras | El nombre del producto ya no se desborda. Las órdenes de un producto van en la pestaña Órdenes. |
+| 1.14 | 2026-11-09 | Compras | Historial y Gasto usan todo el ancho del tablero; la barra de totales queda al pie. |
+| 1.13 | 2026-11-09 | Compras | Historial y Gasto: tres columnas por mes, totales en blanco sobre azul y filtro por producto. |
+| 1.12 | 2026-11-09 | Compras | Pestañas Historial y Gasto en Compras → Suministros (permiso Suministros: Seguimiento): matriz mensual, órdenes del producto y gasto frente a lo solicitado. |
 | 1.11 | 2026-11-06 | Compras | Mis solicitudes y Por aprobar (módulo Compras) usan el ancho de portátil (máx. 1440px) y dejan de estirarse en pantallas mayores. |
 | 1.10 | 2026-10-22 | Compras | El detalle del suministro muestra sus órdenes de compra con PDF descargable y el saldo ordenado/pendiente. |
 | 1.9 | 2026-10-21 | Compras | Compras puede devolver un pedido Por comprar sin órdenes; al reenviarlo, Calidad lo vuelve a aprobar. |

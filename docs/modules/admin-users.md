@@ -31,7 +31,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 
 - `sections` — titulos de los tres bloques
 - `assigned_area_permissions`
-- `global_groups` (incluye `supplies_calidad` y `supplies_compras`)
+- `global_groups` (incluye `supplies_calidad`, `supplies_compras` y `supplies_seguimiento`)
 - `other_areas` (con `subgroups` por area)
 
 Cada permiso del formulario lleva una explicacion visible debajo del titulo:
@@ -62,6 +62,7 @@ Cada permiso del formulario lleva una explicacion visible debajo del titulo:
 
 | Version | Fecha | Descripcion |
 | --- | --- | --- |
+| 1.6 | 2026-11-09 | Grupo transversal **Suministros — Seguimiento** (`supply.tab.seguimiento`) |
 | 1.5 | 2026-11-06 | Permisos: explicacion visible debajo de cada permiso (`access.permission_help` + generacion automatica para tableros y areas); buscador incluye la explicacion |
 | 1.4 | 2026-08-20 | Lista de usuarios: scroll al ítem activo tras seleccionar |
 | 1.3 | 2026-08-19 | Admin: bloque **Solicitar en su area**; crear/mis compras solo ahi, no en transversal |

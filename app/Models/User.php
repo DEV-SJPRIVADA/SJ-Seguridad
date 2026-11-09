@@ -172,6 +172,8 @@ class User extends Authenticatable
         return match ($firstTab) {
             'mis_solicitudes' => route('supplies.index', ['module' => $moduleKey]),
             'aprobacion_insumos' => route('supplies.approval.index', ['module' => $moduleKey]),
+            'seguimiento_historial' => route('supplies.seguimiento.historial', ['module' => $moduleKey]),
+            'seguimiento_gasto' => route('supplies.seguimiento.gasto', ['module' => $moduleKey]),
             default => route('dashboard', ['module' => $moduleKey]),
         };
     }

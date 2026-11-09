@@ -57,6 +57,7 @@ Siguiendo la arquitectura actual, los accesos se controlan con permisos funciona
 | Por aprobar (`supply.tab.quality`) | **Calidad** → Suministros. Solo esa pestaña. La URL vieja `supplies.approved.index` redirige a Por aprobar |
 | Catálogo de insumos (`supply.tab.catalog`) | **Compras** → **Catálogos** → pestaña Insumos |
 | Compra del pedido | **Compras** → **Pedidos** (clave `bandeja_compras`) |
+| Seguimiento (`supply.tab.seguimiento`) | **Compras** → Suministros → pestañas **Historial**, **Órdenes** y **Gasto**. El permiso abre ese hogar sin marcar tablero en otras áreas. |
 
 Ver [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md) y `SidebarVisibilityService`.
 
@@ -82,15 +83,16 @@ Ver [`docs/ACCESS_CONTROL.md`](../ACCESS_CONTROL.md) y `SidebarVisibilityService
 ## 7. Estado real implementado (actualizado)
 
 ### Permisos vigentes (`config/access.php`)
-El tablero Suministros muestra solo las pestañas que `SupplyAccessService::visibleTabsFor` devuelve. FEAT-048 no creó claves nuevas. `supply_tabs` todavía nombra «Insumos aprobados» y «Catalogo»; esas entradas ya no salen en el menú.
+El tablero Suministros muestra solo las pestañas que `SupplyAccessService::visibleTabsFor` devuelve. `supply_tabs` todavía nombra «Insumos aprobados» y «Catalogo»; esas entradas ya no salen en el menú.
 
 - `supply.tab.my_requests`: ver, crear y **reenviar** solicitudes propias (area base del usuario).
 - `supply.tab.quality`: solo **Por aprobar** (`aprobacion_insumos`). Sidebar en **Calidad**. Ya no abre Insumos aprobados.
 - `supply.tab.catalog` (y `manage.supply.catalog`): pestaña **Insumos** dentro del tablero **Catálogos** (`canViewInsumosCatalog`). Quien solo administra el catálogo entra por Catálogos, no por un Suministros vacío.
+- `supply.tab.seguimiento`: consulta **Historial**, **Órdenes** y **Gasto** en **Compras → Suministros** (todas las áreas). Un solo `view`; sin `edit`. Se asigna a mano en Admin (`global_groups.supplies_seguimiento`). `super-admin` lo recibe al sincronizar. No exige `view.board.compras.suministros`.
 - `approve.supply.quality`: variante de revisión de Calidad.
 - `view.board.{area}.suministros`: solo visualiza el tablero cuando aplica la regla canónica.
 
-`User::defaultSupplyBoardUrl()` abre la primera pestaña que quede: Mis solicitudes o Por aprobar. Ya no prioriza `insumos_aprobados` ni `catalogo`.
+`User::defaultSupplyBoardUrl()` abre la primera pestaña que quede: Mis solicitudes, Por aprobar o Historial. Ya no prioriza `insumos_aprobados` ni `catalogo`.
 
 ### Flujo de estados
 `pendiente_calidad` → `aprobada_calidad` | `rechazada_calidad`. El rechazo se reenvía a `pendiente_calidad` (policy `resubmit`: dueño, `supply.tab.my_requests`, área de la URL). `aprobada_calidad` → `en_compras` → `completada` lo escribe `PurchaseFlowStateService` al emitir, al registrar la fecha de recibido o al cerrar saldo. Ver [`purchase-requests.md`](purchase-requests.md).
@@ -113,6 +115,9 @@ Prefijo `supplies/{module}`:
 - `POST /solicitud/{supply_request}/comentarios` (`supplies.comments.store`) — hilo; policy `comment`
 - `GET /insumos-aprobados` (`supplies.approved.index`) — **redirige** a `supplies.approval.index`. Ya no es un escritorio. Las rutas de export de ese listado no tienen entrada de menú
 - `GET|POST /catalogo` y `PATCH /catalogo/{product}` (`supplies.products.*`) — pestaña Insumos de **Catálogos**; el nav activo es Catálogos, no Suministros
+- `GET /seguimiento/historial` y `/exportar` (`supplies.seguimiento.historial` / `.export`) — matriz productos × meses; query `year`, `area_key`, `sede_id`, `product`
+- `GET /seguimiento/ordenes` (`supplies.seguimiento.ordenes`) — OC del producto; mismos filtros más `month` (fecha de la OC). Requiere `product` para listar filas. Pie de tabla: total cantidad y valor
+- `GET /seguimiento/gasto` y `/exportar` (`supplies.seguimiento.gasto` / `.export`) — pedido vs compra; mismos filtros. Solo `module=compras` (`supply.tab:seguimiento`)
 
 ### Items fuera de catalogo
 En `supply_request_items`:
@@ -187,15 +192,29 @@ El listado **Insumos aprobados** ya no está en el menú. El Excel FO-AD-44 se d
 - El correo a Calidad enlaza a Por aprobar en el hogar `calidad` (`board_canonical_areas.suministros.alt_home`). Bandeja Compras es cross-area via `ComprasQueueService`.
 
 ### Navegacion
-- `User::defaultSupplyBoardUrl()` abre Mis solicitudes o Por aprobar.
-- Pestañas visibles del tablero Suministros: `mis_solicitudes`, `aprobacion_insumos`.
+- `User::defaultSupplyBoardUrl()` abre Mis solicitudes, Por aprobar o Historial.
+- Pestañas visibles del tablero Suministros: `mis_solicitudes`, `aprobacion_insumos`, `seguimiento_historial`, `seguimiento_ordenes`, `seguimiento_gasto`.
 - Pestaña Insumos del tablero Catálogos: `User::catalogBoardTabs()` (`insumos`) si `canViewInsumosCatalog`. Subnav `catalogos-subnav`.
+- `SidebarVisibilityService::hasComprasSupplyScope` incluye `supply.tab.seguimiento` para mostrar Compras → Suministros.
+- `SupplyAccessService::canViewSupplyBoard('compras')` también es verdadero con ese permiso (el resolver del menú lo exige además del sidebar).
+
+### Seguimiento (Historial, Órdenes y Gasto)
+Consulta transversal. Servicio `SupplySeguimientoService`, controlador `SupplySeguimientoController`, vistas `modules/supplies/seguimiento/*`. CSS `resources/css/areas/compras/116-compras-suministros-seguimiento.css`.
+
+- **Universo:** solicitudes en `aprobada_calidad`, `en_compras` o `completada` (autorizadas por Calidad). Incluye catálogo y fuera de catálogo.
+- **Historial:** filas = productos; cada mes tiene 3 columnas (inventario, solicitud, autorizado). Inventario = último declarado del mes; cantidades se suman. Sin precios. Totales en barra azul con texto blanco. El nombre del producto abre la pestaña Órdenes.
+- **Órdenes:** una sola tabla con las OC del producto elegido (año, valor con IVA). Filtro opcional por mes de la fecha de la OC. Pie de tabla con total de cantidad y valor. Las anuladas no salen. Mismo permiso `supply.tab.seguimiento`; sin clave Spatie nueva.
+- **Gasto:** 3 columnas por mes (solicitud, comprado, valor con IVA). Solo OC con `fecha_recibido`. Lo solicitado se agrupa por mes del pedido; lo comprado, por mes de recibido. No hay presupuesto anual todavía.
+- Filtros GET: `year` (por defecto el actual), `area_key`, `sede_id`, `product`. En Órdenes también `month` (1–12, fecha de la OC). Quien tiene el permiso ve todas las áreas.
+- Export Excel de cada pestaña via `BaseExport`. Auditoría `seguimiento_historial_excel` / `seguimiento_gasto_excel`.
+- Layout: Historial y Gasto anulan el tope de 1280px de los listados de compras; el panel de la matriz llena el ancho y el alto de `.app-main` (totales sticky al pie).
 
 ### Notificaciones
 - Al crear una solicitud (`store`), se envia `SupplyRequestNotification` a usuarios con `supply.tab.quality` o `approve.supply.quality`.
 
 ### Pruebas
 - `tests/Feature/SupplyModuleTest.php` y los de FEAT-048 en compras (`PurchaseFlowStateTest`, `PurchaseMenuFolioTest`, `PurchaseSupplyPriceTest`): reenvío, hilo, redirección de la URL vieja de insumos aprobados, folio `SU-` y precio solo en la orden.
+- `tests/Feature/Supplies/SupplySeguimientoTest.php`: permiso, hogar Compras, matriz (solo autorizados, suma, último inventario, fuera de catálogo, filtro área), OC del producto, gasto solo recibidas con IVA, Excel.
 
 ### Pendientes conocidos
 - Estado `borrador` documentado pero no implementado.
@@ -212,6 +231,12 @@ El listado **Insumos aprobados** ya no está en el menú. El Excel FO-AD-44 se d
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-11-09 | Columna Valor en Órdenes y Gasto con formato de moneda (`$ 0.000,00`) |
+| 2026-11-09 | Órdenes: filtro por mes (fecha de la OC) y totales de cantidad y valor |
+| 2026-11-09 | Pestaña Órdenes (OC del producto) y nombres de producto que no se desbordan |
+| 2026-11-09 | Historial/Gasto: matrices a todo el ancho/alto de `.app-main` (sin tope 1280px) |
+| 2026-11-09 | Historial/Gasto: 3 columnas por mes, totales blancos sobre azul, filtro `product` |
+| 2026-11-09 | Pestañas Historial y Gasto en Compras → Suministros (`supply.tab.seguimiento`): matriz mensual, detalle de OC por producto, gasto vs solicitado (OC recibidas, IVA incluido), export Excel |
 | 2026-10-22 | Detalle `supplies.show` con panel de OC (`partials/source-orders`) y saldo ordenado/pendiente; PDF FO-AD-07 en `supplies.orders.pdf` (`/solicitud/{supply_request}/ordenes/{purchase_order}/pdf`, `authorizeSupplyView`, 404 si la OC no es del suministro) |
 | 2026-10-21 | Compras puede devolver un suministro Por comprar sin OC; al reenviarlo vuelve a Calidad |
 | 2026-10-21 | Etapa común `PedidoEtapa` en listados, detalle y PDF; Por aprobar de Calidad para todas las áreas con filtro por área |

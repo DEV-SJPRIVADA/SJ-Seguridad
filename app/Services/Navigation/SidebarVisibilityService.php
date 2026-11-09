@@ -383,6 +383,7 @@ class SidebarVisibilityService
         return $user->can('supply.tab.catalog')
             || $user->can('manage.supply.catalog')
             || $user->can('purchase.tab.processing')
+            || $user->can('supply.tab.seguimiento')
             || $user->can('manage.users');
     }
 

@@ -1,0 +1,196 @@
+/* Compras / Suministros — Seguimiento (historial y gasto) */
+
+/* La matriz es ancha: usa todo el main (no el tope de 1280px de listados de compras). */
+.app-main:has(.supply-seg-page) {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+}
+
+.page-section.supply-seg-page {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    padding-bottom: 0.35rem;
+}
+
+.page-section.purchase-requests-page.purchase-requests-page--list.supply-seg-page > .app-container {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    width: calc(100% - 1.5rem);
+    max-width: none;
+    gap: 0.5rem;
+}
+
+.supply-seg-page .purchase-requests-page__intro {
+    flex-shrink: 0;
+    padding-top: 0.75rem;
+    padding-bottom: 0.4rem;
+}
+
+.supply-seg-page.req-manage-page .panel {
+    max-height: none;
+}
+
+.supply-seg-page > .app-container > .purchase-requests-page__panel {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    min-width: 0;
+    height: 100%;
+}
+
+.supply-seg-page > .app-container > .purchase-requests-page__panel > .panel__body.req-manage-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+}
+
+.supply-seg-page .req-manage-shell__table {
+    flex: 1 1 auto;
+    min-height: 0;
+    min-width: 0;
+}
+
+.supply-seg-page__matrix-wrap,
+.supply-seg-page__orders-wrap {
+    flex: 1 1 auto;
+    min-height: 12rem;
+    min-width: 0;
+    overflow: auto;
+}
+
+.supply-seg-page__matrix {
+    width: 100%;
+    min-width: 96rem;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.supply-seg-page__matrix th,
+.supply-seg-page__matrix td {
+    vertical-align: middle;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.supply-seg-page__matrix td,
+.supply-seg-page__matrix tfoot th {
+    min-width: 3.25rem;
+    padding: 0.35rem 0.4rem;
+}
+
+.supply-seg-page__sticky {
+    position: sticky;
+    left: 0;
+    z-index: 4;
+    background: #fff;
+    box-shadow: 1px 0 0 var(--color-border, #dbe3ef);
+}
+
+/* El nowrap de las celdas numéricas no debe aplicar al nombre del producto. */
+.supply-seg-page__matrix th.supply-seg-page__sticky,
+.supply-seg-page__matrix td.supply-seg-page__sticky {
+    width: 16rem;
+    min-width: 16rem;
+    max-width: 16rem;
+    white-space: normal;
+    overflow: hidden;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.supply-seg-page .req-manage-table-scroll .data-table thead th {
+    color: #fff;
+    background-color: #003366 !important;
+}
+
+.supply-seg-page .req-manage-table-scroll .data-table thead tr:first-child th {
+    top: 0 !important;
+    z-index: 14 !important;
+}
+
+.supply-seg-page .req-manage-table-scroll .data-table thead tr:nth-child(2) th {
+    top: 2.35rem !important;
+    z-index: 13 !important;
+}
+
+.supply-seg-page .req-manage-table-scroll .data-table thead th.supply-seg-page__sticky {
+    z-index: 16 !important;
+    background-color: #003366 !important;
+    color: #fff;
+}
+
+.supply-seg-page__month-group {
+    letter-spacing: 0.02em;
+    border-left: 1px solid color-mix(in srgb, #fff 28%, #003366) !important;
+}
+
+.supply-seg-page__month-end,
+.supply-seg-page__matrix td.supply-seg-page__month-end,
+.supply-seg-page__matrix th.supply-seg-page__month-end {
+    border-right: 1px solid var(--color-border, #dbe3ef);
+}
+
+.supply-seg-page .req-manage-table-scroll .data-table thead th.supply-seg-page__month-end {
+    border-right-color: color-mix(in srgb, #fff 28%, #003366);
+}
+
+.supply-seg-page__sub {
+    font-size: 0.72rem;
+    font-weight: 600;
+}
+
+.supply-seg-page__row--active td {
+    background: color-mix(in srgb, var(--brand-primary, #003366) 8%, #fff);
+}
+
+.supply-seg-page__row--active td.supply-seg-page__sticky {
+    background: color-mix(in srgb, var(--brand-primary, #003366) 8%, #fff);
+}
+
+.supply-seg-page__product-link {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    max-width: 100%;
+    color: inherit;
+    text-decoration: none;
+    font-weight: 600;
+    white-space: normal;
+}
+
+.supply-seg-page__product-name {
+    display: block;
+    max-width: 100%;
+    line-height: 1.25;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+}
+
+.supply-seg-page__product-link:hover .supply-seg-page__product-name {
+    text-decoration: underline;
+}
+
+/* Totales: barra fija al pie del scroll, texto blanco sobre azul corporativo. */
+.supply-seg-page .req-manage-table-scroll .data-table tfoot th {
+    position: sticky;
+    bottom: 0;
+    z-index: 12;
+    background-color: #003366 !important;
+    color: #fff !important;
+    font-weight: 700;
+    box-shadow: 0 -2px 0 #002244;
+}
+
+.supply-seg-page .req-manage-table-scroll .data-table tfoot th.supply-seg-page__sticky {
+    z-index: 16;
+    left: 0;
+}

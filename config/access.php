@@ -75,6 +75,7 @@ return [
         'supply.tab.my_requests' => 'Suministros: Ver Mis Solicitudes',
         'supply.tab.quality' => 'Suministros: Acceso a Aprobación Insumos',
         'supply.tab.catalog' => 'Suministros: Acceso a Catálogo',
+        'supply.tab.seguimiento' => 'Suministros: Seguimiento',
 
         'manage.supply.catalog' => 'Administrar catálogo de suministros (Full)',
         'approve.supply.quality' => 'Aprobar insumos (permiso completo)',
@@ -182,6 +183,7 @@ return [
         'supply.tab.my_requests' => 'Permite crear y consultar las solicitudes de insumos propias.',
         'supply.tab.quality' => 'Permite acceder a la aprobación de insumos y revisar solicitudes de todas las áreas.',
         'supply.tab.catalog' => 'Permite acceder al catálogo de insumos.',
+        'supply.tab.seguimiento' => 'Permite consultar el historial mensual de insumos autorizados, las órdenes de compra del producto y el gasto frente a lo solicitado, de todas las áreas.',
         'manage.supply.catalog' => 'Permite crear y editar el catálogo completo de insumos.',
         'approve.supply.quality' => 'Permite aprobar, devolver y ajustar cantidades de las solicitudes de insumos.',
         'manage.quality.documents' => 'Permite administrar los documentos de Calidad: biblioteca, tipos y publicación.',
@@ -465,6 +467,9 @@ return [
         'aprobacion_insumos' => 'Aprobacion Insumos',
         'insumos_aprobados' => 'Insumos aprobados',
         'catalogo' => 'Catalogo',
+        'seguimiento_historial' => 'Historial',
+        'seguimiento_ordenes' => 'Órdenes',
+        'seguimiento_gasto' => 'Gasto',
     ],
 
     'purchase_tabs' => [
@@ -563,6 +568,12 @@ return [
                 'permissions' => [
                     'supply.tab.catalog',
                     'manage.supply.catalog',
+                ],
+            ],
+            'supplies_seguimiento' => [
+                'label' => 'Suministros — Seguimiento',
+                'permissions' => [
+                    'supply.tab.seguimiento',
                 ],
             ],
             'purchases' => [
