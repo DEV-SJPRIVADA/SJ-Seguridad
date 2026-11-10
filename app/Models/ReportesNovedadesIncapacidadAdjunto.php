@@ -57,4 +57,14 @@ class ReportesNovedadesIncapacidadAdjunto extends Model
     {
         return Number::fileSize($this->size_bytes);
     }
+
+    public function isImage(): bool
+    {
+        $mime = strtolower((string) $this->mime_type);
+        if (str_starts_with($mime, 'image/')) {
+            return true;
+        }
+
+        return (bool) preg_match('/\.(jpe?g)$/i', (string) $this->original_name);
+    }
 }

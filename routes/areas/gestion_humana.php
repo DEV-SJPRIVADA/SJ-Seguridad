@@ -391,6 +391,7 @@ Route::middleware(['password.changed'])
         Route::get('/incapacidades/{incapacidad}/adjuntos', [ReportesNovedadesIncapacidadesController::class, 'attachments'])->name('incapacidades.attachments.index');
         Route::post('/incapacidades/{incapacidad}/adjuntos', [ReportesNovedadesIncapacidadesController::class, 'storeAttachments'])->name('incapacidades.attachments.store');
         Route::get('/incapacidades/{incapacidad}/adjuntos/{adjunto}', [ReportesNovedadesIncapacidadesController::class, 'downloadAttachment'])->name('incapacidades.attachments.download');
+        Route::get('/incapacidades/{incapacidad}/adjuntos/{adjunto}/vista-previa', [ReportesNovedadesIncapacidadesController::class, 'previewAttachment'])->name('incapacidades.attachments.preview');
         Route::delete('/incapacidades/{incapacidad}/adjuntos/{adjunto}', [ReportesNovedadesIncapacidadesController::class, 'destroyAttachment'])->name('incapacidades.attachments.destroy');
 
         Route::get('/retiros', [ReportesNovedadesRetirosController::class, 'index'])->name('retiros');

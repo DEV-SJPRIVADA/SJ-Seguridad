@@ -180,7 +180,8 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
             ->assertOk()
             ->assertJsonPath('can_edit', false)
             ->assertJsonCount(2, 'data')
-            ->assertJsonPath('data.0.delete_url', null);
+            ->assertJsonPath('data.0.delete_url', null)
+            ->assertJsonPath('data.0.preview_url', route('gestion-humana.reportes-novedades.incapacidades.attachments.preview', [$row, $pdf]));
 
         $this->actingAs($viewer)
             ->getJson(route('gestion-humana.reportes-novedades.incapacidades.attachments.index', $row))
@@ -197,6 +198,16 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
             ->assertOk()
             ->assertDownload('foto.jpg');
 
+        $previewPdf = $this->actingAs($reviewer)
+            ->get(route('gestion-humana.reportes-novedades.incapacidades.attachments.preview', [$row, $pdf]));
+        $previewPdf->assertOk();
+        $this->assertStringContainsString('inline', (string) $previewPdf->headers->get('content-disposition'));
+
+        $previewJpg = $this->actingAs($viewer)
+            ->get(route('gestion-humana.reportes-novedades.incapacidades.attachments.preview', [$row, $jpg]));
+        $previewJpg->assertOk();
+        $this->assertStringContainsString('inline', (string) $previewJpg->headers->get('content-disposition'));
+
         $this->actingAs($reviewer)
             ->deleteJson(route('gestion-humana.reportes-novedades.incapacidades.attachments.destroy', [$row, $pdf]))
             ->assertForbidden();
@@ -212,6 +223,10 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
 
         $this->actingAs($editor)
             ->get(route('gestion-humana.reportes-novedades.incapacidades.attachments.download', [$other, $pdf]))
+            ->assertNotFound();
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.reportes-novedades.incapacidades.attachments.preview', [$other, $pdf]))
             ->assertNotFound();
 
         $this->actingAs($editor)

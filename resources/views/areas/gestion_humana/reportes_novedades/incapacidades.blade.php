@@ -18,6 +18,8 @@
         @rn-incapacidad-open-edit.window="openEdit($event.detail)"
         @rn-open-historial.window="openHistorial($event.detail)"
         @rn-incapacidad-open-adjuntos.window="openAdjuntos($event.detail)"
+        @close-modal.window="if ($event.detail === 'rn-incapacidad-adjuntos') closePreview()"
+        @keydown.escape.window="if (previewOpen) { $event.stopImmediatePropagation(); closePreview(); }"
     >
         <div class="app-container">
             @if (session('status'))
@@ -275,6 +277,16 @@
                                         </p>
                                     </div>
                                     <div class="rn-adjuntos-modal__item-actions">
+                                        <button
+                                            type="button"
+                                            class="cursos-catalogo-page__icon-btn"
+                                            title="Vista previa"
+                                            aria-label="Vista previa"
+                                            x-show="item.preview_url"
+                                            x-on:click="openPreview(item)"
+                                        >
+                                            <x-lucide-eye width="16" height="16" aria-hidden="true" />
+                                        </button>
                                         <a class="cursos-catalogo-page__icon-btn" :href="item.download_url" title="Descargar" aria-label="Descargar">
                                             <x-lucide-download width="16" height="16" aria-hidden="true" />
                                         </a>
@@ -311,6 +323,46 @@
                     </div>
                 </div>
             </x-modal>
+
+            {{-- Vista previa de PDF/JPG encima del modal de adjuntos; Escape cierra solo esta capa. --}}
+            <div
+                class="rn-adjunto-preview"
+                x-show="previewOpen"
+                x-cloak
+                x-on:click.self="closePreview()"
+                role="dialog"
+                aria-modal="true"
+                :aria-label="previewName ? ('Vista previa: ' + previewName) : 'Vista previa'"
+            >
+                <div class="rn-adjunto-preview__panel">
+                    <div class="rn-adjunto-preview__header">
+                        <h3 class="rn-adjunto-preview__title" x-text="previewName">Vista previa</h3>
+                        <button
+                            type="button"
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            title="Cerrar vista previa"
+                            aria-label="Cerrar vista previa"
+                            x-on:click="closePreview()"
+                        >
+                            <x-lucide-x width="18" height="18" aria-hidden="true" />
+                        </button>
+                    </div>
+                    <div class="rn-adjunto-preview__body">
+                        <img
+                            class="rn-adjunto-preview__image"
+                            x-show="previewIsImage && previewUrl"
+                            :src="previewIsImage ? previewUrl : ''"
+                            :alt="previewName"
+                        >
+                        <iframe
+                            class="rn-adjunto-preview__frame"
+                            x-show="!previewIsImage && previewUrl"
+                            :src="!previewIsImage ? previewUrl : ''"
+                            :title="previewName"
+                        ></iframe>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -381,6 +433,10 @@
                     adjuntosLabel: '',
                     adjuntosIndexUrl: '',
                     adjuntosStoreUrl: '',
+                    previewOpen: false,
+                    previewUrl: '',
+                    previewName: '',
+                    previewIsImage: false,
                     historialFilterable: false,
                     historialBaseUrl: '',
                     calcFechaFin() {
@@ -663,6 +719,7 @@
                         }
                     },
                     async openAdjuntos(detail) {
+                        this.closePreview();
                         this.adjuntosIndexUrl = detail?.url || '';
                         this.adjuntosStoreUrl = detail?.storeUrl || '';
                         this.adjuntosLabel = detail?.label || 'Soportes de la incapacidad.';
@@ -672,6 +729,22 @@
                         this.adjuntosCanEdit = !!this.canEdit;
                         window.dispatchEvent(new CustomEvent('open-modal', { detail: 'rn-incapacidad-adjuntos' }));
                         await this.fetchAdjuntos();
+                    },
+                    openPreview(item) {
+                        const url = item?.preview_url || '';
+                        if (! url) {
+                            return;
+                        }
+                        this.previewName = item.original_name || 'Adjunto';
+                        this.previewIsImage = !!item.is_image;
+                        this.previewUrl = url;
+                        this.previewOpen = true;
+                    },
+                    closePreview() {
+                        this.previewOpen = false;
+                        this.previewUrl = '';
+                        this.previewName = '';
+                        this.previewIsImage = false;
                     },
                     adjuntosErrorFromResponse(data) {
                         const errors = data?.errors || {};
@@ -739,6 +812,7 @@
                             }
                             this.adjuntosItems = data.data || [];
                             this.adjuntosMessage = data.message || 'Adjunto eliminado.';
+                            this.closePreview();
                         } catch (e) {
                             this.adjuntosError = 'No se pudo eliminar el adjunto.';
                         } finally {

@@ -260,14 +260,14 @@ class ReportesNovedadesIncapacidadesController extends Controller
         ReportesNovedadesIncapacidad $incapacidad,
         ReportesNovedadesIncapacidadAdjunto $adjunto,
     ): StreamedResponse {
-        abort_unless($this->access->canAccessSheet(auth()->user(), self::SHEET), 403);
-        $this->assertAdjuntoBelongsTo($incapacidad, $adjunto);
+        return $this->streamAdjunto($incapacidad, $adjunto, 'attachment');
+    }
 
-        $disk = (string) config('reportes_novedades.incapacidades_adjuntos.disk', 'local');
-
-        abort_unless(Storage::disk($disk)->exists($adjunto->stored_path), 404);
-
-        return Storage::disk($disk)->download($adjunto->stored_path, $adjunto->original_name);
+    public function previewAttachment(
+        ReportesNovedadesIncapacidad $incapacidad,
+        ReportesNovedadesIncapacidadAdjunto $adjunto,
+    ): StreamedResponse {
+        return $this->streamAdjunto($incapacidad, $adjunto, 'inline');
     }
 
     public function destroyAttachment(
@@ -352,7 +352,7 @@ class ReportesNovedadesIncapacidadesController extends Controller
      * }
      */
     /**
-     * @return list<array{id: int, original_name: string, size_label: string, uploaded_at: string, uploaded_by: string, download_url: string, delete_url: ?string}>
+     * @return list<array{id: int, original_name: string, mime_type: ?string, is_image: bool, size_label: string, uploaded_at: string, uploaded_by: string, preview_url: string, download_url: string, delete_url: ?string}>
      */
     private function attachmentPayload(ReportesNovedadesIncapacidad $incapacidad): array
     {
@@ -365,15 +365,47 @@ class ReportesNovedadesIncapacidadesController extends Controller
             ->map(fn (ReportesNovedadesIncapacidadAdjunto $adjunto): array => [
                 'id' => $adjunto->id,
                 'original_name' => $adjunto->original_name,
+                'mime_type' => $adjunto->mime_type,
+                'is_image' => $adjunto->isImage(),
                 'size_label' => $adjunto->sizeLabel(),
                 'uploaded_at' => DisplayDate::dateTime($adjunto->created_at),
                 'uploaded_by' => $adjunto->uploader?->name ?: '—',
+                'preview_url' => route('gestion-humana.reportes-novedades.incapacidades.attachments.preview', [$incapacidad, $adjunto]),
                 'download_url' => route('gestion-humana.reportes-novedades.incapacidades.attachments.download', [$incapacidad, $adjunto]),
                 'delete_url' => $canEdit
                     ? route('gestion-humana.reportes-novedades.incapacidades.attachments.destroy', [$incapacidad, $adjunto])
                     : null,
             ])
             ->all();
+    }
+
+    /**
+     * @param  'inline'|'attachment'  $disposition
+     */
+    private function streamAdjunto(
+        ReportesNovedadesIncapacidad $incapacidad,
+        ReportesNovedadesIncapacidadAdjunto $adjunto,
+        string $disposition,
+    ): StreamedResponse {
+        abort_unless($this->access->canAccessSheet(auth()->user(), self::SHEET), 403);
+        $this->assertAdjuntoBelongsTo($incapacidad, $adjunto);
+
+        $disk = (string) config('reportes_novedades.incapacidades_adjuntos.disk', 'local');
+
+        abort_unless(Storage::disk($disk)->exists($adjunto->stored_path), 404);
+
+        $headers = [];
+        $mime = trim((string) $adjunto->mime_type);
+        if ($mime !== '') {
+            $headers['Content-Type'] = $mime;
+        }
+
+        return Storage::disk($disk)->response(
+            $adjunto->stored_path,
+            $adjunto->original_name,
+            $headers,
+            $disposition,
+        );
     }
 
     private function assertAdjuntoBelongsTo(

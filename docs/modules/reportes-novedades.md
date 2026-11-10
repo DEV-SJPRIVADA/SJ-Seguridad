@@ -44,6 +44,7 @@ Middleware grupo area: `password.changed` (mas `auth` / `active` del grupo `web.
 | GET | `/incapacidades/{incapacidad}/adjuntos` | `incapacidades.attachments.index` | JSON de adjuntos. view∨edit∨review |
 | POST | `/incapacidades/{incapacidad}/adjuntos` | `incapacidades.attachments.store` | Sube PDF/JPG (lote). **edit** |
 | GET | `/incapacidades/{incapacidad}/adjuntos/{adjunto}` | `incapacidades.attachments.download` | Descarga. view∨edit∨review. 404 si el archivo no es de esa fila |
+| GET | `/incapacidades/{incapacidad}/adjuntos/{adjunto}/vista-previa` | `incapacidades.attachments.preview` | Vista previa inline (PDF/JPG). view∨edit∨review. 404 si el archivo no es de esa fila |
 | DELETE | `/incapacidades/{incapacidad}/adjuntos/{adjunto}` | `incapacidades.attachments.destroy` | Borra archivo. **edit** |
 
 Hojas: `vacaciones`, `incapacidades`, `retiros`, `permisos`. Parametros de ruta: `{vacacion}`, `{incapacidad}`, `{retiro}`, `{permiso}`.
@@ -192,7 +193,7 @@ Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja
 11. Vacaciones (alta/edición GH): al ingresar **días** y **fecha inicio**, el modal sugiere `fecha_fin` = inicio + N días hábiles (sin domingos ni festivos CO) y `fecha_reintegro` = día siguiente a fin; el usuario puede editar ambas. También persisten **períodos** y **firma** (`signatory_id`, catálogo `firmas`) para regenerar la carta Word; no se muestran en el listado.
 12. Vacaciones: acción **Descargar carta Word** por fila (solo `reportes_novedades.vacaciones.edit`); usa `ClienteInternoCartasVacacionesGeneratorService` + plantilla activa `cartas_vacaciones`.
 13. Permisos: la columna **Marca GH** del listado es un checkbox que persiste al instante vía `PATCH /permisos/{permiso}/marca-gh` (JSON). Solo `edit`; para `review`/`view` se muestra deshabilitado. Genera evento de auditoría `update` con `metadata.field = marca_gh`.
-14. Incapacidades: acción **Adjuntos** en cada fila. Quien ve la hoja (ver, editar o revisar) consulta y descarga. Solo **edit** sube (PDF o JPG, en lote o en varios envíos; máx. 10 por envío y 10 MB c/u) o elimina un archivo. Borrar la incapacidad borra sus archivos. No van al Excel.
+14. Incapacidades: acción **Adjuntos** en cada fila. Quien ve la hoja (ver, editar o revisar) consulta, previsualiza (PDF/JPG en overlay) y descarga. Solo **edit** sube (PDF o JPG, en lote o en varios envíos; máx. 10 por envío y 10 MB c/u) o elimina un archivo. Borrar la incapacidad borra sus archivos. No van al Excel.
 15. Incapacidades: en el modal (alta/edición GH), al ingresar **días** y **fecha inicio**, `calcFechaFin()` (Alpine) recalcula automáticamente `form.fecha_fin` = inicio + (N − 1) días corridos (incluye el día de inicio); el usuario puede editar la fecha fin manualmente.
 16. Cédula duplicada: en el listado filtrado de cada una de las cuatro hojas, si la **cédula** aparece en más de una fila del mismo filtro, el valor de la columna Cédula se muestra en **rojo** (clase `.rn-cedula-duplicada`). La detección se calcula sobre el conjunto completo filtrado (todas las páginas), no solo la página visible. No afecta el export a Excel.
 17. Orden de listado (las cuatro hojas): DataTables es `serverSide: true`, por lo que el orden lo resuelve el backend. Cada `ReportesNovedades*DatatableService` implementa `applyOrdering()` y respeta `order[0][column]` / `order[0][dir]` con **lista blanca** de columnas (índice → columna real; la dirección solo puede ser `asc`/`desc`). Sin `order` explícito, o en columnas no ordenables (Acciones y, en Incapacidades, **Días entrega** calculada), cae al default `fecha_inicio desc, id desc` (Retiros: `fecha_retiro desc, id desc`). El `filteredQuery()` recibe un `?Request` opcional: el export lo omite y conserva el orden por defecto.
@@ -201,7 +202,7 @@ Historial UI: endpoint por pestana; lectura con view∨edit∨review de esa hoja
 
 - Alpine + DataTables server-side embebidos en vistas Blade (patron GH).
 - Vacaciones: `syncFechaFin()` (Alpine) recalcula `form.fecha_fin` y `form.fecha_reintegro` desde `dias_novedad` + `fecha_inicio` usando `holidaySet` (festivos CO enviados por el controller).
-- Incapacidades: `calcFechaFin()` (Alpine) recalcula `form.fecha_fin` = `fecha_inicio` + (días − 1) días corridos al cambiar `form.dias` o `form.fecha_inicio` (`x-on:input`).
+- Incapacidades: `calcFechaFin()` (Alpine) recalcula `form.fecha_fin` = `fecha_inicio` + (días − 1) días corridos al cambiar `form.dias` o `form.fecha_inicio` (`x-on:input`). Adjuntos: `openPreview()` abre overlay JPG (`img`) o PDF (`iframe`) con `Content-Disposition: inline`.
 - Selectores catalogo: `<x-searchable-select>`.
 - Botones icon-only: `.req-manage-filters__icon-btn` / `.cursos-catalogo-page__icon-btn`.
 - Subnav: `.module-tab` / branding GH.
