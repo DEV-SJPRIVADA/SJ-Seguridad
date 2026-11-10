@@ -233,7 +233,7 @@ a {
 .module-tab--active {
     color: #fff;
     background: var(--color-primary);
-    border-color: var(--color-primary);
+    border-color: #f7a823;
 }
 
 .sidebar-link__title {
@@ -300,7 +300,7 @@ button.module-tab {
 .app-sidebar-footer {
     margin-top: auto;
     padding-top: 1.25rem;
-    border-top: 1px solid var(--color-border);
+    border-top: 1px solid #f7a823;
 }
 
 .app-sidebar-footer__identity {

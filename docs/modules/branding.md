@@ -84,6 +84,7 @@ Los tres niveles de navegacion autenticada usan **el mismo look de pill**:
 | Pestanas del modulo | `.module-tab` | `.module-subnav__inner` / `.requisition-subtabs__inner` |
 
 - Estilos compartidos en `resources/css/base/001-base.css` (selectores `.sidebar-link, .module-tab`).
+- Estado activo (`.sidebar-link--active`, `.module-tab--active`): fondo `--color-primary` con **borde de acento `#f7a823`**; el pie del sidebar usa el mismo acento en su `border-top`.
 - Padding entre botones y contenedor de franja: **`0.2rem`**.
 - **Sidebar Procesos (desktop):** scroll de áreas oculto (sin barra visible); botón pill con chevrones (`chevrons-left` / `chevrons-right`) para **colapsar/mostrar** la barra (preferencia en `localStorage` `sj.sidebarCollapsed`). En ≤1024px sigue el select móvil (sin colapso).
 - **Tableros del area:** una sola fila (`.module-tabs--scroll`) con scroll horizontal oculto (sin barra visible); flechas laterales (`.module-tabs-scroller`) en desktop y móvil cuando hay overflow; swipe nativo en el track (sin capturar pointer, para no romper clics). Sin wrap a segunda fila.

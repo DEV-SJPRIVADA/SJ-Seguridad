@@ -18,7 +18,7 @@ Estandar visual unico para los tres niveles de navegacion autenticada.
 
 ## Reglas obligatorias
 
-1. **Mismo look:** `.sidebar-link` y `.module-tab` comparten tipografia, padding, borde, `border-radius: 999px`, colores y estados hover/activo en `resources/css/base/001-base.css`. No reinventar pills distintas por modulo.
+1. **Mismo look:** `.sidebar-link` y `.module-tab` comparten tipografia, padding, borde, `border-radius: 999px`, colores y estados hover/activo en `resources/css/base/001-base.css`. No reinventar pills distintas por modulo. El estado activo usa borde de acento `#f7a823` (mismo acento que la linea superior del `app-sidebar-footer`).
 2. **Padding contenedor ↔ botones:** `0.2rem` en `.module-strip__inner`, `.module-subnav__inner` y `.requisition-subtabs__inner` (tambien en media queries moviles de esas clases).
 3. **Tableros del area:** una fila con scroll (`.module-tabs--scroll`) + flechas (`.module-tabs-scroller`) si hay overflow; no usar `flex-wrap: wrap` en esa franja.
 4. **Sidebar Procesos:** scroll de areas oculto; colapso desktop via `.app-sidebar--collapsed` + Alpine `appSidebar` (no afecta el select movil ≤1024px).
