@@ -72,6 +72,8 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | Suministros | [`modules/suministros.md`](modules/suministros.md) | [`user/suministros.md`](user/suministros.md) | Compartido |
 | Solicitudes de compra | [`modules/purchase-requests.md`](modules/purchase-requests.md) | [`user/purchase-requests.md`](user/purchase-requests.md) | Compartido |
 | Documentos calidad | [`modules/quality-documents.md`](modules/quality-documents.md) | [`user/quality-documents.md`](user/quality-documents.md) | Compartido |
+| Servicio al cliente | [`modules/servicio-cliente.md`](modules/servicio-cliente.md) | [`user/servicio-cliente.md`](user/servicio-cliente.md) | Area calidad |
+| Planeación estratégica | [`modules/planeacion-estrategica.md`](modules/planeacion-estrategica.md) | [`user/planeacion-estrategica.md`](user/planeacion-estrategica.md) | Area calidad |
 | Indicadores (Operaciones) | [`modules/indicadores.md`](modules/indicadores.md) | [`user/indicadores.md`](user/indicadores.md) | Area operaciones |
 | Matriz comercial | [`modules/matriz-clientes.md`](modules/matriz-clientes.md) | [`user/matriz-clientes.md`](user/matriz-clientes.md) | Area comercial |
 | Ficha empleados | [`modules/ficha-empleados.md`](modules/ficha-empleados.md) | [`user/ficha-empleados.md`](user/ficha-empleados.md) | Area gestion_humana |

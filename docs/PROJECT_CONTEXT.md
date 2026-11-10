@@ -24,6 +24,7 @@
 - **Requisiciones de personal:** dashboard, solicitar, seguimiento, gestion, parametros; notificaciones por correo al crear y al cambiar estado
 - **Suministros:** mis solicitudes, aprobacion Calidad, insumos aprobados (FO-AD-44), catalogo; sedes; notificacion a Calidad al crear
 - **Documentos de Calidad:** biblioteca por area, mis documentos, administracion centralizada
+- **Calidad — Planeación estratégica:** indicadores de gestión construibles (campos + fórmula), compartir a usuarios, captura mensual, ficha consolidada (suma de campos + recálculo) y dashboard
 - **Indicadores (Operaciones):** captura FT-OP, dashboard, ajustes (periodos, metas, auditoria), consolidado, export PDF/Excel
 - **Comercial:** dashboard KPI, matriz clientes (NIT), servicios por portafolio; importacion MT-CO-01
 - **Gestion humana (area):** Ficha empleados, Desvinculaciones, **MT-GH-04 Novedades** (Vacaciones / Incapacidades / Retiros / Permisos; review Nómina), Cursos, **Formación** (Dashboard + Formaciones; import replace-all dataset Excel), **Selección** (Ingreso / Examen ocupacional / Dashboard / Catalogos), **Cliente interno** (Dashboard + Solicitudes + Catalogos ESTADO/SOLICITUD; import replace-por-periodo), Acreditaciones, **MT-ST-04** (Dashboard + Matriz exámenes psicofísicos/psicosensométricos; import upsert), Archivo, Plantillas Word
@@ -54,6 +55,7 @@ El workflow multi-agente actualiza estas capas al cerrar features ([`docs/AGENT_
 - **Requisiciones:** `personal_requisitions`, `personal_requisition_status_logs`, `personal_requisition_change_logs`, catalogos en `requisition_*`; correos via tablas globales `notification_types` / `notification_emails` (modulo `requisitions`)
 - **Suministros:** `supply_products`, `supply_requests`, `supply_request_items`, `supply_sites`
 - **Calidad documentos:** `quality_documents`, `quality_document_areas`, `quality_document_users`
+- **Planeación estratégica (Calidad):** `quality_planning_indicators`, `quality_planning_indicator_versions`, `quality_planning_indicator_assignees`, `quality_planning_captures`
 - **Indicadores:** `indicators`, `indicator_periods`, `indicator_captures`, `dashboard_weights`, `improvements`
 - **Comercial:** `commercial_clients`, `commercial_services`, catalogos `commercial_*`
 - **Selección (GH):** `seleccion_ingresos`, `seleccion_examenes_ocupacionales`; catalogos RH/estado civil/SOLICITUD en `payroll_catalog_items`

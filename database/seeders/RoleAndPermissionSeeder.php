@@ -35,6 +35,11 @@ class RoleAndPermissionSeeder extends Seeder
                 'servicio_cliente.fo_gi_22.view',
                 'servicio_cliente.fo_gi_22.edit',
                 'servicio_cliente.parameters.edit',
+                'view.board.calidad.planeacion_estrategica',
+                'planeacion.indicadores.edit',
+                'planeacion.dashboard.view',
+                'planeacion.captura.view',
+                'planeacion.captura.edit',
             ],
             'director' => [
                 'view.dashboard',

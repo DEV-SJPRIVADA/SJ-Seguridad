@@ -88,6 +88,7 @@ Tabla de referencia para agentes y desarrolladores (conflictos y scope lock). Wo
 | requisitions | `routes/modules/requisitions.php` | `RequisitionController`, catalogos | `resources/views/modules/requisitions/` | `docs/modules/requisitions.md` | `docs/user/requisitions.md` |
 | supplies | `routes/modules/supplies.php` | `Supply*Controller` | `resources/views/modules/suministros/` | `docs/modules/suministros.md` | `docs/user/suministros.md` |
 | quality-documents | `routes/modules/quality-documents.php` | `QualityDocument*` | `resources/views/modules/quality-documents/` | `docs/modules/quality-documents.md` | `docs/user/quality-documents.md` |
+| calidad / planeacion_estrategica | `routes/areas/calidad.php` | `Calidad\PlaneacionEstrategicaController` | `resources/views/areas/calidad/planeacion/` | `docs/modules/planeacion-estrategica.md` | `docs/user/planeacion-estrategica.md` |
 | operaciones / indicadores | `routes/areas/operaciones.php` | `Operaciones\IndicadorController` | `resources/views/areas/operaciones/` | `docs/modules/indicadores.md` | `docs/user/indicadores.md` |
 | comercial | `routes/areas/comercial.php` | `Comercial\*Controller` | `resources/views/areas/comercial/` | `docs/modules/matriz-clientes.md` | `docs/user/matriz-clientes.md` |
 | gestion_humana / dashboard (área) | `routes/areas/gestion_humana.php` (+ redirect `web.php`) | `GestionHumana\GestionHumanaAreaDashboardController` | `resources/views/areas/gestion_humana/dashboard.blade.php` | `docs/modules/gestion-humana-dashboard.md` | `docs/user/gestion-humana-dashboard.md` |

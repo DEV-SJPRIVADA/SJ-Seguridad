@@ -1,0 +1,477 @@
+/* Calidad / Planeación estratégica — capa 117
+   Listado, constructor de indicador y ficha de definición.
+*/
+
+.planeacion-page .req-manage-dt-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.35rem 0 0.75rem;
+    margin-bottom: 0.35rem;
+    background: #fff;
+}
+
+.planeacion-page .req-manage-dt-top .dataTables_length,
+.planeacion-page .req-manage-dt-top .dataTables_filter {
+    float: none !important;
+    margin: 0 !important;
+}
+
+.planeacion-page__placeholder {
+    margin: 0;
+    padding: 1.25rem 0.25rem;
+}
+
+.planeacion-form-page > .app-container,
+.planeacion-show-page > .app-container {
+    width: calc(100% - 1.5rem);
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 768px) {
+    .planeacion-form-page > .app-container,
+    .planeacion-show-page > .app-container {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+}
+
+.planeacion-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.planeacion-fields__row {
+    display: grid;
+    grid-template-columns: minmax(8rem, 11rem) minmax(12rem, 1fr) 8rem 7rem auto;
+    gap: 0.65rem 0.75rem;
+    align-items: end;
+    padding: 0.75rem;
+    border: 1px solid #64748b;
+    border-radius: var(--radius-md, 0.5rem);
+    background: #fff;
+}
+
+.planeacion-fields__toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.planeacion-fields__actions {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+
+.planeacion-fields__required input[type='checkbox'] {
+    width: 1.1rem;
+    height: 1.1rem;
+}
+
+@media (max-width: 959px) {
+    .planeacion-fields__row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .planeacion-fields__label,
+    .planeacion-fields__actions {
+        grid-column: 1 / -1;
+    }
+}
+
+.planeacion-formula__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0.75rem;
+}
+
+.planeacion-formula__textarea {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.planeacion-formula__preview {
+    margin-top: 1rem;
+    padding: 0.85rem;
+    border: 1px solid #64748b;
+    border-radius: var(--radius-md, 0.5rem);
+    background: #f8fafc;
+}
+
+.planeacion-formula__samples {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.65rem 0.75rem;
+    margin: 0.5rem 0 0.85rem;
+}
+
+@media (max-width: 639px) {
+    .planeacion-formula__samples {
+        grid-template-columns: 1fr;
+    }
+}
+
+.planeacion-formula__preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+}
+
+.planeacion-formula__result,
+.planeacion-formula__error {
+    margin: 0;
+}
+
+.planeacion-formula__error {
+    color: #b91c1c;
+}
+
+.planeacion-ficha__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.85rem 1.25rem;
+    margin: 0;
+}
+
+.planeacion-ficha__grid dt {
+    font-size: 0.75rem;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--color-text-soft, #64748b);
+    margin-bottom: 0.2rem;
+}
+
+.planeacion-ficha__grid dd {
+    margin: 0;
+    font-weight: 600;
+}
+
+.planeacion-ficha__span {
+    grid-column: 1 / -1;
+}
+
+.planeacion-ficha code,
+.planeacion-show-page code {
+    font-size: 0.9em;
+}
+
+.table-actions__inline {
+    display: inline;
+    margin: 0;
+}
+
+@media (max-width: 639px) {
+    .planeacion-ficha__grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.planeacion-share-modal__body {
+    padding-top: 1rem;
+}
+
+.planeacion-share-modal__table {
+    max-height: 16rem;
+    overflow: auto;
+}
+
+.planeacion-share__add {
+    display: grid;
+    grid-template-columns: minmax(16rem, 1fr) auto auto;
+    gap: 0.75rem;
+    align-items: end;
+    margin-bottom: 1rem;
+}
+
+.planeacion-share__consult-add,
+.planeacion-share__consult {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.9rem;
+}
+
+.planeacion-share__error {
+    margin: 0 0 0.75rem;
+    color: #b91c1c;
+}
+
+.planeacion-capture-page > .app-container {
+    width: calc(100% - 1.5rem);
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Unificar hueco entre bloques de captura (periodo, campos, KPIs, análisis, acciones, ficha). */
+.planeacion-capture-page .form-stack {
+    gap: 10px;
+}
+
+.planeacion-capture-page .req-form-actions {
+    margin-top: 0;
+}
+
+.planeacion-capture-page .planeacion-ficha-sheet {
+    margin-top: 0;
+}
+
+.planeacion-capture-period {
+    display: grid;
+    grid-template-columns: minmax(8rem, 12rem) minmax(10rem, 14rem) auto;
+    gap: 0.75rem;
+    align-items: end;
+}
+
+.planeacion-capture-fields {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+}
+
+/* Celdas visibles en constructor y captura (no depender de Tailwind). */
+.planeacion-form-page .form-grid .form-field,
+.planeacion-form-page .planeacion-formula__samples .form-field,
+.planeacion-capture-fields .form-field,
+.planeacion-capture-page .form-stack .form-field {
+    border: 1px solid #64748b;
+    border-radius: var(--radius-md, 0.5rem);
+    padding: 0.7rem 0.85rem;
+    background: #fff;
+}
+
+.planeacion-form-page .form-input,
+.planeacion-capture-page .form-input,
+.planeacion-form-page textarea.form-input,
+.planeacion-capture-page textarea.form-input {
+    border: 1px solid #94a3b8;
+}
+
+.planeacion-capture-metrics {
+    margin: 0;
+}
+
+.confirm-replace-modal__icon {
+    background: rgba(180, 83, 9, 0.12);
+    color: #b45309;
+}
+
+@media (max-width: 959px) {
+    .planeacion-share__add,
+    .planeacion-capture-period,
+    .planeacion-capture-fields {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .planeacion-capture-page > .app-container {
+        width: calc(100% - 1rem);
+        max-width: none;
+    }
+}
+
+/* Filtros de la ficha de consulta (año / mes / versión / capturador). */
+.planeacion-ficha-filters {
+    display: grid;
+    grid-template-columns: minmax(8rem, 10rem) minmax(10rem, 12rem) minmax(12rem, 16rem) minmax(14rem, 1fr) auto;
+    gap: 0.75rem;
+    align-items: end;
+}
+
+.planeacion-ficha-sheet {
+    margin-top: 1rem;
+}
+
+.planeacion-ficha-sheet .panel__body {
+    overflow-x: auto;
+}
+
+.planeacion-ficha-sheet__table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.planeacion-ficha-sheet__table td {
+    border: 1px solid #4b5563;
+    padding: 0.35rem 0.7rem;
+    color: #1e293b;
+}
+
+.planeacion-ficha-sheet.ftop01-sheet .t-head {
+    font-weight: 800;
+    color: #1e3a5f;
+    text-align: left;
+}
+
+.planeacion-ficha-sheet.ftop01-sheet .t-body {
+    font-weight: 400;
+    color: #1e293b;
+    text-align: left;
+}
+
+.planeacion-ficha-sheet.ftop01-sheet .t-title {
+    font-weight: 800;
+    color: #1e3a5f;
+}
+
+.planeacion-ficha-sheet__center {
+    text-align: center !important;
+}
+
+.planeacion-ficha-sheet__table--analysis {
+    border-top: 0;
+}
+
+.planeacion-ficha-sheet__chart-wrap {
+    width: 100%;
+    min-width: 888px;
+    box-sizing: border-box;
+    border: 1px solid #4b5563;
+    border-top: 0;
+}
+
+.planeacion-ficha-sheet__chart-head {
+    height: 38px;
+    border-bottom: 1px solid #4b5563;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-primary, #1e2743);
+    color: #fff;
+}
+
+.planeacion-ficha-sheet.ftop01-sheet .planeacion-ficha-sheet__chart-head.t-head {
+    color: #fff;
+}
+
+.planeacion-ficha-sheet__banner {
+    background: var(--color-primary, #1e2743);
+}
+
+.planeacion-ficha-sheet.ftop01-sheet .planeacion-ficha-sheet__banner.t-head {
+    color: #fff;
+}
+
+.planeacion-ficha-sheet__chart {
+    width: 100%;
+    height: 380px;
+    margin: 20px 0;
+}
+
+.planeacion-ficha-sheet__chart-wrap .apexcharts-canvas {
+    width: 100% !important;
+}
+
+.planeacion-version-history {
+    margin-top: 1rem;
+}
+
+.planeacion-version-history__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.planeacion-version-history__item {
+    border: 1px solid #64748b;
+    border-radius: var(--radius-md, 0.5rem);
+    padding: 0.75rem 0.85rem;
+    background: #fff;
+}
+
+.planeacion-version-history__item--active {
+    border-color: #1d4ed8;
+    background: #eff6ff;
+}
+
+.planeacion-version-history__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.planeacion-version-history__title,
+.planeacion-version-history__meta,
+.planeacion-version-history__empty {
+    margin: 0;
+}
+
+.planeacion-version-history__title {
+    font-weight: 700;
+}
+
+.planeacion-version-history__meta {
+    margin-top: 0.25rem;
+    color: var(--color-text-soft, #64748b);
+    font-size: 0.875rem;
+}
+
+.planeacion-version-history__changes {
+    margin: 0.5rem 0 0;
+    padding-left: 1.1rem;
+    font-size: 0.875rem;
+}
+
+.req-form-aside .planeacion-version-history {
+    margin-top: 1.25rem;
+}
+
+.planeacion-ficha-sheet .apexcharts-datalabels rect {
+    fill: transparent !important;
+    fill-opacity: 0 !important;
+    stroke: none !important;
+}
+
+.planeacion-ficha-sheet .apexcharts-datalabels text {
+    fill: #0f172a !important;
+    paint-order: stroke fill;
+    stroke: #ffffff;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+/* Dashboard: 5 KPI en fila y dos gráficos, chrome GH. */
+.planeacion-dashboard-page.gh-area-dashboard-page .planeacion-dashboard-page__kpi-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.planeacion-dashboard-page .planeacion-dashboard-page__charts-row--two {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.planeacion-dashboard-page .planeacion-dashboard-page__charts-row--two .cursos-dashboard-page__chart {
+    min-height: 240px;
+    height: 260px;
+}
+
+@media (max-width: 959px) {
+    .planeacion-ficha-filters,
+    .planeacion-dashboard-page.gh-area-dashboard-page .planeacion-dashboard-page__kpi-grid,
+    .planeacion-dashboard-page .planeacion-dashboard-page__charts-row--two {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 639px) {
+    .planeacion-ficha-filters,
+    .planeacion-dashboard-page.gh-area-dashboard-page .planeacion-dashboard-page__kpi-grid,
+    .planeacion-dashboard-page .planeacion-dashboard-page__charts-row--two {
+        grid-template-columns: 1fr;
+    }
+}

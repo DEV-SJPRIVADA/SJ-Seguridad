@@ -16,6 +16,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MtSt04AccessService;
+use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -45,6 +46,7 @@ class SidebarVisibilityService
         private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly ServicioClienteAccessService $servicioClienteAccess,
+        private readonly PlaneacionEstrategicaAccessService $planeacionAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
     ) {}
@@ -85,6 +87,7 @@ class SidebarVisibilityService
             'acreditaciones' => $this->shouldShowAcreditacionesBoard($user, $areaKey),
             'reportes_novedades' => $this->shouldShowReportesNovedadesBoard($user, $areaKey),
             'servicio_cliente' => $this->shouldShowServicioClienteBoard($user, $areaKey),
+            'planeacion_estrategica' => $this->shouldShowPlaneacionBoard($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -309,6 +312,15 @@ class SidebarVisibilityService
         }
 
         return $this->servicioClienteAccess->canViewBoard($user);
+    }
+
+    private function shouldShowPlaneacionBoard(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'calidad') {
+            return false;
+        }
+
+        return $this->planeacionAccess->canViewBoard($user);
     }
 
     private function shouldShowAcreditacionesBoard(User $user, string $areaKey): bool

@@ -54,6 +54,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Solicitudes de desarrollo | [`modules/development-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/development-requests.md) | [`user/development-requests.md`](c:/laragon/www/SJSEGURIDAD/docs/user/development-requests.md) |
 | Documentos calidad | [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md) | [`user/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/user/quality-documents.md) |
 | Servicio al cliente | [`modules/servicio-cliente.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/servicio-cliente.md) | [`user/servicio-cliente.md`](c:/laragon/www/SJSEGURIDAD/docs/user/servicio-cliente.md) |
+| Planeación estratégica | [`modules/planeacion-estrategica.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/planeacion-estrategica.md) | [`user/planeacion-estrategica.md`](c:/laragon/www/SJSEGURIDAD/docs/user/planeacion-estrategica.md) |
 | Indicadores | [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md) | [`user/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/user/indicadores.md) |
 | Audit log | [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md) | [`user/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/user/audit-log.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md) | [`user/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matriz-clientes.md) |
@@ -67,6 +68,7 @@ Serie mensual en [`docs/informes/`](c:/laragon/www/SJSEGURIDAD/docs/informes/).
 | --- | --- | --- |
 | Octubre 2026 | [`informe-tecnico-2026-10.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-tecnico-2026-10.md) · [`DOCX`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-tecnico-statflow-2026-10.docx) | [`informe-gerencial-2026-10.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-2026-10.md) · [`DOCX`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-statflow-2026-10.docx) |
 | Cierre área GH (nov 2026) | [`cierre-observaciones-gestion-humana-2026-11-04.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/cierre-observaciones-gestion-humana-2026-11-04.md) | [`cierre-operativo-gestion-humana-2026-11-04.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/cierre-operativo-gestion-humana-2026-11-04.md) |
+| Entrega formal GH para Calidad (nov 2026) | [`informe-implementacion-gestion-humana-2026-11-10.md`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-implementacion-gestion-humana-2026-11-10.md) | — |
 | Septiembre 2026 | — | [`informe-gerencial-statflow-2026-09.docx`](c:/laragon/www/SJSEGURIDAD/docs/informes/informe-gerencial-statflow-2026-09.docx) |
 
 El informe tecnico incluye el conteo de lineas de codigo por area y estado, el detalle de Gestion Humana, la deuda tecnica y las recomendaciones priorizadas. El gerencial resume cifras clave, avance por area, valor de negocio y decisiones requeridas.
@@ -99,6 +101,7 @@ Analisis del costo de construir la plataforma desde cero sin inteligencia artifi
 - [`modules/suministros.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/suministros.md)
 - [`modules/quality-documents.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/quality-documents.md)
 - [`modules/servicio-cliente.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/servicio-cliente.md)
+- [`modules/planeacion-estrategica.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/planeacion-estrategica.md)
 - [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)
 - [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md)
 - [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md)

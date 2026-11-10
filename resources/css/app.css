@@ -237,3 +237,5 @@
 @import './areas/gestion-humana/115-gh-seleccion.css';
 /* 116 Compras / Suministros seguimiento */
 @import './areas/compras/116-compras-suministros-seguimiento.css';
+/* 117 Calidad / Planeación estratégica */
+@import './areas/calidad/117-calidad-planeacion.css';

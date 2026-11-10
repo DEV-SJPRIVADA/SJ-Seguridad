@@ -31,6 +31,8 @@ Guia maestra de las tres capas (IA, desarrollador, usuario): [`docs/DOCUMENTATIO
 | Cartas Notificación | [`modules/cartas-notificacion.md`](../modules/cartas-notificacion.md) | [`cartas-notificacion.md`](cartas-notificacion.md) |
 | Suministros | [`modules/suministros.md`](../modules/suministros.md) | [`suministros.md`](suministros.md) |
 | Documentos calidad | [`modules/quality-documents.md`](../modules/quality-documents.md) | [`quality-documents.md`](quality-documents.md) |
+| Servicio al cliente | [`modules/servicio-cliente.md`](../modules/servicio-cliente.md) | [`servicio-cliente.md`](servicio-cliente.md) |
+| Planeación estratégica | [`modules/planeacion-estrategica.md`](../modules/planeacion-estrategica.md) | [`planeacion-estrategica.md`](planeacion-estrategica.md) |
 | Indicadores (Operaciones) | [`modules/indicadores.md`](../modules/indicadores.md) | [`indicadores.md`](indicadores.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](../modules/matriz-clientes.md) | [`matriz-clientes.md`](matriz-clientes.md) |
 | Solicitudes de compra | [`modules/purchase-requests.md`](../modules/purchase-requests.md) | [`purchase-requests.md`](purchase-requests.md) |

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Calidad\PlaneacionEstrategicaController;
 use App\Http\Controllers\Calidad\ServicioClienteController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,4 +31,28 @@ Route::middleware(['password.changed'])
         Route::post('/catalogos/{type}', [ServicioClienteController::class, 'storeCatalog'])->name('catalogos.store');
         Route::patch('/catalogos/{type}/{item}', [ServicioClienteController::class, 'updateCatalog'])->name('catalogos.update');
         Route::delete('/catalogos/{type}/{item}', [ServicioClienteController::class, 'destroyCatalog'])->name('catalogos.destroy');
+    });
+
+Route::middleware(['password.changed'])
+    ->prefix('calidad/planeacion')
+    ->name('calidad.planeacion.')
+    ->group(function (): void {
+        Route::get('/', [PlaneacionEstrategicaController::class, 'index'])->name('index');
+        Route::get('/dashboard', [PlaneacionEstrategicaController::class, 'dashboard'])->name('dashboard');
+        Route::get('/captura', [PlaneacionEstrategicaController::class, 'captura'])->name('captura');
+        Route::get('/captura/datatable', [PlaneacionEstrategicaController::class, 'capturaDatatable'])->name('captura.datatable');
+        Route::get('/captura/{indicator}', [PlaneacionEstrategicaController::class, 'capturaShow'])->name('captura.show')->whereNumber('indicator');
+        Route::post('/captura/{indicator}', [PlaneacionEstrategicaController::class, 'capturaStore'])->name('captura.store')->whereNumber('indicator');
+
+        Route::get('/indicadores', [PlaneacionEstrategicaController::class, 'indicadores'])->name('indicadores');
+        Route::get('/indicadores/datatable', [PlaneacionEstrategicaController::class, 'datatable'])->name('indicadores.datatable');
+        Route::post('/indicadores/previsualizar-formula', [PlaneacionEstrategicaController::class, 'previewFormula'])->name('indicadores.preview');
+        Route::get('/indicadores/crear', [PlaneacionEstrategicaController::class, 'create'])->name('indicadores.create');
+        Route::post('/indicadores', [PlaneacionEstrategicaController::class, 'store'])->name('indicadores.store');
+        Route::get('/indicadores/{indicator}/editar', [PlaneacionEstrategicaController::class, 'edit'])->name('indicadores.edit')->whereNumber('indicator');
+        Route::patch('/indicadores/{indicator}', [PlaneacionEstrategicaController::class, 'update'])->name('indicadores.update')->whereNumber('indicator');
+        Route::post('/indicadores/{indicator}/publicar', [PlaneacionEstrategicaController::class, 'publish'])->name('indicadores.publish')->whereNumber('indicator');
+        Route::post('/indicadores/{indicator}/archivar', [PlaneacionEstrategicaController::class, 'archive'])->name('indicadores.archive')->whereNumber('indicator');
+        Route::post('/indicadores/{indicator}/compartir', [PlaneacionEstrategicaController::class, 'share'])->name('indicadores.share')->whereNumber('indicator');
+        Route::get('/indicadores/{indicator}', [PlaneacionEstrategicaController::class, 'show'])->name('indicadores.show')->whereNumber('indicator');
     });

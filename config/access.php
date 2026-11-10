@@ -56,6 +56,11 @@ return [
         'servicio_cliente.fo_gi_22.view' => 'FO-GI-22: Ver',
         'servicio_cliente.fo_gi_22.edit' => 'FO-GI-22: Editar',
         'servicio_cliente.parameters.edit' => 'Servicio al cliente: Catálogos',
+        'planeacion.dashboard.view' => 'Planeación: Dashboard',
+        'planeacion.indicadores.view' => 'Planeación: Ver indicadores',
+        'planeacion.indicadores.edit' => 'Planeación: Editar indicadores',
+        'planeacion.captura.view' => 'Planeación: Ver captura',
+        'planeacion.captura.edit' => 'Planeación: Capturar',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
         'reportes_novedades.vacaciones.view' => 'Vacaciones: Ver',
@@ -164,6 +169,11 @@ return [
         'servicio_cliente.fo_gi_22.view' => 'Permite ver FO-GI-22, el dashboard, filtrar y exportar a Excel.',
         'servicio_cliente.fo_gi_22.edit' => 'Permite crear, editar y eliminar casos, observaciones y adjuntos.',
         'servicio_cliente.parameters.edit' => 'Permite administrar tipología, fuente, responsable y categoría.',
+        'planeacion.dashboard.view' => 'Permite ver el dashboard de Planeación estratégica. No se otorga al editar indicadores.',
+        'planeacion.indicadores.view' => 'Permite listar y consultar la definición de los indicadores de Planeación estratégica.',
+        'planeacion.indicadores.edit' => 'Permite crear, editar, publicar y archivar indicadores. Incluye la consulta de la pestaña Indicadores.',
+        'planeacion.captura.view' => 'Permite ver la pestaña Captura de Planeación estratégica.',
+        'planeacion.captura.edit' => 'Permite guardar o reemplazar la captura propia de un indicador asignado.',
         'acreditaciones.view' => 'Permite ver Acreditados y exportar la información, además de mostrar los módulos del área.',
         'acreditaciones.edit' => 'Permite crear, editar y eliminar acreditados, importar información y administrar el catálogo.',
 
@@ -252,6 +262,7 @@ return [
         'acreditaciones' => 'Acreditaciones',
         'reportes_novedades' => 'MT-GH-04 Novedades',
         'servicio_cliente' => 'Servicio al cliente',
+        'planeacion_estrategica' => 'Planeación estratégica',
         'archivo' => 'Archivo',
         'plantillas_word' => 'Plantillas Word',
         'cartas_notificacion' => 'Cartas Notificación',
@@ -355,6 +366,10 @@ return [
             'home' => 'calidad',
             'base_area_tab' => false,
         ],
+        'planeacion_estrategica' => [
+            'home' => 'calidad',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -418,6 +433,12 @@ return [
         'dashboard' => 'Dashboard',
         'fo_gi_22' => 'FO-GI-22',
         'catalogos' => 'Catálogos',
+    ],
+
+    'planeacion_tabs' => [
+        'dashboard' => 'Dashboard',
+        'indicadores' => 'Indicadores',
+        'captura' => 'Captura',
     ],
 
     'cliente_interno_tabs' => [
@@ -811,6 +832,7 @@ return [
                         'permissions' => [
                             'view.board.calidad.dashboard',
                             'view.board.calidad.servicio_cliente',
+                            'view.board.calidad.planeacion_estrategica',
                         ],
                     ],
                     'servicio_cliente' => [
@@ -819,6 +841,16 @@ return [
                             'servicio_cliente.fo_gi_22.view',
                             'servicio_cliente.fo_gi_22.edit',
                             'servicio_cliente.parameters.edit',
+                        ],
+                    ],
+                    'planeacion' => [
+                        'label' => 'Planeación estratégica (funciones)',
+                        'permissions' => [
+                            'planeacion.dashboard.view',
+                            'planeacion.indicadores.view',
+                            'planeacion.indicadores.edit',
+                            'planeacion.captura.view',
+                            'planeacion.captura.edit',
                         ],
                     ],
                     'area' => [

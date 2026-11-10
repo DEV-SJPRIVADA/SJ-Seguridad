@@ -14,6 +14,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MtSt04AccessService;
+use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -579,6 +580,27 @@ class User extends Authenticatable
             'dashboard' => route('calidad.servicio-cliente.dashboard'),
             'fo_gi_22' => route('calidad.servicio-cliente.fo-gi-22.index'),
             'catalogos' => route('calidad.servicio-cliente.catalogos'),
+            default => route('dashboard', ['module' => 'calidad']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function planeacionBoardTabsFor(): Collection
+    {
+        return collect(app(PlaneacionEstrategicaAccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultPlaneacionBoardUrl(): string
+    {
+        $tabs = $this->planeacionBoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('calidad.planeacion.dashboard'),
+            'indicadores' => route('calidad.planeacion.indicadores'),
+            'captura' => route('calidad.planeacion.captura'),
             default => route('dashboard', ['module' => 'calidad']),
         };
     }

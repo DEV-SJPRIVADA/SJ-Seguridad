@@ -16,6 +16,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MtSt04AccessService;
+use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\Access\ReportesNovedadesAccessService;
 use App\Services\Access\RequisitionAccessService;
@@ -47,6 +48,7 @@ class NavigationResolver
         private readonly AcreditacionesAccessService $acreditacionesAccess,
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly ServicioClienteAccessService $servicioClienteAccess,
+        private readonly PlaneacionEstrategicaAccessService $planeacionAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
@@ -422,6 +424,23 @@ class NavigationResolver
                                 'route' => 'calidad.servicio-cliente.dashboard',
                                 'url' => $user->defaultServicioClienteBoardUrl(),
                                 'active' => str_starts_with((string) $routeName, 'calidad.servicio-cliente.'),
+                            ];
+                        }
+
+                        if ($boardKey === 'planeacion_estrategica') {
+                            if ($key !== 'calidad') {
+                                return null;
+                            }
+
+                            if (! $this->planeacionAccess->canViewBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'calidad.planeacion.index',
+                                'url' => $user->defaultPlaneacionBoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'calidad.planeacion.'),
                             ];
                         }
 

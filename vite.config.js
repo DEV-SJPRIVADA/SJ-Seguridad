@@ -20,6 +20,8 @@ export default defineConfig({
                 'resources/js/mt-st-04-dashboard-charts.js',
                 'resources/js/requisitions-dashboard-charts.js',
                 'resources/js/indicadores-capture.js',
+                'resources/js/planeacion-ficha-charts.js',
+                'resources/js/planeacion-dashboard-charts.js',
                 'resources/js/management-report-preview-charts.js',
                 'resources/js/purchase-request-form.js',
                 'resources/js/admin/user-permissions-form.js',

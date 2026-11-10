@@ -43,6 +43,10 @@ return [
             'label' => 'Servicio al cliente',
             'area' => 'calidad',
         ],
+        'planeacion_estrategica' => [
+            'label' => 'Planeación estratégica',
+            'area' => 'calidad',
+        ],
         'ficha_empleados' => [
             'label' => 'Ficha empleados',
             'area' => 'gestion_humana',
