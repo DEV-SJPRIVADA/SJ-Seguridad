@@ -25,7 +25,7 @@ final class ReportesNovedadesRetirosDatatableService
         $baseQuery = ReportesNovedadesRetiro::query();
         $recordsTotal = (clone $baseQuery)->count();
 
-        $query = $this->filteredQuery($filters);
+        $query = $this->filteredQuery($filters, $request);
         $recordsFiltered = (clone $query)->count();
         $duplicateDocuments = ReportesNovedadesUi::duplicateDocumentNumbers(clone $query);
 
@@ -55,7 +55,7 @@ final class ReportesNovedadesRetirosDatatableService
      * @param  array{q: string, fecha_desde: string, fecha_hasta: string}  $filters
      * @return Builder<ReportesNovedadesRetiro>
      */
-    public function filteredQuery(array $filters): Builder
+    public function filteredQuery(array $filters, ?Request $request = null): Builder
     {
         $q = trim((string) ($filters['q'] ?? ''));
 
@@ -68,9 +68,37 @@ final class ReportesNovedadesRetirosDatatableService
                 });
             });
 
-        return ReportesNovedadesPeriodFilter::applyToQuery($query, $filters, 'fecha_retiro')
-            ->orderByDesc('fecha_retiro')
-            ->orderByDesc('id');
+        $query = ReportesNovedadesPeriodFilter::applyToQuery($query, $filters, 'fecha_retiro');
+
+        $this->applyOrdering($query, $request);
+
+        return $query;
+    }
+
+    /**
+     * Orden solicitado por DataTables server-side; los indices remiten a las columnas visibles del Blade.
+     *
+     * @param  Builder<ReportesNovedadesRetiro>  $query
+     */
+    private function applyOrdering(Builder $query, ?Request $request): void
+    {
+        $column = $request?->input('order.0.column');
+        $direction = $request?->input('order.0.dir') === 'asc' ? 'asc' : 'desc';
+
+        match ($column === null || $column === '' ? -1 : (int) $column) {
+            0 => $query->orderBy('document_number', $direction)->orderBy('id', $direction),
+            1 => $query->orderBy('employee_name', $direction)->orderBy('id', $direction),
+            2 => $query->orderBy('fecha_ingreso', $direction)->orderBy('id', $direction),
+            3 => $query->orderBy('tipo', $direction)->orderBy('id', $direction),
+            4 => $query->orderBy('cargo', $direction)->orderBy('id', $direction),
+            5 => $query->orderBy('destino', $direction)->orderBy('id', $direction),
+            6 => $query->orderBy('novedad', $direction)->orderBy('id', $direction),
+            7 => $query->orderBy('fecha_retiro', $direction)->orderBy('id', $direction),
+            8 => $query->orderBy('motivo_retiro', $direction)->orderBy('id', $direction),
+            9 => $query->orderBy('observaciones', $direction)->orderBy('id', $direction),
+            10 => $query->orderBy('observacion_nomina', $direction)->orderBy('id', $direction),
+            default => $query->orderByDesc('fecha_retiro')->orderByDesc('id'),
+        };
     }
 
     /**

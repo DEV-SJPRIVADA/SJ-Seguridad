@@ -781,7 +781,10 @@
                     pageLength: 25,
                     responsive: false,
                     order: [[6, 'desc']],
-                    columnDefs: [{ targets: [11], orderable: false, searchable: false }],
+                    columnDefs: [
+                        { targets: [9], orderable: false, searchable: false },
+                        { targets: [11], orderable: false, searchable: false },
+                    ],
                 });
 
                 api.on('xhr.dt', function (_event, _settings, json) {

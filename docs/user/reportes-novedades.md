@@ -66,6 +66,7 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
 5. En **Permisos**, con **Editar**, marque o desmarque el check de la columna **Marca GH** directamente en el listado: el cambio se guarda al instante. Con Revisar o solo consulta, el check se ve deshabilitado. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
 6. En **Incapacidades**, el icono de clip abre **Adjuntos**. Ahí se ven el nombre, la fecha, quién lo subió y el tamaño, y se descarga el archivo. Con **Editar** puede agregar varios PDF o JPG (de una vez o en otro momento) y eliminar uno. Al eliminar la incapacidad se borran también sus archivos. Nómina y quien solo consulta pueden ver y descargar, no subir ni borrar.
 7. En cualquier pestana, si una **cédula** aparece en más de una fila del listado filtrado, el valor de la columna **Cédula** se muestra en **rojo** para que detecte los duplicados de inmediato. La marca se calcula sobre todos los registros del filtro (no solo la página visible) y no se incluye en el export a Excel.
+8. Puede **ordenar** el listado haciendo clic en el encabezado de cualquier columna (Cédula, Nombre, Cargo, Destino, Novedad, Días, Inicio, Fin, Observaciones, Obs. Nómina, etc.). Un clic ordena ascendente y otro descendente. La columna **Acciones** no se ordena y, en **Incapacidades**, **Días entrega** tampoco (es un cálculo). Al entrar sin ordenar, se muestra primero la fecha más reciente. El orden es independiente de los filtros y el export a Excel conserva el orden por defecto.
 
 ### Retiros automaticos
 
@@ -75,6 +76,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.11 | 2026-11-10 | Agent | Las cuatro hojas permiten **ordenar** el listado por cualquier columna visible (orden server-side con lista blanca); Acciones y Días entrega no son ordenables. |
 | 1.10 | 2026-11-09 | Agent | En las cuatro hojas, la cédula se muestra en **rojo** cuando está duplicada dentro del listado filtrado. |
 | 1.9 | 2026-11-09 | Agent | Permisos: columna **Marca GH** como check editable en el listado; se guarda al instante (solo permiso Editar). |
 | 1.8 | 2026-11-06 | Agent | Incapacidades: adjuntos PDF/JPG por fila (subir y eliminar con Editar; ver y descargar con Ver o Nómina). |
