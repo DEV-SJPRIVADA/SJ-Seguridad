@@ -93,6 +93,25 @@
         >
     </div>
 
+    @if (! empty($showExtemporaneaFilter))
+        {{-- Solo Incapacidades: Sí / No; vacío = todas. --}}
+        <div class="form-field">
+            <label class="form-label" for="filter_extemporanea">Extemporánea</label>
+            <x-searchable-select
+                id="filter_extemporanea"
+                name="extemporanea"
+                :options="[
+                    ['value' => '1', 'label' => 'Sí'],
+                    ['value' => '0', 'label' => 'No'],
+                ]"
+                :value="$filters['extemporanea'] ?? ''"
+                placeholder="Todas"
+                :allow-clear="true"
+                :required="false"
+            />
+        </div>
+    @endif
+
     <div class="cursos-registros-page__filter-actions form-field">
         <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
             <x-lucide-search width="18" height="18" aria-hidden="true" />

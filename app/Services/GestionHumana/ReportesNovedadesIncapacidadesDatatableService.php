@@ -14,7 +14,7 @@ use Illuminate\Support\Collection;
 final class ReportesNovedadesIncapacidadesDatatableService
 {
     /**
-     * @param  array{q: string, fecha_desde: string, fecha_hasta: string}  $filters
+     * @param  array{q: string, fecha_desde: string, fecha_hasta: string, extemporanea?: string}  $filters
      */
     public function respond(Request $request, array $filters, bool $canEdit, bool $canReview): JsonResponse
     {
@@ -52,12 +52,13 @@ final class ReportesNovedadesIncapacidadesDatatableService
     }
 
     /**
-     * @param  array{q: string, fecha_desde: string, fecha_hasta: string}  $filters
+     * @param  array{q: string, fecha_desde: string, fecha_hasta: string, extemporanea?: string}  $filters
      * @return Builder<ReportesNovedadesIncapacidad>
      */
     public function filteredQuery(array $filters, ?Request $request = null): Builder
     {
         $q = trim((string) ($filters['q'] ?? ''));
+        $extemporanea = trim((string) ($filters['extemporanea'] ?? ''));
 
         $query = ReportesNovedadesIncapacidad::query()
             ->when($q !== '', function (Builder $query) use ($q): void {
@@ -66,6 +67,9 @@ final class ReportesNovedadesIncapacidadesDatatableService
                     $inner->where('document_number', 'like', $like)
                         ->orWhere('employee_name', 'like', $like);
                 });
+            })
+            ->when(in_array($extemporanea, ['0', '1'], true), function (Builder $query) use ($extemporanea): void {
+                $query->where('extemporanea', $extemporanea === '1');
             });
 
         $query = ReportesNovedadesPeriodFilter::applyToQuery($query, $filters, 'fecha_inicio');
@@ -77,7 +81,7 @@ final class ReportesNovedadesIncapacidadesDatatableService
 
     /**
      * Orden solicitado por DataTables server-side; los indices remiten a las columnas visibles del Blade.
-     * La columna "Dias entrega" (9) es calculada, por eso cae al orden por defecto.
+     * "Dias entrega" (9) es calculada y no ordena; "Extemporanea" (10) usa el boolean persistido.
      *
      * @param  Builder<ReportesNovedadesIncapacidad>  $query
      */
@@ -96,7 +100,8 @@ final class ReportesNovedadesIncapacidadesDatatableService
             6 => $query->orderBy('fecha_inicio', $direction)->orderBy('id', $direction),
             7 => $query->orderBy('fecha_fin', $direction)->orderBy('id', $direction),
             8 => $query->orderBy('fecha_recepcion', $direction)->orderBy('id', $direction),
-            10 => $query->orderBy('observacion_nomina', $direction)->orderBy('id', $direction),
+            10 => $query->orderBy('extemporanea', $direction)->orderBy('id', $direction),
+            11 => $query->orderBy('observacion_nomina', $direction)->orderBy('id', $direction),
             default => $query->orderByDesc('fecha_inicio')->orderByDesc('id'),
         };
     }
@@ -172,6 +177,7 @@ final class ReportesNovedadesIncapacidadesDatatableService
             e(DisplayDate::date($row->fecha_fin)),
             e(DisplayDate::date($row->fecha_recepcion) ?: '—'),
             e((string) ($row->diasEntregaCalculados() ?? '—')),
+            $this->formatExtemporaneaCell((bool) $row->extemporanea),
             ReportesNovedadesUi::observacionNominaCell($row->observacion_nomina),
         ];
 
@@ -256,6 +262,15 @@ final class ReportesNovedadesIncapacidadesDatatableService
             e(route('gestion-humana.reportes-novedades.incapacidades.historial', ['id' => $row->id])),
             $this->historySvg(),
         );
+    }
+
+    private function formatExtemporaneaCell(bool $extemporanea): string
+    {
+        if ($extemporanea) {
+            return '<span class="status-pill status-pill--warning">Sí</span>';
+        }
+
+        return '<span class="status-pill status-pill--muted">No</span>';
     }
 
     private function formatAdjuntosButton(ReportesNovedadesIncapacidad $row): string

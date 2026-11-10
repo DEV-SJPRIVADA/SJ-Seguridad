@@ -77,8 +77,8 @@ class ReportesNovedadesIncapacidadesController extends Controller
             'canReview' => $canReview,
             'canExport' => $canExport,
             'filters' => $filters,
-            'datatableUrl' => route('gestion-humana.reportes-novedades.incapacidades.datatable', ReportesNovedadesPeriodFilter::toQueryParams($filters)),
-            'exportUrl' => route('gestion-humana.reportes-novedades.incapacidades.export', ReportesNovedadesPeriodFilter::toQueryParams($filters)),
+            'datatableUrl' => route('gestion-humana.reportes-novedades.incapacidades.datatable', $this->filterQueryParams($filters)),
+            'exportUrl' => route('gestion-humana.reportes-novedades.incapacidades.export', $this->filterQueryParams($filters)),
             'historialUrl' => route('gestion-humana.reportes-novedades.incapacidades.historial'),
             'lookupUrl' => route('gestion-humana.reportes-novedades.lookup'),
             'storeUrl' => route('gestion-humana.reportes-novedades.incapacidades.store'),
@@ -340,18 +340,6 @@ class ReportesNovedadesIncapacidadesController extends Controller
     }
 
     /**
-     * @return array{
-     *     q: string,
-     *     mes: string,
-     *     quincena: string,
-     *     fecha_desde: string,
-     *     fecha_hasta: string,
-     *     period_active: bool,
-     *     period_desde: string|null,
-     *     period_hasta: string|null
-     * }
-     */
-    /**
      * @return list<array{id: int, original_name: string, mime_type: ?string, is_image: bool, size_label: string, uploaded_at: string, uploaded_by: string, preview_url: string, download_url: string, delete_url: ?string}>
      */
     private function attachmentPayload(ReportesNovedadesIncapacidad $incapacidad): array
@@ -415,9 +403,48 @@ class ReportesNovedadesIncapacidadesController extends Controller
         abort_unless($adjunto->incapacidad_id === $incapacidad->id, 404);
     }
 
+    /**
+     * @return array{
+     *     q: string,
+     *     mes: string,
+     *     quincena: string,
+     *     fecha_desde: string,
+     *     fecha_hasta: string,
+     *     period_active: bool,
+     *     period_desde: string|null,
+     *     period_hasta: string|null,
+     *     extemporanea: string
+     * }
+     */
     private function filtersFromRequest(Request $request): array
     {
-        return ReportesNovedadesPeriodFilter::resolveFromRequest($request);
+        $filters = ReportesNovedadesPeriodFilter::resolveFromRequest($request);
+        $filters['extemporanea'] = $this->resolveExtemporaneaFilter($request);
+
+        return $filters;
+    }
+
+    private function resolveExtemporaneaFilter(Request $request): string
+    {
+        $raw = trim((string) $request->query('extemporanea', ''));
+
+        return in_array($raw, ['0', '1'], true) ? $raw : '';
+    }
+
+    /**
+     * @param  array<string, mixed>  $filters
+     * @return array<string, string>
+     */
+    private function filterQueryParams(array $filters): array
+    {
+        $params = ReportesNovedadesPeriodFilter::toQueryParams($filters);
+        $extemporanea = trim((string) ($filters['extemporanea'] ?? ''));
+
+        if (in_array($extemporanea, ['0', '1'], true)) {
+            $params['extemporanea'] = $extemporanea;
+        }
+
+        return $params;
     }
 
     /**

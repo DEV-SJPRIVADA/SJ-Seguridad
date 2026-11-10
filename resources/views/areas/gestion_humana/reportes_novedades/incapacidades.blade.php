@@ -1,6 +1,7 @@
 <x-app-layout>
     @php
-        $hasActiveFilters = \App\Support\ReportesNovedadesPeriodFilter::hasNonDefaultUiFilters($filters);
+        $hasActiveFilters = \App\Support\ReportesNovedadesPeriodFilter::hasNonDefaultUiFilters($filters)
+            || in_array((string) ($filters['extemporanea'] ?? ''), ['0', '1'], true);
     @endphp
 
     <x-slot name="header">
@@ -47,6 +48,7 @@
                                     'exportUrl' => $exportUrl,
                                     'fechaDesdeLabel' => 'Inicio desde',
                                     'fechaHastaLabel' => 'Inicio hasta',
+                                    'showExtemporaneaFilter' => true,
                                 ])
                             </form>
                         </div>
@@ -101,6 +103,7 @@
                                     <th>Fin</th>
                                     <th>Recepción</th>
                                     <th>Días entrega</th>
+                                    <th>Extemporánea</th>
                                     <th>Obs. Nómina</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -857,7 +860,7 @@
                     order: [[6, 'desc']],
                     columnDefs: [
                         { targets: [9], orderable: false, searchable: false },
-                        { targets: [11], orderable: false, searchable: false },
+                        { targets: [12], orderable: false, searchable: false },
                     ],
                 });
 

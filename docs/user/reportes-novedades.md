@@ -61,12 +61,13 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
    - Si elige **Inicio/Retiro desde** o **hasta** (basta uno), el rango de fechas prima y se vacían mes y quincena.
    - Al cambiar mes o quincena se vacían los datepickers de rango.
    - **Limpiar** restaura mes y quincena actuales.
+   - En **Incapacidades** también puede filtrar por **Extemporánea** (Sí, No o Todas). El export a Excel respeta ese filtro.
    - Con permiso, use también **Exportar** o **Historial**. En el Historial de la hoja puede filtrar por cédula/usuario, tipo de acción y rango de fechas.
 4. Con **Editar**: cree o corrija filas. En el alta, escriba la **cédula** y pulse buscar (o Enter / salga del campo): se precargan nombre, cargo y destino desde Ficha. En **Vacaciones**, al completar **días** y **fecha inicio** se sugieren **fecha fin** y **fecha reintegro** (sin domingos ni festivos; reintegro = dia siguiente a fin); complete **periodos** y **firma** como en Cartas Vacaciones. En acciones, use **Descargar carta Word** para generar el .docx del registro (requiere plantilla activa en Plantillas Word).
 5. En **Permisos**, con **Editar**, marque o desmarque el check de la columna **Marca GH** directamente en el listado: el cambio se guarda al instante. Con Revisar o solo consulta, el check se ve deshabilitado. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
 6. En **Incapacidades**, el icono de clip abre **Adjuntos**. Ahí se ven el nombre, la fecha, quién lo subió y el tamaño. El icono de ojo abre la **vista previa** del PDF o JPG; el de descarga guarda el archivo. Con **Editar** puede agregar varios PDF o JPG (de una vez o en otro momento) y eliminar uno. Al eliminar la incapacidad se borran también sus archivos. Nómina y quien solo consulta pueden ver, previsualizar y descargar, no subir ni borrar.
 7. En cualquier pestana, si una **cédula** aparece en más de una fila del listado filtrado, el valor de la columna **Cédula** se muestra en **rojo** para que detecte los duplicados de inmediato. La marca se calcula sobre todos los registros del filtro (no solo la página visible) y no se incluye en el export a Excel.
-8. Puede **ordenar** el listado haciendo clic en el encabezado de cualquier columna (Cédula, Nombre, Cargo, Destino, Novedad, Días, Inicio, Fin, Observaciones, Obs. Nómina, etc.). Un clic ordena ascendente y otro descendente. La columna **Acciones** no se ordena y, en **Incapacidades**, **Días entrega** tampoco (es un cálculo). Al entrar sin ordenar, se muestra primero la fecha más reciente. El orden es independiente de los filtros y el export a Excel conserva el orden por defecto.
+8. Puede **ordenar** el listado haciendo clic en el encabezado de cualquier columna (Cédula, Nombre, Cargo, Destino, Novedad, Días, Inicio, Fin, Observaciones, Obs. Nómina, etc.). Un clic ordena ascendente y otro descendente. La columna **Acciones** no se ordena y, en **Incapacidades**, **Días entrega** tampoco (es un cálculo). En **Incapacidades**, **Extemporánea** (Sí/No) aparece después de Días entrega y sí se puede ordenar. Al entrar sin ordenar, se muestra primero la fecha más reciente. El orden es independiente de los filtros y el export a Excel conserva el orden por defecto.
 
 ### Retiros automaticos
 
@@ -76,6 +77,8 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.14 | 2026-11-10 | Agent | Incapacidades: filtro **Extemporánea** (Sí / No / Todas) en Filtros; aplica al listado y al Excel. |
+| 1.13 | 2026-11-10 | Agent | Incapacidades: columna **Extemporánea** (Sí/No) en el listado, después de Días entrega. |
 | 1.12 | 2026-11-10 | Agent | Incapacidades / Adjuntos: icono de **vista previa** (ojo) a la izquierda de Descargar; abre PDF o JPG en overlay. |
 | 1.11 | 2026-11-10 | Agent | Las cuatro hojas permiten **ordenar** el listado por cualquier columna visible (orden server-side con lista blanca); Acciones y Días entrega no son ordenables. |
 | 1.10 | 2026-11-09 | Agent | En las cuatro hojas, la cédula se muestra en **rojo** cuando está duplicada dentro del listado filtrado. |

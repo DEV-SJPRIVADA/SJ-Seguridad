@@ -36,6 +36,8 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
             ->get(route('gestion-humana.reportes-novedades.incapacidades'))
             ->assertOk()
             ->assertSee('Incapacidades', false)
+            ->assertSee('Extemporánea', false)
+            ->assertSee('name="extemporanea"', false)
             ->assertDontSee('listado y formularios en preparación', false);
 
         $this->actingAs($editor)
@@ -245,6 +247,69 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
 
         $this->assertDatabaseMissing('reportes_novedades_incapacidad_adjuntos', ['id' => $jpg->id]);
         Storage::disk('local')->assertMissing($jpgPath);
+    }
+
+    public function test_incapacidades_datatable_filters_by_extemporanea(): void
+    {
+        $editor = $this->editorUser();
+
+        ReportesNovedadesIncapacidad::query()->create([
+            'document_number' => '6116116116',
+            'employee_name' => 'NO EXTEMP',
+            'tipo_incapacidad' => 'EG',
+            'dias' => 3,
+            'fecha_inicio' => '2026-09-01',
+            'fecha_fin' => '2026-09-03',
+            'extemporanea' => false,
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]);
+        ReportesNovedadesIncapacidad::query()->create([
+            'document_number' => '6226226226',
+            'employee_name' => 'SI EXTEMP',
+            'tipo_incapacidad' => 'EG',
+            'dias' => 3,
+            'fecha_inicio' => '2026-09-10',
+            'fecha_fin' => '2026-09-12',
+            'extemporanea' => true,
+            'created_by' => $editor->id,
+            'updated_by' => $editor->id,
+        ]);
+
+        $range = [
+            'fecha_desde' => '2026-09-01',
+            'fecha_hasta' => '2026-09-30',
+        ];
+
+        $all = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.incapacidades.datatable', $range))
+            ->assertOk();
+        $this->assertSame(2, $all->json('recordsFiltered'));
+
+        $onlyYes = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.incapacidades.datatable', array_merge($range, [
+                'extemporanea' => '1',
+            ])))
+            ->assertOk();
+        $this->assertSame(1, $onlyYes->json('recordsFiltered'));
+        $this->assertStringContainsString('SI EXTEMP', (string) $onlyYes->json('data.0.1'));
+        $this->assertStringContainsString('Sí', (string) $onlyYes->json('data.0.10'));
+
+        $onlyNo = $this->actingAs($editor)
+            ->getJson(route('gestion-humana.reportes-novedades.incapacidades.datatable', array_merge($range, [
+                'extemporanea' => '0',
+            ])))
+            ->assertOk();
+        $this->assertSame(1, $onlyNo->json('recordsFiltered'));
+        $this->assertStringContainsString('NO EXTEMP', (string) $onlyNo->json('data.0.1'));
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.reportes-novedades.incapacidades', array_merge($range, [
+                'extemporanea' => '1',
+            ])))
+            ->assertOk()
+            ->assertSee('extemporanea=1', false)
+            ->assertSee('Activos', false);
     }
 
     private function editorUser(): User

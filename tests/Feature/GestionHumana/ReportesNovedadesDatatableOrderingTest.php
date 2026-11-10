@@ -71,8 +71,8 @@ class ReportesNovedadesDatatableOrderingTest extends TestCase
     {
         $user = $this->sheetEditor('incapacidades');
 
-        ReportesNovedadesIncapacidad::query()->create($this->incapacidadRow('ALFA UNO', '2026-09-01'));
-        ReportesNovedadesIncapacidad::query()->create($this->incapacidadRow('ZETA DOS', '2026-09-10'));
+        ReportesNovedadesIncapacidad::query()->create($this->incapacidadRow('ALFA UNO', '2026-09-01', false));
+        ReportesNovedadesIncapacidad::query()->create($this->incapacidadRow('ZETA DOS', '2026-09-10', true));
 
         $asc = $this->orderRequest($user, 'incapacidades', 1, 'asc');
         $this->assertStringContainsString('ALFA UNO', (string) $asc->json('data.0.1'));
@@ -84,6 +84,11 @@ class ReportesNovedadesDatatableOrderingTest extends TestCase
         $computed = $this->orderRequest($user, 'incapacidades', 9, 'asc');
         $this->assertSame(2, $computed->json('recordsFiltered'));
         $this->assertStringContainsString('ZETA DOS', (string) $computed->json('data.0.1'));
+
+        $extemporanea = $this->orderRequest($user, 'incapacidades', 10, 'desc');
+        $this->assertStringContainsString('ZETA DOS', (string) $extemporanea->json('data.0.1'));
+        $this->assertStringContainsString('Sí', (string) $extemporanea->json('data.0.10'));
+        $this->assertStringContainsString('No', (string) $extemporanea->json('data.1.10'));
     }
 
     public function test_retiros_datatable_orders_by_requested_column(): void
@@ -161,7 +166,7 @@ class ReportesNovedadesDatatableOrderingTest extends TestCase
     /**
      * @return array<string, mixed>
      */
-    private function incapacidadRow(string $name, string $fechaInicio): array
+    private function incapacidadRow(string $name, string $fechaInicio, bool $extemporanea = false): array
     {
         return [
             'document_number' => (string) random_int(3000000000, 3999999999),
@@ -170,6 +175,7 @@ class ReportesNovedadesDatatableOrderingTest extends TestCase
             'dias' => 4,
             'fecha_inicio' => $fechaInicio,
             'fecha_fin' => $fechaInicio,
+            'extemporanea' => $extemporanea,
         ];
     }
 
