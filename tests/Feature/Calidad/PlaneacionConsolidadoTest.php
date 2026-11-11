@@ -65,6 +65,7 @@ class PlaneacionConsolidadoTest extends TestCase
         $todos->assertSee('94.00%');
         $todos->assertSee($maria->name);
         $todos->assertSee($carlos->name);
+        $todos->assertSee('CUMPLIMIENTO DEL MES');
 
         $filtered = $this->actingAs($this->editor)
             ->get(route('calidad.planeacion.indicadores.show', [
@@ -136,6 +137,9 @@ class PlaneacionConsolidadoTest extends TestCase
 
         $response->assertSee('FICHA DEL INDICADOR DE GESTIÓN');
         $response->assertSee('90.00%');
+        $response->assertSee('CUMPLIMIENTO DEL MES');
+        $response->assertSee('Exportar ficha a Excel', false);
+        $response->assertSee('Exportar ficha a PDF', false);
         $response->assertDontSee('Todos los capturadores');
         $response->assertDontSee('name="capturador_id"', false);
         $response->assertDontSee('94.00%');
@@ -234,6 +238,86 @@ class PlaneacionConsolidadoTest extends TestCase
             ->assertOk()
             ->assertSee('Historial de versiones')
             ->assertSee('Nombre: EFICACIA DEL PROCESO → EFICACIA V2');
+    }
+
+    public function test_ficha_excel_and_pdf_export_respect_consulta(): void
+    {
+        $this->travelTo(Carbon::parse('2026-04-10 09:00:00'));
+        $indicator = $this->publishedIndicator();
+        $capturer = $this->assignedCapturer($indicator, 'María Gómez');
+        $consultant = $this->assignedConsultant($indicator, 'Director Consulta');
+
+        $this->actingAs($capturer)
+            ->post(route('calidad.planeacion.captura.store', $indicator), $this->capturePayload())
+            ->assertRedirect();
+
+        $query = ['indicator' => $indicator, 'year' => 2026, 'month' => 4];
+
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.indicadores.show', $query))
+            ->assertOk()
+            ->assertSee('Exportar ficha a Excel', false)
+            ->assertSee('Exportar ficha a PDF', false);
+
+        $excel = $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.indicadores.export.excel', $query))
+            ->assertOk()
+            ->assertDownload('ficha-IND-001-2026.xlsx');
+
+        if (extension_loaded('gd') && class_exists(\ZipArchive::class)) {
+            $tmp = tempnam(sys_get_temp_dir(), 'ficha').'.xlsx';
+            file_put_contents($tmp, $excel->streamedContent());
+            $zip = new \ZipArchive;
+            $this->assertTrue($zip->open($tmp) === true);
+            $hasImage = false;
+            for ($index = 0; $index < $zip->numFiles; $index++) {
+                if (str_starts_with((string) $zip->getNameIndex($index), 'xl/media/')) {
+                    $hasImage = true;
+                    break;
+                }
+            }
+            $zip->close();
+            unlink($tmp);
+            $this->assertTrue($hasImage, 'El Excel debe incluir la imagen del gráfico.');
+        }
+
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.indicadores.export.pdf', $query))
+            ->assertOk()
+            ->assertDownload('ficha-IND-001-2026.pdf');
+
+        $ficha = app(PlaneacionConsolidadoService::class)->ficha($indicator, $this->editor, 2026, 4, null, false, null);
+        $html = view('areas.calidad.planeacion.exports.ficha-pdf', [
+            'indicator' => $indicator,
+            'ficha' => $ficha,
+            'logoPath' => null,
+            'chartImage' => 'data:image/png;base64,AAA',
+        ])->render();
+        $this->assertSame(1, substr_count($html, '<table'));
+        $this->assertStringContainsString('FICHA DEL INDICADOR DE GESTIÓN', $html);
+        $this->assertStringContainsString('90.00%', $html);
+        $this->assertStringContainsString('colspan="8" class="sheet-navy">ANÁLISIS DE RESULTADOS', $html);
+        $this->assertStringContainsString('data:image/png;base64,AAA', $html);
+
+        $this->actingAs($consultant)
+            ->get(route('calidad.planeacion.indicadores.export.excel', $query))
+            ->assertOk();
+
+        $this->actingAs($capturer)
+            ->get(route('calidad.planeacion.captura.show', $query))
+            ->assertOk()
+            ->assertSee('Exportar ficha a Excel', false)
+            ->assertSee('Exportar ficha a PDF', false);
+
+        $this->actingAs($capturer)
+            ->get(route('calidad.planeacion.indicadores.export.pdf', $query))
+            ->assertOk()
+            ->assertDownload('ficha-IND-001-2026.pdf');
+
+        $stranger = User::factory()->create(['must_change_password' => false]);
+        $this->actingAs($stranger)
+            ->get(route('calidad.planeacion.indicadores.export.pdf', $query))
+            ->assertForbidden();
     }
 
     private function publishedIndicator(string $code = 'IND-001'): QualityPlanningIndicator

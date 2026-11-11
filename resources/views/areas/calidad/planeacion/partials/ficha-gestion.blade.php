@@ -157,7 +157,7 @@
                 <tr style="height:53px;">
                     <td class="border border-gray-600 t-head planeacion-ficha-sheet__center [writing-mode:vertical-rl] rotate-180">{{ $ficha['year'] }}</td>
                     <td class="border border-gray-600 t-head planeacion-ficha-sheet__center">{{ $row['abbrev'] }}</td>
-                    <td class="border border-gray-600 align-top t-body">{{ $row['has_data'] ? $row['analysis'] : '' }}</td>
+                    <td class="border border-gray-600 align-top t-body whitespace-pre-line">{{ $row['has_data'] ? $row['analysis'] : '' }}</td>
                     <td class="border border-gray-600 t-body planeacion-ficha-sheet__center">{{ $row['has_data'] ? ($row['complies'] ? 'Sí' : 'No') : '' }}</td>
                     <td class="border border-gray-600 t-body planeacion-ficha-sheet__center">{{ $row['has_data'] ? ($row['improvement'] ? 'Sí' : 'No') : '' }}</td>
                 </tr>

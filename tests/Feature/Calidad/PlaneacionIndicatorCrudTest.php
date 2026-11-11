@@ -110,6 +110,78 @@ class PlaneacionIndicatorCrudTest extends TestCase
             ->assertJsonValidationErrors('code');
     }
 
+    public function test_archive_then_restore_clears_archived_at(): void
+    {
+        $indicator = $this->makeIndicator();
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.indicadores.archive', $indicator))
+            ->assertRedirect(route('calidad.planeacion.indicadores'));
+
+        $indicator->refresh();
+        $this->assertNotNull($indicator->archived_at);
+
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.indicadores.show', $indicator))
+            ->assertOk()
+            ->assertSee('aria-label="Restablecer indicador"', false);
+
+        $archivedJson = $this->actingAs($this->editor)
+            ->getJson(route('calidad.planeacion.indicadores.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+                'status' => 'archived',
+            ]))
+            ->assertOk()
+            ->json();
+
+        $archivedActions = $archivedJson['data'][0][4] ?? '';
+        $this->assertStringContainsString('Restablecer indicador', $archivedActions);
+        $this->assertStringNotContainsString('js-confirm-archive', $archivedActions);
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.indicadores.restore', $indicator))
+            ->assertRedirect(route('calidad.planeacion.indicadores.show', $indicator));
+
+        $indicator->refresh();
+        $this->assertNull($indicator->archived_at);
+    }
+
+    public function test_archive_form_in_list_asks_for_confirmation(): void
+    {
+        $indicator = $this->makeIndicator();
+
+        $json = $this->actingAs($this->editor)
+            ->getJson(route('calidad.planeacion.indicadores.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk()
+            ->json();
+
+        $actions = $json['data'][0][4] ?? '';
+        $this->assertStringContainsString('js-confirm-archive', $actions);
+        $this->assertStringContainsString('Archivar '.$indicator->code, $actions);
+    }
+
+    public function test_viewer_cannot_restore_archived_indicator(): void
+    {
+        $indicator = $this->makeIndicator();
+        $indicator->forceFill(['archived_at' => now()])->save();
+
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo([
+            'view.board.calidad.planeacion_estrategica',
+            'planeacion.indicadores.view',
+        ]);
+
+        $this->actingAs($viewer)
+            ->post(route('calidad.planeacion.indicadores.restore', $indicator))
+            ->assertForbidden();
+    }
+
     public function test_invalid_formula_returns_422(): void
     {
         $this->actingAs($this->editor)
@@ -120,6 +192,20 @@ class PlaneacionIndicatorCrudTest extends TestCase
             ->assertJsonValidationErrors('formula');
 
         $this->assertSame(0, QualityPlanningIndicator::query()->count());
+    }
+
+    private function makeIndicator(string $code = 'IND-ARC'): QualityPlanningIndicator
+    {
+        $indicator = QualityPlanningIndicator::factory()->create([
+            'code' => $code,
+            'created_by_user_id' => $this->editor->id,
+        ]);
+
+        QualityPlanningIndicatorVersion::factory()->create([
+            'indicator_id' => $indicator->id,
+        ]);
+
+        return $indicator;
     }
 
     /**

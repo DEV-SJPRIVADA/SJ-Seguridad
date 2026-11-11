@@ -31,6 +31,8 @@ class PlaneacionConsolidadoTest extends TestCase
         $this->assertEqualsWithDelta(0.02, (float) $todos['fields']['campo_3'], 0.0001);
         $this->assertEqualsWithDelta(94.0, (float) $todos['result'], 0.0001);
         $this->assertTrue($todos['complies']);
+        $this->assertStringContainsString('CUMPLIMIENTO DEL MES', (string) $todos['analysis']);
+        $this->assertStringNotContainsString('—', (string) $todos['analysis']);
 
         $mariaOnly = $service->monthSnapshot($indicator, 2026, 4, $maria->id);
         $this->assertEqualsWithDelta(22.0, (float) $mariaOnly['fields']['campo_1'], 0.0001);

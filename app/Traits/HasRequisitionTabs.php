@@ -26,7 +26,10 @@ trait HasRequisitionTabs
 
                 return [
                     'key' => $tabKey,
-                    'label' => config("access.requisition_tabs.{$tabKey}", Str::headline($tabKey)),
+                    'label' => config(
+                        "access.requisition_module_tabs.{$module}.{$tabKey}",
+                        config("access.requisition_tabs.{$tabKey}", Str::headline($tabKey))
+                    ),
                     'url' => $routes[$tabKey],
                     'active' => $tabKey === $activeKey,
                 ];

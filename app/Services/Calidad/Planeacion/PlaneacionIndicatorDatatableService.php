@@ -188,6 +188,15 @@ final class PlaneacionIndicatorDatatableService
             '<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>'.
             '</a>';
 
+        if ($canEdit && $indicator->isArchived()) {
+            $html .= '<form method="POST" action="'.e(route('calidad.planeacion.indicadores.restore', $indicator)).'" class="table-actions__inline">'.
+                csrf_field().
+                '<button type="submit" class="cursos-catalogo-page__icon-btn" title="Restablecer indicador" aria-label="Restablecer indicador">'.
+                '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+                '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>'.
+                '</button></form>';
+        }
+
         if ($canEdit && ! $indicator->isArchived()) {
             $editUrl = route('calidad.planeacion.indicadores.edit', $indicator);
             $html .= '<a href="'.e($editUrl).'" class="cursos-catalogo-page__icon-btn" title="Editar" aria-label="Editar">'.
@@ -204,7 +213,10 @@ final class PlaneacionIndicatorDatatableService
                     '</button></form>';
             }
 
-            $html .= '<form method="POST" action="'.e(route('calidad.planeacion.indicadores.archive', $indicator)).'" class="table-actions__inline">'.
+            $code = (string) $indicator->code;
+            $html .= '<form method="POST" action="'.e(route('calidad.planeacion.indicadores.archive', $indicator)).'" class="table-actions__inline js-confirm-archive" '.
+                'data-confirm-title="Archivar indicador" '.
+                'data-confirm-message="'.e('¿Archivar '.$code.'? Dejará de capturarse y de aparecer en el dashboard hasta que lo restablezca.').'">'.
                 csrf_field().
                 '<button type="submit" class="cursos-catalogo-page__icon-btn cursos-catalogo-page__icon-btn--danger" title="Archivar" aria-label="Archivar">'.
                 '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.

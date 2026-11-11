@@ -223,8 +223,8 @@ Tablero **Planeación estratégica** con pestañas **Dashboard** | **Indicadores
 | --- | --- |
 | `view.board.calidad.planeacion_estrategica` | Ver tablero en sidebar Calidad |
 | `planeacion.dashboard.view` | Pestaña Dashboard (no se otorga al editar indicadores) |
-| `planeacion.indicadores.view` | Listar y consultar ficha; sin `edit` = solo indicadores con `can_consult` |
-| `planeacion.indicadores.edit` | CRUD, versionar, publicar, compartir, archivar; implica view |
+| `planeacion.indicadores.view` | Listar, consultar ficha y exportar Excel/PDF; sin `edit` = solo indicadores con `can_consult` |
+| `planeacion.indicadores.edit` | CRUD, versionar, publicar, compartir, archivar y restablecer; implica view |
 | `planeacion.captura.view` | Pestaña Captura |
 | `planeacion.captura.edit` | Guardar o reemplazar la captura propia; implica view |
 

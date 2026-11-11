@@ -6,7 +6,7 @@
     <div class="page-section">
         <div class="app-container">
             <div class="page-header-inner" style="padding-top: 0; margin-bottom: 1.25rem;">
-                <h2 class="page-title">Solicitar personal</h2>
+                <h2 class="page-title">REQUISICIÓN DE PERSONAL - Febrero de 2026 - Versión 07</h2>                
                 <p class="page-subtitle">Completa las secciones del formulario. La solicitud queda registrada en tu área y solo Gestión Humana podrá modificarla después.</p>
             </div>
 

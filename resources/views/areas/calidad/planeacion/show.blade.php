@@ -18,11 +18,41 @@
                         <span>· Consultando v{{ $consultVersion->version_number }} ({{ $consultVersion->statusLabel() }})</span>
                     @endif
                 </p>
+                @php
+                    $fichaExportQuery = array_filter([
+                        'year' => $year,
+                        'month' => $month,
+                        'capturador_id' => $ficha['capturador_id'] ?? null,
+                        'version' => $ficha['consult_version_id'] ?? null,
+                    ], fn ($value) => $value !== null && $value !== '');
+                @endphp
                 <div class="cursos-registros-page__table-actions">
                     <a href="{{ route('calidad.planeacion.indicadores') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Volver al listado" aria-label="Volver al listado">
                         <x-lucide-x width="18" height="18" aria-hidden="true" />
                     </a>
-                    @if ($canEdit)
+                    <x-export-excel
+                        route="{{ route('calidad.planeacion.indicadores.export.excel', array_merge(['indicator' => $indicator], $fichaExportQuery)) }}"
+                        label=""
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        title="Exportar ficha a Excel"
+                        aria-label="Exportar ficha a Excel"
+                    />
+                    <a
+                        href="{{ route('calidad.planeacion.indicadores.export.pdf', array_merge(['indicator' => $indicator], $fichaExportQuery)) }}"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        title="Exportar ficha a PDF"
+                        aria-label="Exportar ficha a PDF"
+                    >
+                        <x-lucide-file-text width="18" height="18" aria-hidden="true" />
+                    </a>
+                    @if ($canRestore ?? false)
+                        <form method="POST" action="{{ route('calidad.planeacion.indicadores.restore', $indicator) }}">
+                            @csrf
+                            <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Restablecer indicador" aria-label="Restablecer indicador">
+                                <x-lucide-rotate-ccw width="18" height="18" aria-hidden="true" />
+                            </button>
+                        </form>
+                    @elseif ($canEdit)
                         @include('areas.calidad.planeacion.partials.share', [
                             'indicator' => $indicator,
                             'shareUsers' => $shareUsers,
@@ -39,7 +69,13 @@
                                 </button>
                             </form>
                         @endif
-                        <form method="POST" action="{{ route('calidad.planeacion.indicadores.archive', $indicator) }}">
+                        <form
+                            method="POST"
+                            action="{{ route('calidad.planeacion.indicadores.archive', $indicator) }}"
+                            class="js-confirm-archive"
+                            data-confirm-title="Archivar indicador"
+                            data-confirm-message="¿Archivar {{ $indicator->code }}? Dejará de capturarse y de aparecer en el dashboard hasta que lo restablezca."
+                        >
                             @csrf
                             <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--danger" title="Archivar" aria-label="Archivar">
                                 <x-lucide-archive width="18" height="18" aria-hidden="true" />
@@ -137,6 +173,10 @@
             @endif
         </div>
     </div>
+
+    @if ($canEdit)
+        @include('areas.calidad.planeacion.partials.confirm-archive-modal')
+    @endif
 
     @vite(['resources/js/planeacion-ficha-charts.js'])
 </x-app-layout>

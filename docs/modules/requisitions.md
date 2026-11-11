@@ -7,9 +7,9 @@ Gestionar el flujo de requisicion de personal por area: solicitud del colaborado
 ## Alcance actual
 
 - Prefijo autenticado `/requisitions/{module}` + CTA de correo `GET /requisitions/abrir/{requisition}` (`requisitions.open`).
-- Subtabs (label UI en `config/access.php` → `requisition_tabs`):
+- Subtabs (label UI en `config/access.php` → `requisition_tabs`, con overrides por modulo en `requisition_module_tabs`):
   - **Dashboard** — KPIs ApexCharts; alcance global si el usuario puede abrir Dashboard/Gestion
-  - **Solicitar** / **Mis requisiciones** — solo en `users.area_key` (area base)
+  - **Solicitar** / **Mis requisiciones** — solo en `users.area_key` (area base). En `gestion_humana` el tab Solicitar se muestra como **FO-GH-22 Solicitar**
   - **Gestion** — listado transversal de todas las areas
   - **Autorizacion gerencia** — motivo Cargo nuevo (`requisitions.approve.management`)
   - **Catalogos** (ruta `parametros`) — cargos, motivos, ciudades, tipos, uniformes, contratos + toggles de encargados de seleccion

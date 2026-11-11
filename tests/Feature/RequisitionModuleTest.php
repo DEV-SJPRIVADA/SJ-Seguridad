@@ -67,6 +67,38 @@ class RequisitionModuleTest extends TestCase
             ->assertJsonPath('data.0.name', 'MADEMAX');
     }
 
+    public function test_gestion_humana_solicitar_tab_uses_format_label(): void
+    {
+        $user = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $user->assignRole('usuario');
+        $user->givePermissionTo([
+            'requisitions.tab.solicitar',
+            'requisitions.tab.gestion',
+            'view.board.gestion_humana.requisiciones',
+        ]);
+
+        $this->actingAs($user)
+            ->get(route('requisitions.create', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertSee('FO-GH-22 Solicitar');
+
+        $operacionesUser = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $operacionesUser->assignRole('usuario');
+        $operacionesUser->givePermissionTo('requisitions.tab.solicitar');
+
+        $this->actingAs($operacionesUser)
+            ->get(route('requisitions.create', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertSee('Solicitar')
+            ->assertDontSee('FO-GH-22 Solicitar');
+    }
+
     public function test_clients_parameter_type_is_no_longer_manageable(): void
     {
         $user = User::factory()->create([

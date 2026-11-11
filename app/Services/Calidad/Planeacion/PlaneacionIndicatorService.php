@@ -172,6 +172,29 @@ class PlaneacionIndicatorService
         return $indicator;
     }
 
+    public function restore(QualityPlanningIndicator $indicator, int $userId): QualityPlanningIndicator
+    {
+        if (! $indicator->isArchived()) {
+            throw ValidationException::withMessages([
+                'status' => 'El indicador no está archivado.',
+            ]);
+        }
+
+        $before = optional($indicator->archived_at)?->toDateTimeString();
+        $indicator->forceFill(['archived_at' => null])->save();
+
+        $this->audit->logModelChange(
+            eventType: 'indicator',
+            action: 'restore',
+            model: $indicator,
+            before: ['archived_at' => $before],
+            after: ['archived_at' => null],
+            userId: $userId,
+        );
+
+        return $indicator;
+    }
+
     /**
      * Historial de versiones con el diff respecto a la anterior.
      *

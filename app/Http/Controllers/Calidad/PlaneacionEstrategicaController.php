@@ -18,6 +18,7 @@ use App\Services\Calidad\Planeacion\PlaneacionCaptureDatatableService;
 use App\Services\Calidad\Planeacion\PlaneacionCaptureService;
 use App\Services\Calidad\Planeacion\PlaneacionConsolidadoService;
 use App\Services\Calidad\Planeacion\PlaneacionDashboardService;
+use App\Services\Calidad\Planeacion\PlaneacionFichaExportService;
 use App\Services\Calidad\Planeacion\PlaneacionIndicatorDatatableService;
 use App\Services\Calidad\Planeacion\PlaneacionIndicatorService;
 use App\Services\Calidad\Planeacion\PlaneacionPeriodService;
@@ -27,7 +28,9 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PlaneacionEstrategicaController extends Controller
 {
@@ -43,6 +46,7 @@ class PlaneacionEstrategicaController extends Controller
         private readonly PlaneacionCaptureDatatableService $captureDatatable,
         private readonly PlaneacionConsolidadoService $consolidado,
         private readonly PlaneacionDashboardService $dashboardMetrics,
+        private readonly PlaneacionFichaExportService $fichaExport,
         private readonly FormulaEvaluator $evaluator,
     ) {}
 
@@ -136,8 +140,7 @@ class PlaneacionEstrategicaController extends Controller
 
     public function show(Request $request, QualityPlanningIndicator $indicator): View
     {
-        abort_unless($this->access->canViewIndicadores(auth()->user()), 403);
-        abort_unless($this->access->canConsultIndicator(auth()->user(), $indicator), 403);
+        $this->authorizeFichaView($indicator);
 
         $indicator->load(['versions', 'currentPublishedVersion', 'assignees.user']);
         $version = $indicator->workingVersion();
@@ -145,17 +148,10 @@ class PlaneacionEstrategicaController extends Controller
 
         [$year, $month] = $this->periodFromRequest($request);
         $consultVersionId = $this->versionIdFromRequest($request, $indicator);
-        $ficha = $this->consolidado->ficha(
-            $indicator,
-            auth()->user(),
-            $year,
-            $month,
-            $this->capturadorIdFromRequest($request),
-            false,
-            $consultVersionId,
-        );
+        $ficha = $this->fichaForRequest($request, $indicator);
 
-        $canEdit = $this->access->canEditIndicadores(auth()->user()) && ! $indicator->isArchived();
+        $canManage = $this->access->canEditIndicadores(auth()->user());
+        $canEdit = $canManage && ! $indicator->isArchived();
         $consultVersion = $consultVersionId !== null
             ? $indicator->versions->firstWhere('id', $consultVersionId)
             : null;
@@ -168,6 +164,7 @@ class PlaneacionEstrategicaController extends Controller
             'versionHistory' => $this->indicators->versionHistory($indicator),
             'versionOptions' => $this->versionOptions($indicator),
             'canEdit' => $canEdit,
+            'canRestore' => $canManage && $indicator->isArchived(),
             'year' => $year,
             'month' => $month,
             'yearOptions' => $this->periods->yearOptions($year),
@@ -227,6 +224,35 @@ class PlaneacionEstrategicaController extends Controller
         return redirect()
             ->route('calidad.planeacion.indicadores')
             ->with('status', 'Indicador '.$indicator->code.' archivado.');
+    }
+
+    public function restore(QualityPlanningIndicator $indicator): RedirectResponse
+    {
+        abort_unless($this->access->canEditIndicadores(auth()->user()), 403);
+
+        $this->indicators->restore($indicator, (int) auth()->id());
+
+        return redirect()
+            ->route('calidad.planeacion.indicadores.show', $indicator)
+            ->with('status', 'Indicador '.$indicator->code.' restablecido.');
+    }
+
+    public function exportFichaExcel(Request $request, QualityPlanningIndicator $indicator): StreamedResponse
+    {
+        $this->authorizeFichaView($indicator);
+        $user = auth()->user();
+        abort_unless($user instanceof User, 403);
+
+        return $this->fichaExport->excel($indicator, $this->fichaForRequest($request, $indicator), $user);
+    }
+
+    public function exportFichaPdf(Request $request, QualityPlanningIndicator $indicator): Response
+    {
+        $this->authorizeFichaView($indicator);
+        $user = auth()->user();
+        abort_unless($user instanceof User, 403);
+
+        return $this->fichaExport->pdf($indicator, $this->fichaForRequest($request, $indicator), $user);
     }
 
     public function share(SyncPlaneacionAssigneesRequest $request, QualityPlanningIndicator $indicator): RedirectResponse
@@ -369,6 +395,42 @@ class PlaneacionEstrategicaController extends Controller
         }
 
         return [$year, $month];
+    }
+
+    private function authorizeFichaView(QualityPlanningIndicator $indicator): void
+    {
+        $user = auth()->user();
+        abort_unless($user instanceof User, 403);
+
+        if ($this->access->canConsultIndicator($user, $indicator)) {
+            return;
+        }
+
+        abort_unless($this->access->canCaptureIndicator($user, $indicator), 403);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function fichaForRequest(Request $request, QualityPlanningIndicator $indicator): array
+    {
+        $user = auth()->user();
+        abort_unless($user instanceof User, 403);
+
+        $indicator->loadMissing(['versions', 'currentPublishedVersion', 'assignees.user']);
+        [$year, $month] = $this->periodFromRequest($request);
+        $canConsult = $this->access->canConsultIndicator($user, $indicator);
+        $forceOwn = ! $canConsult;
+
+        return $this->consolidado->ficha(
+            $indicator,
+            $user,
+            $year,
+            $month,
+            $forceOwn ? (int) $user->id : $this->capturadorIdFromRequest($request),
+            $forceOwn,
+            $forceOwn ? null : $this->versionIdFromRequest($request, $indicator),
+        );
     }
 
     private function capturadorIdFromRequest(Request $request): ?int

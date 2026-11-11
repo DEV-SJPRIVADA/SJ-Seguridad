@@ -146,6 +146,7 @@ class IndicatorPdfChartRenderer
      * @param  list<string>  $categories
      * @param  list<array{label: string, data: list<float|int|null>, color: list{int, int, int}}>  $barSeries
      * @param  list<array{label: string, data: list<float|int|null>, color: list{int, int, int}, dashed?: bool}>  $lineSeries
+     * @param  bool  $showDataLabels  Valores encima de barras y porcentaje (primera línea) dentro del grupo.
      */
     public function mixedBarLineDataUri(
         array $categories,
@@ -155,6 +156,7 @@ class IndicatorPdfChartRenderer
         int $rightAxisMax = 100,
         int $width = 860,
         int $height = 380,
+        bool $showDataLabels = false,
     ): ?string {
         if ($categories === []) {
             return null;
@@ -176,7 +178,7 @@ class IndicatorPdfChartRenderer
 
         $legendHeight = $this->legendHeight($legend, $width - 24);
         $categoryBand = 22;
-        $topMargin = $title !== '' ? 28 : 12;
+        $topMargin = ($title !== '' ? 28 : 12) + ($showDataLabels ? 12 : 0);
 
         $plot = [
             'left' => 55,
@@ -202,6 +204,7 @@ class IndicatorPdfChartRenderer
         $slotWidth = ($plot['right'] - $plot['left']) / max($count, 1);
         $barCount = count($barSeries);
         $barWidth = min(18, ($slotWidth * 0.7) / max($barCount, 1));
+        $cluster = [];
 
         foreach ($barSeries as $barIndex => $series) {
             foreach ($series['data'] as $index => $value) {
@@ -213,10 +216,22 @@ class IndicatorPdfChartRenderer
                 $y1 = (int) round($plot['bottom'] - $barHeight);
                 $x2 = (int) round($xCenter + $offset + ($barWidth / 2));
                 $this->filledRectangle($image, $x1, $y1, $x2, $plot['bottom'], $series['color']);
+
+                if (! isset($cluster[$index])) {
+                    $cluster[$index] = ['minX' => $x1, 'maxX' => $x2, 'minY' => $y1, 'maxY' => $plot['bottom']];
+                } else {
+                    $cluster[$index]['minX'] = min($cluster[$index]['minX'], $x1);
+                    $cluster[$index]['maxX'] = max($cluster[$index]['maxX'], $x2);
+                    $cluster[$index]['minY'] = min($cluster[$index]['minY'], $y1);
+                }
+
+                if ($showDataLabels && $numeric != 0.0) {
+                    $this->drawChartLabel($image, $this->formatChartLabel($numeric), (int) round(($x1 + $x2) / 2), $y1 - 12, [15, 23, 42]);
+                }
             }
         }
 
-        foreach ($lineSeries as $series) {
+        foreach ($lineSeries as $seriesIndex => $series) {
             $points = [];
             foreach ($series['data'] as $index => $value) {
                 $numeric = (float) ($value ?? 0);
@@ -226,6 +241,20 @@ class IndicatorPdfChartRenderer
             }
 
             $this->drawPolyline($image, $points, $series['color'], (bool) ($series['dashed'] ?? false));
+
+            if ($showDataLabels && $seriesIndex === 0) {
+                foreach ($series['data'] as $index => $value) {
+                    $numeric = (float) ($value ?? 0);
+                    if ($numeric == 0.0 || ! isset($cluster[$index])) {
+                        continue;
+                    }
+
+                    $box = $cluster[$index];
+                    $labelY = (int) round($box['minY'] + (($box['maxY'] - $box['minY']) * 0.42));
+                    $labelX = (int) round(($box['minX'] + $box['maxX']) / 2);
+                    $this->drawChartLabel($image, $this->formatChartLabel($numeric), $labelX, $labelY, [255, 255, 255]);
+                }
+            }
         }
 
         $this->drawLegend($image, $legend, $legendColors, $width - 24, (int) ($plot['bottom'] + $categoryBand + 4));
@@ -478,6 +507,24 @@ class IndicatorPdfChartRenderer
     {
         $textColor = imagecolorallocate($image, 100, 116, 139);
         imagestring($image, 3, $centerX - (strlen($text) * 3), $centerY - 6, $text, $textColor);
+    }
+
+    /**
+     * @param  list{int, int, int}  $color
+     */
+    private function drawChartLabel(\GdImage $image, string $text, int $centerX, int $y, array $color): void
+    {
+        if ($text === '') {
+            return;
+        }
+
+        $x = $centerX - (int) (strlen($text) * 3);
+        imagestring($image, 2, $x, $y, $text, $this->allocateColor($image, $color));
+    }
+
+    private function formatChartLabel(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
     }
 
     /**

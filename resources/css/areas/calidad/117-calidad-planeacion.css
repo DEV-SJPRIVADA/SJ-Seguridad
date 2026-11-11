@@ -266,6 +266,11 @@
     color: #b45309;
 }
 
+.confirm-archive-modal__icon {
+    background: rgba(185, 28, 28, 0.1);
+    color: #b91c1c;
+}
+
 @media (max-width: 959px) {
     .planeacion-share__add,
     .planeacion-capture-period,
@@ -444,6 +449,27 @@
     stroke: #ffffff;
     stroke-width: 3px;
     stroke-linejoin: round;
+}
+
+/* Porcentaje (Resultado) dentro de las barras: no heredar el halo oscuro de los valores. */
+.planeacion-ficha-sheet .js-planeacion-pct-label text {
+    font-size: 11px;
+    font-weight: 700;
+    pointer-events: none;
+    paint-order: stroke fill;
+    stroke-linejoin: round;
+}
+
+.planeacion-ficha-sheet .js-planeacion-pct-label text.is-inside {
+    fill: #ffffff !important;
+    stroke: rgba(15, 23, 42, 0.35);
+    stroke-width: 2px;
+}
+
+.planeacion-ficha-sheet .js-planeacion-pct-label text.is-above {
+    fill: #d12f2f !important;
+    stroke: #ffffff;
+    stroke-width: 3px;
 }
 
 /* Dashboard: 5 KPI en fila y dos gráficos, chrome GH. */

@@ -135,6 +135,7 @@ class PlaneacionConsolidadoService
         $captures = collect();
         if ($period->version instanceof QualityPlanningIndicatorVersion) {
             $query = QualityPlanningCapture::query()
+                ->with('user')
                 ->where('indicator_version_id', $period->version->id)
                 ->where('year', $year)
                 ->where('month', $month);
@@ -264,6 +265,7 @@ class PlaneacionConsolidadoService
         }
 
         $query = QualityPlanningCapture::query()
+            ->with('user')
             ->whereIn('indicator_version_id', $versionIds)
             ->where('year', $year);
 
@@ -409,22 +411,40 @@ class PlaneacionConsolidadoService
         $complies = $result !== null && $this->captures->complies($result, $version);
         $isCritical = $this->isCritical($result, $version, $complies);
 
-        $analysis = '—';
-        if (! $isTodos && $single instanceof QualityPlanningCapture) {
-            $analysis = trim((string) $single->analysis_text);
-        }
-
         return array_merge($base, [
             'has_data' => true,
             'field_values' => array_merge($emptyFields, $sums),
             'result' => $result,
             'complies' => $complies,
             'is_critical' => $isCritical,
-            'analysis' => $analysis,
+            'analysis' => $this->joinAnalysis($monthCaptures, $isTodos),
             'improvement' => ! $complies,
             'capture_count' => $monthCaptures->count(),
             'captured_user_ids' => $monthCaptures->pluck('user_id')->map(fn ($id): int => (int) $id)->unique()->values()->all(),
         ]);
+    }
+
+    /**
+     * Une el análisis de las capturas del mes. En consolidado (Todos) antepone el nombre.
+     *
+     * @param  Collection<int, QualityPlanningCapture>  $monthCaptures
+     */
+    private function joinAnalysis(Collection $monthCaptures, bool $isTodos): string
+    {
+        $prefixName = $isTodos && $monthCaptures->count() > 1;
+        $parts = [];
+
+        foreach ($monthCaptures as $capture) {
+            $text = trim((string) $capture->analysis_text);
+            if ($text === '' || $text === '—') {
+                continue;
+            }
+
+            $name = trim((string) ($capture->user?->name ?? ''));
+            $parts[] = $prefixName && $name !== '' ? $name.': '.$text : $text;
+        }
+
+        return implode("\n", $parts);
     }
 
     /**

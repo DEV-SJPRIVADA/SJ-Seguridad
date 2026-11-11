@@ -61,9 +61,31 @@
                     <strong>{{ $indicator->code }}</strong>
                     <span>· {{ $version?->name ?? 'Sin versión para este mes' }}</span>
                 </p>
+                @php
+                    $fichaExportQuery = array_filter([
+                        'year' => $year,
+                        'month' => $month,
+                        'capturador_id' => $ficha['capturador_id'] ?? auth()->id(),
+                    ], fn ($value) => $value !== null && $value !== '');
+                @endphp
                 <div class="cursos-registros-page__table-actions">
                     <a href="{{ route('calidad.planeacion.captura') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Volver al listado" aria-label="Volver al listado">
                         <x-lucide-x width="18" height="18" aria-hidden="true" />
+                    </a>
+                    <x-export-excel
+                        route="{{ route('calidad.planeacion.indicadores.export.excel', array_merge(['indicator' => $indicator], $fichaExportQuery)) }}"
+                        label=""
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        title="Exportar ficha a Excel"
+                        aria-label="Exportar ficha a Excel"
+                    />
+                    <a
+                        href="{{ route('calidad.planeacion.indicadores.export.pdf', array_merge(['indicator' => $indicator], $fichaExportQuery)) }}"
+                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                        title="Exportar ficha a PDF"
+                        aria-label="Exportar ficha a PDF"
+                    >
+                        <x-lucide-file-text width="18" height="18" aria-hidden="true" />
                     </a>
                 </div>
             </div>

@@ -171,7 +171,7 @@ return [
         'servicio_cliente.parameters.edit' => 'Permite administrar tipología, fuente, responsable y categoría.',
         'planeacion.dashboard.view' => 'Permite ver el dashboard de Planeación estratégica. No se otorga al editar indicadores.',
         'planeacion.indicadores.view' => 'Permite listar y consultar la definición de los indicadores de Planeación estratégica.',
-        'planeacion.indicadores.edit' => 'Permite crear, editar, publicar y archivar indicadores. Incluye la consulta de la pestaña Indicadores.',
+        'planeacion.indicadores.edit' => 'Permite crear, editar, publicar, archivar y restablecer indicadores. Incluye la consulta de la pestaña Indicadores.',
         'planeacion.captura.view' => 'Permite ver la pestaña Captura de Planeación estratégica.',
         'planeacion.captura.edit' => 'Permite guardar o reemplazar la captura propia de un indicador asignado.',
         'acreditaciones.view' => 'Permite ver Acreditados y exportar la información, además de mostrar los módulos del área.',
@@ -481,6 +481,13 @@ return [
         'gestion' => 'Gestion',
         'autorizacion_gerencia' => 'Autorizacion gerencia',
         'parametros' => 'Catalogos',
+    ],
+
+    // Overrides de label por modulo; el resto hereda de requisition_tabs.
+    'requisition_module_tabs' => [
+        'gestion_humana' => [
+            'solicitar' => 'FO-GH-22 Solicitar',
+        ],
     ],
 
     'supply_tabs' => [

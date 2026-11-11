@@ -126,4 +126,8 @@
             });
         });
     </script>
+
+    @if ($canEdit)
+        @include('areas.calidad.planeacion.partials.confirm-archive-modal')
+    @endif
 </x-app-layout>
