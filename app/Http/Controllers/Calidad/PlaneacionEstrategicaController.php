@@ -64,6 +64,7 @@ class PlaneacionEstrategicaController extends Controller
         $route = match ($firstTab) {
             'indicadores' => 'calidad.planeacion.indicadores',
             'captura' => 'calidad.planeacion.captura',
+            'estrategia' => 'calidad.planeacion.estrategia',
             default => 'calidad.planeacion.dashboard',
         };
 

@@ -20,6 +20,7 @@ trait HasPlaneacionTabs
                 'dashboard' => 'calidad.planeacion.dashboard',
                 'indicadores' => 'calidad.planeacion.indicadores',
                 'captura' => 'calidad.planeacion.captura',
+                'estrategia' => 'calidad.planeacion.estrategia',
                 default => 'calidad.planeacion.indicadores',
             };
 
@@ -30,6 +31,8 @@ trait HasPlaneacionTabs
                     || str_starts_with((string) $routeName, 'calidad.planeacion.indicadores'),
                 'captura' => $activeTab === 'captura'
                     || str_starts_with((string) $routeName, 'calidad.planeacion.captura'),
+                'estrategia' => $activeTab === 'estrategia'
+                    || str_starts_with((string) $routeName, 'calidad.planeacion.estrategia'),
                 default => $tab === $activeTab,
             };
 

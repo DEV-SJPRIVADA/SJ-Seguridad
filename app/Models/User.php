@@ -601,6 +601,7 @@ class User extends Authenticatable
             'dashboard' => route('calidad.planeacion.dashboard'),
             'indicadores' => route('calidad.planeacion.indicadores'),
             'captura' => route('calidad.planeacion.captura'),
+            'estrategia' => route('calidad.planeacion.estrategia'),
             default => route('dashboard', ['module' => 'calidad']),
         };
     }

@@ -121,6 +121,28 @@ class PlaneacionEstrategicaAccessService
     }
 
     /**
+     * Pestaña Estrategia (DOFA, objetivos, estrategias).
+     */
+    public function canViewEstrategia(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('planeacion.estrategia.view')
+            || $user->can('planeacion.estrategia.edit');
+    }
+
+    public function canEditEstrategia(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('planeacion.estrategia.edit');
+    }
+
+    /**
      * @return array<int, string>
      */
     public function visibleTabsFor(User $user): array
@@ -132,6 +154,7 @@ class PlaneacionEstrategicaAccessService
                 'dashboard' => $this->canViewDashboard($user),
                 'indicadores' => $this->canViewIndicadores($user),
                 'captura' => $this->canViewCapture($user),
+                'estrategia' => $this->canViewEstrategia($user),
                 default => false,
             };
 

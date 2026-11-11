@@ -2,7 +2,7 @@
 
 Tablero de Calidad para construir indicadores de gestión (campos + fórmula), publicarlos, compartirlos a usuarios sueltos y consultar la ficha anual tipo FT-OP-01. Tablas propias: **no** reutiliza `indicators` / `indicator_captures` de Operaciones.
 
-**Feature:** FEAT-050 (fase 1). Fuera de V1: DOFA, objetivos, estrategias, asignación por área, suplencia, PPTX y funciones de fórmula avanzadas (`SI()`, `MIN()`, etc.).
+**Feature:** FEAT-050 (fase 1, indicadores/captura/ficha) + FEAT-051 (pestaña **Estrategia**: DOFA, objetivos y estrategias). Fuera de alcance: PPTX, enlace de estrategias a indicadores y funciones de fórmula avanzadas (`SI()`, `MIN()`, etc.).
 
 ## Objetivo
 
@@ -42,6 +42,18 @@ Prefijo `calidad/planeacion`, nombre `calidad.planeacion.*`, middleware `auth`, 
 | POST | `/calidad/planeacion/indicadores/{indicator}/compartir` | `calidad.planeacion.indicadores.share` | `.edit` (usuarios sueltos y áreas) |
 | POST | `/calidad/planeacion/indicadores/{indicator}/suplencias` | `calidad.planeacion.indicadores.substitutions.store` | `.edit` |
 | DELETE | `/calidad/planeacion/indicadores/{indicator}/suplencias/{substitution}` | `calidad.planeacion.indicadores.substitutions.destroy` | `.edit` |
+| GET | `/calidad/planeacion/estrategia` | `calidad.planeacion.estrategia` | `planeacion.estrategia.view` o `.edit` |
+| POST | `/calidad/planeacion/estrategia` | `calidad.planeacion.estrategia.store` | `planeacion.estrategia.edit` |
+| GET | `/calidad/planeacion/estrategia/{dofa}` | `calidad.planeacion.estrategia.show` | `view` o `.edit` |
+| PATCH | `/calidad/planeacion/estrategia/{dofa}` | `calidad.planeacion.estrategia.update` | `.edit` |
+| POST | `/calidad/planeacion/estrategia/{dofa}/activar` | `calidad.planeacion.estrategia.activate` | `.edit` |
+| POST | `/calidad/planeacion/estrategia/{dofa}/archivar` | `calidad.planeacion.estrategia.archive` | `.edit` |
+| POST | `/calidad/planeacion/estrategia/{dofa}/objetivos` | `calidad.planeacion.estrategia.objectives.store` | `.edit` |
+| PATCH | `/calidad/planeacion/estrategia/objetivos/{objective}` | `calidad.planeacion.estrategia.objectives.update` | `.edit` |
+| DELETE | `/calidad/planeacion/estrategia/objetivos/{objective}` | `calidad.planeacion.estrategia.objectives.destroy` | `.edit` |
+| POST | `/calidad/planeacion/estrategia/objetivos/{objective}/estrategias` | `calidad.planeacion.estrategia.strategies.store` | `.edit` |
+| PATCH | `/calidad/planeacion/estrategia/estrategias/{strategy}` | `calidad.planeacion.estrategia.strategies.update` | `.edit` |
+| DELETE | `/calidad/planeacion/estrategia/estrategias/{strategy}` | `calidad.planeacion.estrategia.strategies.destroy` | `.edit` |
 | GET | `/calidad/planeacion/captura` | `calidad.planeacion.captura` | `planeacion.captura.view` o `.edit` |
 | GET | `/calidad/planeacion/captura/datatable` | `calidad.planeacion.captura.datatable` | Igual |
 | GET | `/calidad/planeacion/captura/{indicator}` | `calidad.planeacion.captura.show` | Captura de **ese** indicador (`canCaptureIndicator`) |
@@ -61,6 +73,8 @@ El tablero en el menú usa `view.board.calidad.planeacion_estrategica`. `manage.
 | `planeacion.indicadores.edit` | Planeación: Editar indicadores | CRUD, versionar, publicar, compartir, archivar y restablecer; implica consulta de todos |
 | `planeacion.captura.view` | Planeación: Ver captura | Pestaña Captura |
 | `planeacion.captura.edit` | Planeación: Capturar | Guardar o reemplazar la captura **propia** |
+| `planeacion.estrategia.view` | Planeación: Ver estrategia | Pestaña **Estrategia** (DOFA, objetivos, estrategias) en modo consulta |
+| `planeacion.estrategia.edit` | Planeación: Editar estrategia | CRUD de DOFA, objetivos y estrategias; implica view |
 
 Config: `config/access.php` (`area_indicador_permissions`, grupo Admin **Calidad → Planeación estratégica (funciones)**). Pestañas: `planeacion_tabs`.
 
@@ -82,7 +96,7 @@ Suplencias temporales: tabla `quality_planning_indicator_substitutions` (titular
 ### Semilla de roles
 
 - `super-admin`: catálogo completo vía `app:sync-permissions` / `PermissionCatalog::sync()`.
-- `administrador`: tablero + `planeacion.indicadores.edit` + `planeacion.dashboard.view` + `planeacion.captura.view` / `.edit`.
+- `administrador`: tablero + `planeacion.indicadores.edit` + `planeacion.dashboard.view` + `planeacion.captura.view` / `.edit` + `planeacion.estrategia.edit`.
 - No hay permiso legado que migrar. El rol Spatie `director` de Compras **no** se usa aquí: el director de un indicador es un usuario con `can_consult` (y captura) en ese indicador.
 
 ## Controladores y requests
@@ -90,6 +104,10 @@ Suplencias temporales: tabla `quality_planning_indicator_substitutions` (titular
 | Clase | Responsabilidad |
 | --- | --- |
 | `Calidad\PlaneacionEstrategicaController` | Shell, CRUD, publicar, archivar, restablecer, compartir, captura, preview de fórmula, ficha |
+| `Calidad\PlaneacionEstrategiaController` | FEAT-051: pestaña Estrategia (DOFA, objetivos, estrategias) |
+| `StorePlaneacionDofaRequest` | DOFA: título, periodo libre (etiqueta + fechas), resumen, estado y cuadrantes |
+| `StorePlaneacionObjectiveRequest` | Objetivo: título, descripción y fechas opcionales |
+| `StorePlaneacionStrategyRequest` | Estrategia: título, responsable, fechas y avance 0–100 |
 | `StorePlaneacionIndicatorRequest` / `UpdatePlaneacionIndicatorRequest` | Alta/edición; 2–12 campos; clave `^[a-z][a-z0-9_]*$`; fórmula validada |
 | `PreviewPlaneacionFormulaRequest` | Valores de prueba para el botón Probar |
 | `SyncPlaneacionAssigneesRequest` | Usuarios activos, `user_id` distinto, `can_consult` opcional |
@@ -112,7 +130,10 @@ Directorio `resources/views/areas/calidad/planeacion/`.
 | `partials/ficha-gestion.blade.php` | Hoja tipo FT-OP-01 (ene–dic, gráfico, análisis) |
 | `partials/share.blade.php` | Modal de asignar usuarios o áreas (captura / consulta) y suplencias; se abre con ícono `users` |
 | `partials/confirm-archive-modal.blade.php` | Confirmar archivo antes de POST `archivar` |
-| `partials/subnav.blade.php` | Pills Dashboard / Indicadores / Captura |
+| `partials/subnav.blade.php` | Pills Dashboard / Indicadores / Captura / Estrategia |
+| `estrategia/index.blade.php` | Listado de DOFA con filtro por estado (FEAT-051) |
+| `estrategia/show.blade.php` | Matriz F/O/D/A + árbol objetivo → estrategias |
+| `estrategia/partials/dofa-modal.blade.php` | Alta/edición del DOFA con cuadrantes dinámicos |
 | `partials/capture-metrics.blade.php` | Tarjetas resultado / semáforo / cumple |
 
 ## Modelos y tablas
@@ -125,6 +146,12 @@ Migración `2026_11_10_114549_create_quality_planning_tables.php` (MySQL y sqlit
 | `QualityPlanning\QualityPlanningIndicatorVersion` | `quality_planning_indicator_versions` | Ficha + `formula` + `fields` JSON; `insumos` y `medicion` (texto libre de identidad); estado `draft` / `published` / `superseded`; unique `(indicator_id, version_number)` |
 | `QualityPlanning\QualityPlanningIndicatorAssignee` | `quality_planning_indicator_assignees` | `can_capture`, `can_consult`; unique `(indicator_id, user_id)` |
 | `QualityPlanning\QualityPlanningCapture` | `quality_planning_captures` | `input_data` JSON, `result_value`, `complies`, análisis, mejora; unique `(indicator_version_id, user_id, year, month)` |
+| `QualityPlanning\QualityPlanningDofa` | `quality_planning_dofas` | FEAT-051. `title`, `period_label` libre, `starts_on`/`ends_on`, `status` (`draft`/`active`/`archived`), `summary`, `archived_at` |
+| `QualityPlanning\QualityPlanningDofaItem` | `quality_planning_dofa_items` | Línea de un cuadrante: `quadrant` (`fortaleza`/`oportunidad`/`debilidad`/`amenaza`), `description`, `sort` |
+| `QualityPlanning\QualityPlanningObjective` | `quality_planning_objectives` | Cuelga del DOFA (`dofa_id`); fechas opcionales; `sort` |
+| `QualityPlanning\QualityPlanningStrategy` | `quality_planning_strategies` | Cuelga del objetivo (`objective_id`); `responsible`, fechas, `progress` 0–100, `sort`. Borrar el objetivo borra sus estrategias |
+
+Migración DOFA: `2026_11_11_160200_create_quality_planning_dofa_tables.php` (MySQL y sqlite).
 
 JSON de cada campo: `{ key, label, decimals (0\|2), required, sort }`.
 
@@ -137,6 +164,7 @@ JSON de cada campo: `{ key, label, decimals (0\|2), required, sort }`.
 | `PlaneacionPeriodService` | Qué versión rige cada mes (cierre del mes de publicación de vN>1) |
 | `PlaneacionCaptureService` | Guardar/reemplazar captura propia; unicidad por persona/mes |
 | `PlaneacionConsolidadoService` | Ficha anual: suma de campos del mes + recálculo; filtro Todos / un capturador |
+| `PlaneacionEstrategiaService` | FEAT-051: alta/edición de DOFA con cuadrantes, objetivos y estrategias; auditoría en cada cambio |
 | `PlaneacionAssignmentService` | Sync de asignados + auto-permisos |
 | `PlaneacionDashboardService` | KPI y series del mes, acotados al perfil |
 | `PlaneacionFichaExportService` | Excel (`PlaneacionFichaExport`) y PDF de la ficha; mismos filtros que la consulta |

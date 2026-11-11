@@ -22,7 +22,7 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 - Varias personas pueden capturar el **mismo** indicador en el **mismo** mes: cada una tiene su fila.
 - El consolidado **suma los campos** de todas las capturas del mes y **vuelve a calcular** la fórmula. No promedia los porcentajes individuales.
 - Si Calidad publica una versión nueva a mitad de un mes (por ejemplo el 15 de marzo), **ese mes queda cerrado**: no se carga ni se reemplaza. El mes siguiente usa la versión nueva.
-- No incluye DOFA, objetivos ni estrategias. La ficha se puede exportar a Excel y PDF (incluye una imagen del gráfico).
+- No incluye enlace de estrategias a indicadores todavía. La ficha de indicadores se puede exportar a Excel y PDF (incluye una imagen del gráfico).
 
 ## Definiciones
 
@@ -64,6 +64,16 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 4. Escriba la **fórmula** usando esas claves. Use **Probar** con valores de ejemplo. Si hay división entre cero, el sistema no deja guardar.
 5. Guarde el **borrador**. Revise y pulse **Publicar** para congelar la versión. Hasta que no esté publicado, nadie puede capturarlo.
 6. Si más adelante corrige un indicador ya publicado, el sistema abre una **versión nueva**. Publíquela cuando esté lista. Recuerde: el mes en que publique esa versión nueva queda cerrado.
+
+### Estrategia (DOFA, objetivos y estrategias)
+
+1. Abra la pestaña **Estrategia** del tablero Planeación estratégica.
+2. Pulse el ícono **+** para crear un DOFA: título, **periodo libre** (por ejemplo `2026`, `T1 2026` o `2026-2028`) y fechas desde/hasta.
+3. Escriba las líneas de cada cuadrante (fortalezas, oportunidades, debilidades y amenazas). Puede agregar o quitar líneas.
+4. Guarde y abra el DOFA: verá la matriz y el bloque **Objetivos y estrategias**.
+5. Agregue objetivos al DOFA y, dentro de cada objetivo, sus estrategias con responsable y avance.
+6. Con **Vigente** marca el DOFA activo; con **Archivar** lo saca del listado (sus objetivos y estrategias se conservan y se ven en el filtro **Archivados**).
+7. Quien solo tiene permiso de **Ver estrategia** consulta la matriz y el árbol, pero no ve botones de alta, edición ni archivo.
 
 ### Archivar y restablecer
 
@@ -108,6 +118,7 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 
 | Versión | Fecha | Autor | Descripción del cambio |
 | --- | --- | --- | --- |
+| 2.0 | 2026-11-11 | Documentador | FEAT-051: pestaña Estrategia con DOFA, objetivos y estrategias encadenados. |
 | 1.9 | 2026-11-11 | Documentador | Suplencias temporales: el suplente captura a nombre del titular dentro del rango. |
 | 1.8 | 2026-11-11 | Documentador | Compartir por área además de usuarios sueltos; suplencias quedan como pendiente definido. |
 | 1.7 | 2026-11-11 | Documentador | Análisis visible en consolidado; Excel/PDF también desde captura; etiquetas del gráfico valor arriba y % dentro. |

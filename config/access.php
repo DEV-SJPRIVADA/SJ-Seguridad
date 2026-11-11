@@ -61,6 +61,8 @@ return [
         'planeacion.indicadores.edit' => 'Planeación: Editar indicadores',
         'planeacion.captura.view' => 'Planeación: Ver captura',
         'planeacion.captura.edit' => 'Planeación: Capturar',
+        'planeacion.estrategia.view' => 'Planeación: Ver estrategia',
+        'planeacion.estrategia.edit' => 'Planeación: Editar estrategia',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
         'reportes_novedades.vacaciones.view' => 'Vacaciones: Ver',
@@ -174,6 +176,8 @@ return [
         'planeacion.indicadores.edit' => 'Permite crear, editar, publicar, archivar y restablecer indicadores. Incluye la consulta de la pestaña Indicadores.',
         'planeacion.captura.view' => 'Permite ver la pestaña Captura de Planeación estratégica.',
         'planeacion.captura.edit' => 'Permite guardar o reemplazar la captura propia de un indicador asignado.',
+        'planeacion.estrategia.view' => 'Permite ver el DOFA, los objetivos y las estrategias de Planeación estratégica.',
+        'planeacion.estrategia.edit' => 'Permite crear, editar y archivar DOFA, objetivos y estrategias. Incluye la consulta de la pestaña.',
         'acreditaciones.view' => 'Permite ver Acreditados y exportar la información, además de mostrar los módulos del área.',
         'acreditaciones.edit' => 'Permite crear, editar y eliminar acreditados, importar información y administrar el catálogo.',
 
@@ -439,6 +443,7 @@ return [
         'dashboard' => 'Dashboard',
         'indicadores' => 'Indicadores',
         'captura' => 'Captura',
+        'estrategia' => 'Estrategia',
     ],
 
     'cliente_interno_tabs' => [
@@ -858,6 +863,8 @@ return [
                             'planeacion.indicadores.edit',
                             'planeacion.captura.view',
                             'planeacion.captura.edit',
+                            'planeacion.estrategia.view',
+                            'planeacion.estrategia.edit',
                         ],
                     ],
                     'area' => [

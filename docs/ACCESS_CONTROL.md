@@ -227,8 +227,10 @@ Tablero **Planeación estratégica** con pestañas **Dashboard** | **Indicadores
 | `planeacion.indicadores.edit` | CRUD, versionar, publicar, compartir, archivar y restablecer; implica view |
 | `planeacion.captura.view` | Pestaña Captura |
 | `planeacion.captura.edit` | Guardar o reemplazar la captura propia; implica view |
+| `planeacion.estrategia.view` | Pestaña **Estrategia**: ver DOFA, objetivos y estrategias |
+| `planeacion.estrategia.edit` | Crear, editar y archivar DOFA, objetivos y estrategias; implica view |
 
-- Labels Admin: `Planeación estratégica`, `Planeación: Dashboard`, `Planeación: Ver indicadores`, `Planeación: Editar indicadores`, `Planeación: Ver captura`, `Planeación: Capturar`.
+- Labels Admin: `Planeación estratégica`, `Planeación: Dashboard`, `Planeación: Ver indicadores`, `Planeación: Editar indicadores`, `Planeación: Ver captura`, `Planeación: Capturar`, `Planeación: Ver estrategia`, `Planeación: Editar estrategia`.
 - Auto-grant captura: tablero + `captura.view` + `captura.edit`. Captura + consulta: lo anterior + `indicadores.view` + `dashboard.view`. Aplica a asignaciones directas y por área (`users.area_key`). Al quitar el último indicador asignado, revoca esos mínimos. Nunca revoca `planeacion.indicadores.edit`.
 - Suplencias: sin permisos nuevos. El suplente recibe el mínimo de captura y solo opera dentro del rango; la captura se atribuye al titular.
 - Detalle: [`modules/planeacion-estrategica.md`](modules/planeacion-estrategica.md).

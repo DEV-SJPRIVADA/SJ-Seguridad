@@ -239,3 +239,6 @@
 @import './areas/compras/116-compras-suministros-seguimiento.css';
 /* 117 Calidad / Planeación estratégica */
 @import './areas/calidad/117-calidad-planeacion.css';
+/* 118 Calidad / Planeación estratégica — Estrategia (DOFA) */
+@import './areas/calidad/118-calidad-planeacion-estrategia.css';
+

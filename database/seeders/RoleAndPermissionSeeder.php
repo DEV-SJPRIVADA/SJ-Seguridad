@@ -40,6 +40,8 @@ class RoleAndPermissionSeeder extends Seeder
                 'planeacion.dashboard.view',
                 'planeacion.captura.view',
                 'planeacion.captura.edit',
+                'planeacion.estrategia.view',
+                'planeacion.estrategia.edit',
             ],
             'director' => [
                 'view.dashboard',

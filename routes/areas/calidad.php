@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Calidad\PlaneacionEstrategiaController;
 use App\Http\Controllers\Calidad\PlaneacionEstrategicaController;
 use App\Http\Controllers\Calidad\ServicioClienteController;
 use Illuminate\Support\Facades\Route;
@@ -60,4 +61,18 @@ Route::middleware(['password.changed'])
         Route::get('/indicadores/{indicator}/exportar-excel', [PlaneacionEstrategicaController::class, 'exportFichaExcel'])->name('indicadores.export.excel')->whereNumber('indicator');
         Route::get('/indicadores/{indicator}/exportar-pdf', [PlaneacionEstrategicaController::class, 'exportFichaPdf'])->name('indicadores.export.pdf')->whereNumber('indicator');
         Route::get('/indicadores/{indicator}', [PlaneacionEstrategicaController::class, 'show'])->name('indicadores.show')->whereNumber('indicator');
+
+        // Estrategia: DOFA, objetivos y estrategias (FEAT-051).
+        Route::get('/estrategia', [PlaneacionEstrategiaController::class, 'index'])->name('estrategia');
+        Route::post('/estrategia', [PlaneacionEstrategiaController::class, 'storeDofa'])->name('estrategia.store');
+        Route::get('/estrategia/{dofa}', [PlaneacionEstrategiaController::class, 'show'])->name('estrategia.show')->whereNumber('dofa');
+        Route::patch('/estrategia/{dofa}', [PlaneacionEstrategiaController::class, 'updateDofa'])->name('estrategia.update')->whereNumber('dofa');
+        Route::post('/estrategia/{dofa}/activar', [PlaneacionEstrategiaController::class, 'activateDofa'])->name('estrategia.activate')->whereNumber('dofa');
+        Route::post('/estrategia/{dofa}/archivar', [PlaneacionEstrategiaController::class, 'archiveDofa'])->name('estrategia.archive')->whereNumber('dofa');
+        Route::post('/estrategia/{dofa}/objetivos', [PlaneacionEstrategiaController::class, 'storeObjective'])->name('estrategia.objectives.store')->whereNumber('dofa');
+        Route::patch('/estrategia/objetivos/{objective}', [PlaneacionEstrategiaController::class, 'updateObjective'])->name('estrategia.objectives.update')->whereNumber('objective');
+        Route::delete('/estrategia/objetivos/{objective}', [PlaneacionEstrategiaController::class, 'destroyObjective'])->name('estrategia.objectives.destroy')->whereNumber('objective');
+        Route::post('/estrategia/objetivos/{objective}/estrategias', [PlaneacionEstrategiaController::class, 'storeStrategy'])->name('estrategia.strategies.store')->whereNumber('objective');
+        Route::patch('/estrategia/estrategias/{strategy}', [PlaneacionEstrategiaController::class, 'updateStrategy'])->name('estrategia.strategies.update')->whereNumber('strategy');
+        Route::delete('/estrategia/estrategias/{strategy}', [PlaneacionEstrategiaController::class, 'destroyStrategy'])->name('estrategia.strategies.destroy')->whereNumber('strategy');
     });
