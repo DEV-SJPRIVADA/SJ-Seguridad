@@ -317,6 +317,8 @@
                                 @include('areas.calidad.planeacion.partials.share', [
                                     'indicator' => $indicator,
                                     'shareUsers' => $shareUsers,
+                                    'shareAreas' => $shareAreas,
+                                    'substitutions' => $substitutions ?? [],
                                     'shareShowModal' => false,
                                 ])
                             @endif
@@ -369,6 +371,8 @@
                 @include('areas.calidad.planeacion.partials.share', [
                     'indicator' => $indicator,
                     'shareUsers' => $shareUsers,
+                    'shareAreas' => $shareAreas,
+                    'substitutions' => $substitutions ?? [],
                     'shareShowTrigger' => false,
                 ])
             @endif

@@ -52,7 +52,7 @@ class PlaneacionConsolidadoService
         bool $forceOwn = false,
         ?int $consultVersionId = null,
     ): array {
-        $indicator->loadMissing(['versions', 'currentPublishedVersion', 'assignees.user']);
+        $indicator->loadMissing(['versions', 'currentPublishedVersion', 'assignees.user', 'areaAssignees']);
 
         $filter = $this->resolveCapturadorFilter($indicator, $viewer, $capturadorId, $forceOwn);
         $selectedPeriod = $this->periods->versionForCapture($indicator, $year, $month);
@@ -175,7 +175,7 @@ class PlaneacionConsolidadoService
      */
     public function visibleCapturers(QualityPlanningIndicator $indicator, User $viewer): Collection
     {
-        $indicator->loadMissing('assignees.user');
+        $indicator->loadMissing(['assignees.user', 'areaAssignees']);
 
         if (! $this->access->canEditIndicadores($viewer) && ! $this->access->canConsultIndicator($viewer, $indicator)) {
             return collect();
@@ -243,13 +243,32 @@ class PlaneacionConsolidadoService
      */
     private function capturersOf(QualityPlanningIndicator $indicator): Collection
     {
-        return $indicator->assignees
+        $direct = $indicator->assignees
             ->filter(function ($row): bool {
                 return (bool) $row->can_capture
                     && $row->user instanceof User
                     && (bool) $row->user->is_active;
             })
-            ->map(fn ($row): User => $row->user)
+            ->map(fn ($row): User => $row->user);
+
+        $areaKeys = $indicator->areaAssignees
+            ->filter(fn ($row): bool => (bool) $row->can_capture)
+            ->pluck('area_key')
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
+
+        $byArea = $areaKeys === []
+            ? collect()
+            : User::query()
+                ->where('is_active', true)
+                ->whereIn('area_key', $areaKeys)
+                ->get();
+
+        return $direct
+            ->concat($byArea)
+            ->unique(fn (User $user): int => (int) $user->id)
             ->sortBy(fn (User $user): string => mb_strtoupper((string) $user->name))
             ->values();
     }

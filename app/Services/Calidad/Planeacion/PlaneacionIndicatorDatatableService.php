@@ -22,12 +22,23 @@ final class PlaneacionIndicatorDatatableService
 
         if (! $canEdit) {
             $query->whereNull('archived_at')
-                ->whereHas(
-                    'assignees',
-                    fn (Builder $assignees) => $assignees
-                        ->where('user_id', $user->id)
-                        ->where('can_consult', true)
-                );
+                ->where(function (Builder $inner) use ($user): void {
+                    $inner->whereHas(
+                        'assignees',
+                        fn (Builder $assignees) => $assignees
+                            ->where('user_id', $user->id)
+                            ->where('can_consult', true)
+                    );
+
+                    if ($user->hasAssignedArea()) {
+                        $inner->orWhereHas(
+                            'areaAssignees',
+                            fn (Builder $areas) => $areas
+                                ->where('area_key', $user->area_key)
+                                ->where('can_consult', true)
+                        );
+                    }
+                });
         }
 
         if ($ordered) {

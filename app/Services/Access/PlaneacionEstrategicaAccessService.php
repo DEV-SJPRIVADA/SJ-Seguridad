@@ -4,6 +4,7 @@ namespace App\Services\Access;
 
 use App\Models\QualityPlanning\QualityPlanningIndicator;
 use App\Models\User;
+use App\Services\Calidad\Planeacion\PlaneacionSubstitutionService;
 
 class PlaneacionEstrategicaAccessService
 {
@@ -81,7 +82,14 @@ class PlaneacionEstrategicaAccessService
         return $indicator->assignees()
             ->where('user_id', $user->id)
             ->where('can_consult', true)
-            ->exists();
+            ->exists()
+            || (
+                $user->hasAssignedArea()
+                && $indicator->areaAssignees()
+                    ->where('area_key', $user->area_key)
+                    ->where('can_consult', true)
+                    ->exists()
+            );
     }
 
     public function canCaptureIndicator(User $user, QualityPlanningIndicator $indicator): bool
@@ -94,10 +102,22 @@ class PlaneacionEstrategicaAccessService
             return true;
         }
 
-        return $indicator->assignees()
+        if ($indicator->assignees()
             ->where('user_id', $user->id)
             ->where('can_capture', true)
-            ->exists();
+            ->exists()) {
+            return true;
+        }
+
+        if ($user->hasAssignedArea()
+            && $indicator->areaAssignees()
+                ->where('area_key', $user->area_key)
+                ->where('can_capture', true)
+                ->exists()) {
+            return true;
+        }
+
+        return app(PlaneacionSubstitutionService::class)->activeFor($indicator, $user) !== null;
     }
 
     /**

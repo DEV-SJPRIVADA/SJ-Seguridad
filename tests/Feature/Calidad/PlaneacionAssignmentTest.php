@@ -3,6 +3,7 @@
 namespace Tests\Feature\Calidad;
 
 use App\Models\QualityPlanning\QualityPlanningIndicator;
+use App\Models\QualityPlanning\QualityPlanningIndicatorAreaAssignee;
 use App\Models\QualityPlanning\QualityPlanningIndicatorAssignee;
 use App\Models\QualityPlanning\QualityPlanningIndicatorVersion;
 use App\Models\User;
@@ -171,6 +172,99 @@ class PlaneacionAssignmentTest extends TestCase
         $this->assertFalse($capturer->can('planeacion.captura.edit'));
         $this->assertFalse($capturer->can('planeacion.captura.view'));
         $this->assertTrue($this->editor->fresh()->can('planeacion.indicadores.edit'));
+    }
+
+    public function test_area_assignment_grants_capture_and_lists_indicator(): void
+    {
+        $indicator = $this->makeIndicator();
+        $version = $indicator->versions->first();
+        $version->update([
+            'status' => QualityPlanningIndicatorVersion::STATUS_PUBLISHED,
+            'published_at' => now(),
+        ]);
+        $indicator->update(['current_published_version_id' => $version->id]);
+        $indicator = $indicator->fresh(['versions', 'currentPublishedVersion']);
+        $capturer = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $outside = User::factory()->create([
+            'area_key' => 'comercial',
+            'must_change_password' => false,
+        ]);
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.indicadores.share', $indicator), [
+                'assignees' => [],
+                'area_assignees' => [
+                    ['area_key' => 'operaciones', 'can_consult' => false],
+                ],
+            ])
+            ->assertRedirect();
+
+        $capturer->refresh();
+        $this->assertTrue($capturer->can('view.board.calidad.planeacion_estrategica'));
+        $this->assertTrue($capturer->can('planeacion.captura.edit'));
+        $this->assertFalse($capturer->can('planeacion.indicadores.view'));
+
+        $this->assertDatabaseHas((new QualityPlanningIndicatorAreaAssignee)->getTable(), [
+            'indicator_id' => $indicator->id,
+            'area_key' => 'operaciones',
+            'can_capture' => 1,
+            'can_consult' => 0,
+        ]);
+
+        $json = $this->actingAs($capturer)
+            ->getJson(route('calidad.planeacion.captura.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(1, $json['recordsFiltered']);
+        $this->assertStringContainsString('IND-001', $json['data'][0][0]);
+
+        $this->actingAs($outside)
+            ->get(route('calidad.planeacion.captura.show', $indicator))
+            ->assertForbidden();
+    }
+
+    public function test_area_assignment_can_grant_consult(): void
+    {
+        $own = $this->makeIndicator('IND-OWN');
+        $other = $this->makeIndicator('IND-OTH');
+        $consultant = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.indicadores.share', $own), [
+                'assignees' => [],
+                'area_assignees' => [
+                    ['area_key' => 'operaciones', 'can_consult' => '1'],
+                ],
+            ])
+            ->assertRedirect();
+
+        $consultant->refresh();
+        $this->assertTrue($consultant->can('planeacion.indicadores.view'));
+        $this->assertTrue($consultant->can('planeacion.dashboard.view'));
+
+        $json = $this->actingAs($consultant)
+            ->getJson(route('calidad.planeacion.indicadores.datatable', [
+                'draw' => 1,
+                'start' => 0,
+                'length' => 25,
+            ]))
+            ->assertOk()
+            ->json();
+
+        $this->assertSame(1, $json['recordsFiltered']);
+        $this->assertStringContainsString('IND-OWN', $json['data'][0][0]);
+        $this->assertStringNotContainsString('IND-OTH', json_encode($json['data']));
     }
 
     private function makeIndicator(string $code = 'IND-001'): QualityPlanningIndicator

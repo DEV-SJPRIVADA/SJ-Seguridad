@@ -74,9 +74,11 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 ### Compartir
 
 1. En la ficha del indicador (o al editarlo), pulse el ícono de **personas** (Compartir indicador).
-2. En el modal, asigne **usuarios activos** y pulse **Guardar asignaciones**.
-3. Toda persona asignada puede **capturar**. Marque además **consulta** si debe ver el listado, la ficha del equipo y el dashboard.
-4. Al guardar, esa persona recibe el acceso mínimo. Si la quita de todos los indicadores, el sistema le retira ese acceso mínimo. Quien ya edita indicadores (Calidad) no pierde sus funciones.
+2. En el modal, asigne **usuarios activos** o **áreas completas** y pulse **Guardar asignaciones**.
+3. Toda persona asignada (directa o por área) puede **capturar**. Marque además **consulta** si debe ver el listado, la ficha del equipo y el dashboard.
+4. Al guardar, esas personas reciben el acceso mínimo. Si las quita de todos los indicadores, el sistema les retira ese acceso mínimo. Quien ya edita indicadores (Calidad) no pierde sus funciones.
+5. Las áreas usan el área configurada en el usuario (`area_key`).
+6. Las **suplencias** se registran en el mismo modal: titular, suplente y rango de fechas. El suplente captura y reemplaza a nombre del titular solo dentro del rango; no ve el consolidado del equipo.
 
 ### Capturar el mes
 
@@ -106,6 +108,8 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 
 | Versión | Fecha | Autor | Descripción del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-11-11 | Documentador | Suplencias temporales: el suplente captura a nombre del titular dentro del rango. |
+| 1.8 | 2026-11-11 | Documentador | Compartir por área además de usuarios sueltos; suplencias quedan como pendiente definido. |
 | 1.7 | 2026-11-11 | Documentador | Análisis visible en consolidado; Excel/PDF también desde captura; etiquetas del gráfico valor arriba y % dentro. |
 | 1.6 | 2026-11-11 | Documentador | Excel y PDF incluyen imagen del gráfico; PDF en una hoja; análisis a todo el ancho. |
 | 1.5 | 2026-11-11 | Documentador | Exportar la ficha a Excel y PDF desde la consulta. |

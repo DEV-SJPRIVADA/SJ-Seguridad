@@ -55,6 +55,8 @@ Route::middleware(['password.changed'])
         Route::post('/indicadores/{indicator}/archivar', [PlaneacionEstrategicaController::class, 'archive'])->name('indicadores.archive')->whereNumber('indicator');
         Route::post('/indicadores/{indicator}/restablecer', [PlaneacionEstrategicaController::class, 'restore'])->name('indicadores.restore')->whereNumber('indicator');
         Route::post('/indicadores/{indicator}/compartir', [PlaneacionEstrategicaController::class, 'share'])->name('indicadores.share')->whereNumber('indicator');
+        Route::post('/indicadores/{indicator}/suplencias', [PlaneacionEstrategicaController::class, 'storeSubstitution'])->name('indicadores.substitutions.store')->whereNumber('indicator');
+        Route::delete('/indicadores/{indicator}/suplencias/{substitution}', [PlaneacionEstrategicaController::class, 'destroySubstitution'])->name('indicadores.substitutions.destroy')->whereNumber(['indicator', 'substitution']);
         Route::get('/indicadores/{indicator}/exportar-excel', [PlaneacionEstrategicaController::class, 'exportFichaExcel'])->name('indicadores.export.excel')->whereNumber('indicator');
         Route::get('/indicadores/{indicator}/exportar-pdf', [PlaneacionEstrategicaController::class, 'exportFichaPdf'])->name('indicadores.export.pdf')->whereNumber('indicator');
         Route::get('/indicadores/{indicator}', [PlaneacionEstrategicaController::class, 'show'])->name('indicadores.show')->whereNumber('indicator');

@@ -213,7 +213,7 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
   - `inasistencias` — **Inasistencias** (`view.board.gestion_humana.inasistencias` + `inasistencias.view` / `inasistencias.edit`; `edit` implica `view`)
 - En area `calidad`, tablero de area unica:
   - `servicio_cliente` — **Servicio al cliente** (`view.board.calidad.servicio_cliente` + `servicio_cliente.fo_gi_22.view` / `edit` + `servicio_cliente.parameters.edit`). El dashboard no tiene permiso propio: lo abre quien puede ver FO-GI-22. `edit` implica `view`. El rol `administrador` recibe el paquete en el seeder; no hay permiso legado.
-  - `planeacion_estrategica` — **Planeación estratégica** (`view.board.calidad.planeacion_estrategica` + `planeacion.dashboard.view` + `planeacion.indicadores.view` / `edit` + `planeacion.captura.view` / `edit`). `edit` implica `view` en `PlaneacionEstrategicaAccessService`. El dashboard **tiene permiso propio** y **no** se deriva de `indicadores.view`. Al compartir un indicador, el sistema otorga el mínimo (tablero + captura; si hay consulta, también `indicadores.view` y `dashboard.view`). Quien tiene `planeacion.indicadores.edit` no pierde permisos al quitarse de un indicador. El rol `administrador` recibe el paquete en el seeder; no hay permiso legado que migrar. El rol Spatie `director` de Compras no se usa.
+  - `planeacion_estrategica` — **Planeación estratégica** (`view.board.calidad.planeacion_estrategica` + `planeacion.dashboard.view` + `planeacion.indicadores.view` / `edit` + `planeacion.captura.view` / `edit`). `edit` implica `view` en `PlaneacionEstrategicaAccessService`. El dashboard **tiene permiso propio** y **no** se deriva de `indicadores.view`. Al compartir un indicador con usuarios o áreas, el sistema otorga el mínimo (tablero + captura; si hay consulta, también `indicadores.view` y `dashboard.view`). Quien tiene `planeacion.indicadores.edit` no pierde permisos al quitarse de un indicador. El rol `administrador` recibe el paquete en el seeder; no hay permiso legado que migrar. El rol Spatie `director` de Compras no se usa.
 
 ### Planeación estratégica (Calidad)
 
@@ -229,7 +229,8 @@ Tablero **Planeación estratégica** con pestañas **Dashboard** | **Indicadores
 | `planeacion.captura.edit` | Guardar o reemplazar la captura propia; implica view |
 
 - Labels Admin: `Planeación estratégica`, `Planeación: Dashboard`, `Planeación: Ver indicadores`, `Planeación: Editar indicadores`, `Planeación: Ver captura`, `Planeación: Capturar`.
-- Auto-grant captura: tablero + `captura.view` + `captura.edit`. Captura + consulta: lo anterior + `indicadores.view` + `dashboard.view`. Al quitar el último indicador asignado, revoca esos mínimos. Nunca revoca `planeacion.indicadores.edit`.
+- Auto-grant captura: tablero + `captura.view` + `captura.edit`. Captura + consulta: lo anterior + `indicadores.view` + `dashboard.view`. Aplica a asignaciones directas y por área (`users.area_key`). Al quitar el último indicador asignado, revoca esos mínimos. Nunca revoca `planeacion.indicadores.edit`.
+- Suplencias: sin permisos nuevos. El suplente recibe el mínimo de captura y solo opera dentro del rango; la captura se atribuye al titular.
 - Detalle: [`modules/planeacion-estrategica.md`](modules/planeacion-estrategica.md).
 
 ### Inasistencias (Gestion humana)

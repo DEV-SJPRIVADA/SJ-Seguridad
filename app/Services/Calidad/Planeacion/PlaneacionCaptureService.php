@@ -4,6 +4,7 @@ namespace App\Services\Calidad\Planeacion;
 
 use App\Models\QualityPlanning\QualityPlanningCapture;
 use App\Models\QualityPlanning\QualityPlanningIndicator;
+use App\Models\QualityPlanning\QualityPlanningIndicatorSubstitution;
 use App\Models\QualityPlanning\QualityPlanningIndicatorVersion;
 use App\Models\User;
 use App\Support\UppercaseFormText;
@@ -18,6 +19,7 @@ class PlaneacionCaptureService
         private readonly PlaneacionPeriodService $periods,
         private readonly FormulaEvaluator $evaluator,
         private readonly PlaneacionAuditLogService $audit,
+        private readonly PlaneacionSubstitutionService $substitutions,
     ) {}
 
     /**
@@ -69,9 +71,18 @@ class PlaneacionCaptureService
             $improvement = null;
         }
 
+        // En suplencia, la captura se atribuye al titular; se registra quién la diligenció.
+        $owner = $this->substitutions->captureOwner($indicator, $actor, $year, $month);
+        $activeSubstitution = $this->substitutions->activeFor($indicator, $actor);
+        $substitution = $activeSubstitution instanceof QualityPlanningIndicatorSubstitution
+            && $this->substitutions->covers($activeSubstitution, $year, $month)
+            && (int) $owner->id !== (int) $actor->id
+                ? $activeSubstitution
+                : null;
+
         $existing = QualityPlanningCapture::query()
             ->where('indicator_version_id', $version->id)
-            ->where('user_id', $actor->id)
+            ->where('user_id', $owner->id)
             ->where('year', $year)
             ->where('month', $month)
             ->first();
@@ -84,7 +95,7 @@ class PlaneacionCaptureService
 
         $payload = [
             'indicator_version_id' => $version->id,
-            'user_id' => $actor->id,
+            'user_id' => $owner->id,
             'year' => $year,
             'month' => $month,
             'input_data' => $input,
@@ -95,7 +106,11 @@ class PlaneacionCaptureService
             'updated_by_user_id' => $actor->id,
         ];
 
-        return DB::transaction(function () use ($existing, $payload, $actor, $indicator, $version): QualityPlanningCapture {
+        $substituteNote = $substitution instanceof QualityPlanningIndicatorSubstitution
+            ? ['substitute_user_id' => (int) $actor->id, 'holder_user_id' => (int) $owner->id]
+            : [];
+
+        return DB::transaction(function () use ($existing, $payload, $actor, $indicator, $version, $substituteNote): QualityPlanningCapture {
             if ($existing instanceof QualityPlanningCapture) {
                 $before = [
                     'result_value' => $existing->result_value,
@@ -109,13 +124,13 @@ class PlaneacionCaptureService
                     action: 'replace',
                     model: $existing,
                     before: $before,
-                    after: [
+                    after: array_merge([
                         'result_value' => $existing->result_value,
                         'complies' => $existing->complies,
                         'input_data' => $existing->input_data,
                         'indicator_id' => $indicator->id,
                         'version' => $version->version_number,
-                    ],
+                    ], $substituteNote),
                     userId: $actor->id,
                 );
 
@@ -130,14 +145,14 @@ class PlaneacionCaptureService
                 action: 'create',
                 model: $capture,
                 before: null,
-                after: [
+                after: array_merge([
                     'result_value' => $capture->result_value,
                     'complies' => $capture->complies,
                     'indicator_id' => $indicator->id,
                     'version' => $version->version_number,
                     'year' => $capture->year,
                     'month' => $capture->month,
-                ],
+                ], $substituteNote),
                 userId: $actor->id,
             );
 

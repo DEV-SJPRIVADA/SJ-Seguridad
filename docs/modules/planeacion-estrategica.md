@@ -39,7 +39,9 @@ Prefijo `calidad/planeacion`, nombre `calidad.planeacion.*`, middleware `auth`, 
 | POST | `/calidad/planeacion/indicadores/{indicator}/publicar` | `calidad.planeacion.indicadores.publish` | `.edit` |
 | POST | `/calidad/planeacion/indicadores/{indicator}/archivar` | `calidad.planeacion.indicadores.archive` | `.edit` |
 | POST | `/calidad/planeacion/indicadores/{indicator}/restablecer` | `calidad.planeacion.indicadores.restore` | `.edit` |
-| POST | `/calidad/planeacion/indicadores/{indicator}/compartir` | `calidad.planeacion.indicadores.share` | `.edit` |
+| POST | `/calidad/planeacion/indicadores/{indicator}/compartir` | `calidad.planeacion.indicadores.share` | `.edit` (usuarios sueltos y áreas) |
+| POST | `/calidad/planeacion/indicadores/{indicator}/suplencias` | `calidad.planeacion.indicadores.substitutions.store` | `.edit` |
+| DELETE | `/calidad/planeacion/indicadores/{indicator}/suplencias/{substitution}` | `calidad.planeacion.indicadores.substitutions.destroy` | `.edit` |
 | GET | `/calidad/planeacion/captura` | `calidad.planeacion.captura` | `planeacion.captura.view` o `.edit` |
 | GET | `/calidad/planeacion/captura/datatable` | `calidad.planeacion.captura.datatable` | Igual |
 | GET | `/calidad/planeacion/captura/{indicator}` | `calidad.planeacion.captura.show` | Captura de **ese** indicador (`canCaptureIndicator`) |
@@ -64,16 +66,18 @@ Config: `config/access.php` (`area_indicador_permissions`, grupo Admin **Calidad
 
 ### Auto-otorgamiento al compartir
 
-`PlaneacionAssignmentService` sincroniza asignados (`can_capture` siempre verdadero; `can_consult` opcional) y otorga el mínimo:
+`PlaneacionAssignmentService` sincroniza asignados directos (`quality_planning_indicator_assignees`) y por área (`quality_planning_indicator_area_assignees`). `can_capture` siempre es verdadero; `can_consult` es opcional. El área se resuelve contra `users.area_key` y se expanden los usuarios activos del área al guardar para otorgar el mínimo:
 
 | Rol en el indicador | Permisos mínimos |
 | --- | --- |
 | Solo captura | tablero + `planeacion.captura.view` + `planeacion.captura.edit` |
 | Captura + consulta | lo anterior + `planeacion.indicadores.view` + `planeacion.dashboard.view` |
 
-Al quitar el último indicador asignado, revoca esos mínimos si no quedan otros. Si quedan asignaciones pero ninguna con consulta, revoca solo el par de consulta/dashboard.
+Al quitar el último indicador asignado (directo o por área), revoca esos mínimos si no quedan otros. Si quedan asignaciones pero ninguna con consulta, revoca solo el par de consulta/dashboard.
 
 **Nunca revoca** `planeacion.indicadores.edit`: Calidad no pierde permisos al quitarse de un indicador.
+
+Suplencias temporales: tabla `quality_planning_indicator_substitutions` (titular, suplente, `starts_on`/`ends_on`). El suplente solo **captura/reemplaza** dentro de su rango y la captura queda a nombre del **titular** (`user_id` del titular; `created_by_user_id`/`updated_by_user_id` guardan quién la diligenció, y el audit registra `substitute_user_id` + `holder_user_id`). No hereda consulta ni dashboard. Al registrar la suplencia se otorga el mínimo de captura al suplente; al eliminarla se revoca si no quedan asignaciones ni suplencias vigentes. Servicio: `PlaneacionSubstitutionService`.
 
 ### Semilla de roles
 
@@ -106,7 +110,7 @@ Directorio `resources/views/areas/calidad/planeacion/`.
 | `captura.blade.php` | Listado de indicadores a capturar |
 | `captura-form.blade.php` | Formulario del mes + ficha propia; Excel/PDF |
 | `partials/ficha-gestion.blade.php` | Hoja tipo FT-OP-01 (ene–dic, gráfico, análisis) |
-| `partials/share.blade.php` | Modal de asignar usuarios (captura / consulta); se abre con ícono `users` |
+| `partials/share.blade.php` | Modal de asignar usuarios o áreas (captura / consulta) y suplencias; se abre con ícono `users` |
 | `partials/confirm-archive-modal.blade.php` | Confirmar archivo antes de POST `archivar` |
 | `partials/subnav.blade.php` | Pills Dashboard / Indicadores / Captura |
 | `partials/capture-metrics.blade.php` | Tarjetas resultado / semáforo / cumple |

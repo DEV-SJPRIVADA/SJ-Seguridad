@@ -57,6 +57,16 @@ class QualityPlanningIndicator extends Model
         return $this->hasMany(QualityPlanningIndicatorAssignee::class, 'indicator_id');
     }
 
+    public function areaAssignees(): HasMany
+    {
+        return $this->hasMany(QualityPlanningIndicatorAreaAssignee::class, 'indicator_id');
+    }
+
+    public function substitutions(): HasMany
+    {
+        return $this->hasMany(QualityPlanningIndicatorSubstitution::class, 'indicator_id');
+    }
+
     public function isArchived(): bool
     {
         return $this->archived_at !== null;

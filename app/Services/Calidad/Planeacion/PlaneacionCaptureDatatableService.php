@@ -21,12 +21,33 @@ final class PlaneacionCaptureDatatableService
             ->whereNotNull('current_published_version_id');
 
         if (! $canEditIndicadores) {
-            $query->whereHas(
-                'assignees',
-                fn (Builder $assignees) => $assignees
-                    ->where('user_id', $user->id)
-                    ->where('can_capture', true)
-            );
+            $today = now()->toDateString();
+            $query->where(function (Builder $inner) use ($user, $today): void {
+                $inner->whereHas(
+                    'assignees',
+                    fn (Builder $assignees) => $assignees
+                        ->where('user_id', $user->id)
+                        ->where('can_capture', true)
+                );
+
+                if ($user->hasAssignedArea()) {
+                    $inner->orWhereHas(
+                        'areaAssignees',
+                        fn (Builder $areas) => $areas
+                            ->where('area_key', $user->area_key)
+                            ->where('can_capture', true)
+                    );
+                }
+
+                // Suplencia vigente: aparece en Captura aunque no sea asignado directo.
+                $inner->orWhereHas(
+                    'substitutions',
+                    fn (Builder $substitutions) => $substitutions
+                        ->where('substitute_user_id', $user->id)
+                        ->whereDate('starts_on', '<=', $today)
+                        ->whereDate('ends_on', '>=', $today)
+                );
+            });
         }
 
         if ($ordered) {

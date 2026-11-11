@@ -203,6 +203,33 @@
     color: #b91c1c;
 }
 
+/* Suplencias dentro del modal Compartir: formulario en una fila y listado compacto. */
+.planeacion-share__substitutions {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+.planeacion-share__substitutions-title {
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+}
+
+.planeacion-share__substitutions-desc {
+    margin: 0 0 0.75rem;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.planeacion-share__substitution-form {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) auto;
+    gap: 0.75rem;
+    align-items: end;
+    margin-bottom: 1rem;
+}
+
 .planeacion-capture-page > .app-container {
     width: calc(100% - 1.5rem);
     max-width: 1440px;
@@ -273,6 +300,7 @@
 
 @media (max-width: 959px) {
     .planeacion-share__add,
+    .planeacion-share__substitution-form,
     .planeacion-capture-period,
     .planeacion-capture-fields {
         grid-template-columns: 1fr;

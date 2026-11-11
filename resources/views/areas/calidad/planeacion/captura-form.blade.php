@@ -127,6 +127,16 @@
                 <div class="alert alert--warning">{{ $periodMessage ?: 'Este periodo no admite captura.' }}</div>
             @endif
 
+            {{-- Aviso de suplencia: deja claro a nombre de quién quedará la captura. --}}
+            @if (($substitution ?? null) !== null)
+                <div class="alert alert--info">
+                    Está capturando como <strong>suplente</strong> de
+                    <strong>{{ $captureOwner?->name }}</strong>
+                    ({{ $substitution->starts_on?->format('d/m/Y') }} – {{ $substitution->ends_on?->format('d/m/Y') }}).
+                    La captura quedará a nombre del titular.
+                </div>
+            @endif
+
             @if ($version)
                 <form
                     method="POST"

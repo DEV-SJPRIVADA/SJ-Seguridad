@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Calidad\Planeacion\PreviewPlaneacionFormulaRequest;
 use App\Http\Requests\Calidad\Planeacion\StorePlaneacionCaptureRequest;
 use App\Http\Requests\Calidad\Planeacion\StorePlaneacionIndicatorRequest;
+use App\Http\Requests\Calidad\Planeacion\StorePlaneacionSubstitutionRequest;
 use App\Http\Requests\Calidad\Planeacion\SyncPlaneacionAssigneesRequest;
 use App\Http\Requests\Calidad\Planeacion\UpdatePlaneacionIndicatorRequest;
 use App\Models\QualityPlanning\QualityPlanningIndicator;
@@ -22,6 +23,7 @@ use App\Services\Calidad\Planeacion\PlaneacionFichaExportService;
 use App\Services\Calidad\Planeacion\PlaneacionIndicatorDatatableService;
 use App\Services\Calidad\Planeacion\PlaneacionIndicatorService;
 use App\Services\Calidad\Planeacion\PlaneacionPeriodService;
+use App\Services\Calidad\Planeacion\PlaneacionSubstitutionService;
 use App\Traits\HasPlaneacionTabs;
 use DomainException;
 use Illuminate\Contracts\View\View;
@@ -47,6 +49,7 @@ class PlaneacionEstrategicaController extends Controller
         private readonly PlaneacionConsolidadoService $consolidado,
         private readonly PlaneacionDashboardService $dashboardMetrics,
         private readonly PlaneacionFichaExportService $fichaExport,
+        private readonly PlaneacionSubstitutionService $substitutions,
         private readonly FormulaEvaluator $evaluator,
     ) {}
 
@@ -142,7 +145,7 @@ class PlaneacionEstrategicaController extends Controller
     {
         $this->authorizeFichaView($indicator);
 
-        $indicator->load(['versions', 'currentPublishedVersion', 'assignees.user']);
+        $indicator->load(['versions', 'currentPublishedVersion', 'assignees.user', 'areaAssignees', 'substitutions.holder', 'substitutions.substitute']);
         $version = $indicator->workingVersion();
         abort_unless($version instanceof QualityPlanningIndicatorVersion, 404);
 
@@ -171,6 +174,8 @@ class PlaneacionEstrategicaController extends Controller
             'monthOptions' => $this->periods->monthOptions(),
             'ficha' => $ficha,
             'shareUsers' => $canEdit ? $this->shareUserOptions() : [],
+            'shareAreas' => $canEdit ? $this->shareAreaOptions() : [],
+            'substitutions' => $this->substitutions->forIndicator($indicator),
         ]);
     }
 
@@ -179,7 +184,7 @@ class PlaneacionEstrategicaController extends Controller
         abort_unless($this->access->canEditIndicadores(auth()->user()), 403);
         abort_if($indicator->isArchived(), 403);
 
-        $indicator->load(['versions', 'currentPublishedVersion', 'assignees.user']);
+        $indicator->load(['versions', 'currentPublishedVersion', 'assignees.user', 'areaAssignees', 'substitutions.holder', 'substitutions.substitute']);
         $version = $indicator->workingVersion();
         abort_unless($version instanceof QualityPlanningIndicatorVersion, 404);
 
@@ -191,7 +196,9 @@ class PlaneacionEstrategicaController extends Controller
             'options' => $this->formOptions(),
             'previewUrl' => route('calidad.planeacion.indicadores.preview'),
             'shareUsers' => $this->shareUserOptions(),
+            'shareAreas' => $this->shareAreaOptions(),
             'versionHistory' => $this->indicators->versionHistory($indicator),
+            'substitutions' => $this->substitutions->forIndicator($indicator),
         ]);
     }
 
@@ -259,11 +266,47 @@ class PlaneacionEstrategicaController extends Controller
     {
         abort_if($indicator->isArchived(), 403);
 
-        $this->assignments->sync($indicator, $request->assigneesPayload(), (int) auth()->id());
+        $this->assignments->sync($indicator, $request->assigneesPayload(), $request->areaAssigneesPayload(), (int) auth()->id());
 
         return redirect()
             ->back()
             ->with('status', 'Usuarios del indicador '.$indicator->code.' actualizados.');
+    }
+
+    public function storeSubstitution(StorePlaneacionSubstitutionRequest $request, QualityPlanningIndicator $indicator): RedirectResponse
+    {
+        abort_if($indicator->isArchived(), 403);
+
+        $payload = $request->substitutionPayload();
+
+        $substitution = $indicator->substitutions()->create([
+            'holder_user_id' => $payload['holder_user_id'],
+            'substitute_user_id' => $payload['substitute_user_id'],
+            'starts_on' => $payload['starts_on'],
+            'ends_on' => $payload['ends_on'],
+            'created_by_user_id' => (int) auth()->id(),
+        ]);
+
+        $this->assignments->grantMinimum($substitution->substitute()->firstOrFail(), false);
+
+        return redirect()
+            ->back()
+            ->with('status', 'Suplencia registrada para '.$indicator->code.'.');
+    }
+
+    public function destroySubstitution(QualityPlanningIndicator $indicator, int $substitution): RedirectResponse
+    {
+        abort_if($indicator->isArchived(), 403);
+
+        $row = $indicator->substitutions()->whereKey($substitution)->firstOrFail();
+        $substituteId = (int) $row->substitute_user_id;
+        $row->delete();
+
+        $this->assignments->revokeUnused($substituteId);
+
+        return redirect()
+            ->back()
+            ->with('status', 'Suplencia eliminada de '.$indicator->code.'.');
     }
 
     public function previewFormula(PreviewPlaneacionFormulaRequest $request): JsonResponse
@@ -313,6 +356,8 @@ class PlaneacionEstrategicaController extends Controller
         abort_unless($this->access->canCaptureIndicator(auth()->user(), $indicator), 403);
 
         [$year, $month] = $this->periodFromRequest($request);
+        $viewer = auth()->user();
+        abort_unless($viewer instanceof User, 403);
 
         $period = $this->periods->versionForCapture($indicator, $year, $month);
         $version = $period->version;
@@ -320,9 +365,20 @@ class PlaneacionEstrategicaController extends Controller
         $result = null;
         $complies = false;
         $input = [];
+        $substitution = null;
+        $captureOwner = auth()->user();
 
         if ($version instanceof QualityPlanningIndicatorVersion) {
-            $existing = $this->captures->existingCapture($version, auth()->user(), $year, $month);
+            $substitution = $this->substitutions->activeFor($indicator, $viewer);
+            if ($substitution !== null && ! $this->substitutions->covers($substitution, $year, $month)) {
+                $substitution = null;
+            }
+
+            if ($substitution?->holder instanceof User) {
+                $captureOwner = $substitution->holder;
+            }
+
+            $existing = $this->captures->existingCapture($version, $captureOwner, $year, $month);
             $input = is_array($existing?->input_data) ? $existing->input_data : [];
             if ($existing !== null) {
                 $result = $existing->result_value !== null ? (float) $existing->result_value : null;
@@ -349,6 +405,8 @@ class PlaneacionEstrategicaController extends Controller
             'periodMessage' => $period->message,
             'canSave' => $this->access->canEditCapture(auth()->user()) && $period->isCapturable(),
             'existingCapture' => $existing,
+            'substitution' => $substitution,
+            'captureOwner' => $captureOwner,
             'input' => $input,
             'result' => $result,
             'complies' => $complies,
@@ -357,10 +415,10 @@ class PlaneacionEstrategicaController extends Controller
                 : '',
             'ficha' => $this->consolidado->ficha(
                 $indicator,
-                auth()->user(),
+                $viewer,
                 $year,
                 $month,
-                (int) auth()->id(),
+                (int) $captureOwner->id,
                 true,
             ),
         ]);
@@ -417,7 +475,7 @@ class PlaneacionEstrategicaController extends Controller
         $user = auth()->user();
         abort_unless($user instanceof User, 403);
 
-        $indicator->loadMissing(['versions', 'currentPublishedVersion', 'assignees.user']);
+        $indicator->loadMissing(['versions', 'currentPublishedVersion', 'assignees.user', 'areaAssignees']);
         [$year, $month] = $this->periodFromRequest($request);
         $canConsult = $this->access->canConsultIndicator($user, $indicator);
         $forceOwn = ! $canConsult;
@@ -507,6 +565,20 @@ class PlaneacionEstrategicaController extends Controller
                 'value' => (string) $user->id,
                 'label' => (string) $user->name,
             ])
+            ->all();
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function shareAreaOptions(): array
+    {
+        return collect(config('access.areas', []))
+            ->map(fn (string $label, string $key): array => [
+                'value' => $key,
+                'label' => $label,
+            ])
+            ->values()
             ->all();
     }
 

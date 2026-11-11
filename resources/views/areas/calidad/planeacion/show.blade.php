@@ -56,6 +56,8 @@
                         @include('areas.calidad.planeacion.partials.share', [
                             'indicator' => $indicator,
                             'shareUsers' => $shareUsers,
+                            'shareAreas' => $shareAreas,
+                            'substitutions' => $substitutions ?? [],
                             'shareShowModal' => false,
                         ])
                         <a href="{{ route('calidad.planeacion.indicadores.edit', $indicator) }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Editar" aria-label="Editar">
