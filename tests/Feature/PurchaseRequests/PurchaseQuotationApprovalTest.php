@@ -246,7 +246,23 @@ class PurchaseQuotationApprovalTest extends TestCase
             ->assertSee('Cotización aprobada')
             ->assertSee($selected->descripcionVisible())
             ->assertSee('OC 1 · ASOCIADO A')
-            ->assertSee('Directora Cotizaciones');
+            ->assertSee('Directora Cotizaciones')
+            ->assertSee('Previsualizar cotización aprobada');
+
+        // El icono abre el archivo de la cotización (inline) solo para el aprobador elegido.
+        $fileUrl = route('purchase-requests.approval.order-approval.quotation-file', [
+            'module' => 'compras',
+            'purchase_order' => $order->id,
+        ]);
+
+        $this->actingAs($this->compras)
+            ->get($fileUrl)
+            ->assertForbidden();
+
+        $this->actingAs($this->director)
+            ->get($fileUrl)
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
 
         // La pantalla de revisión de la orden también la muestra.
         $this->actingAs($this->director)

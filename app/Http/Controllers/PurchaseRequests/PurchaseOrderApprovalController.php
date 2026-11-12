@@ -8,12 +8,14 @@ use App\Http\Requests\PurchaseRequests\ResolvePurchaseOrderApprovalRequest;
 use App\Models\PurchaseOrder;
 use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseOrderApprovalService;
+use App\Services\PurchaseRequests\PurchaseQuotationFileService;
 use App\Traits\HasPurchaseTabs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
  * Aprobación opcional de OC: Compras la pide (eligiendo director o administrador) o la retira;
@@ -147,6 +149,20 @@ class PurchaseOrderApprovalController extends Controller
             'decideUrl' => null,
             'result' => $approve ? 'aprobada' : 'rechazada (la orden quedó anulada)',
         ]);
+    }
+
+    /**
+     * Vista previa del archivo de la cotización aprobada vinculada a la OC (solo el aprobador elegido).
+     */
+    public function quotationFile(Request $request, string $module, PurchaseOrder $purchaseOrder, PurchaseQuotationFileService $files): BinaryFileResponse
+    {
+        abort_unless((int) $purchaseOrder->aprobacion_aprobador_id === (int) $request->user()->id, 403);
+
+        $quotation = $purchaseOrder->purchaseQuotation;
+
+        abort_if($quotation === null, 404);
+
+        return $files->response($quotation);
     }
 
     private function loadOrder(PurchaseOrder $order): PurchaseOrder

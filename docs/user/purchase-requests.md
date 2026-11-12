@@ -282,6 +282,7 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.61 | 2026-11-12 | Compras | **Autorizaciones compras → Órdenes de Compra:** junto a la **Cotización aprobada** aparece un botón de ojo que abre el archivo en otra pestaña, para revisarlo antes de decidir. También está en la pantalla de revisión de la orden. |
 | 1.60 | 2026-11-12 | Compras | **Autorizaciones compras → Órdenes de Compra:** el aprobador ve la **cotización aprobada** vinculada a la orden (columna nueva en la lista y datos en la pantalla de revisión y en el correo). |
 | 1.59 | 2026-11-12 | Compras | **Órdenes:** nueva columna **Recibido** después de Estado. Muestra **No recibido** o la fecha en que se recibió la orden (dd/mm/aa). |
 | 1.58 | 2026-11-12 | Compras | **Cotizaciones por grupo:** cada grupo es una OC futura, con una referencia libre (ej. `OC 1 · Asociado A`) y de 1 a 3 cotizaciones (PDF/JPG/PNG, 10 MB). El director decide una vez por grupo y elige la cotización **ganadora**; las demás quedan **No seleccionada**. Puede haber varios grupos pendientes a la vez y cada OC puede vincular la ganadora de un grupo distinto. Es opcional; un grupo pendiente bloquea la OC. La OC y el PDF muestran **Grupo / OC futura**, la cotización y quién la aprobó. |

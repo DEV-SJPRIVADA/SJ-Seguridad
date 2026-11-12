@@ -32,6 +32,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
 
         // Aprobación de OC: la decide el director o administrador que Compras eligió.
         Route::get('/pendientes-autorizacion/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'show'])->name('approval.order-approval.show');
+        Route::get('/pendientes-autorizacion/ordenes/{purchase_order}/cotizacion', [PurchaseOrderApprovalController::class, 'quotationFile'])->name('approval.order-approval.quotation-file');
         Route::patch('/pendientes-autorizacion/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'update'])->name('approval.order-approval.update');
 
         // Cotizaciones: el director elegido revisa el lote y elige la cotización ganadora.

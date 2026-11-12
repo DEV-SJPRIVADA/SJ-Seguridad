@@ -1,0 +1,26 @@
+/* Compras — capa 119
+   Autorizaciones compras → Órdenes de Compra: cotización aprobada y su vista previa.
+   Usa el icon-btn de fila (.cursos-catalogo-page__icon-btn); aquí solo se alinea.
+*/
+
+/* Celda con el nombre de la cotización a la izquierda y el icono de vista previa a la derecha. */
+.pur-order-quotation {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 0.5rem;
+    min-width: 0;
+}
+
+.pur-order-quotation__body {
+    min-width: 0;
+}
+
+.pur-order-quotation__preview {
+    flex: 0 0 auto;
+}
+
+/* Resumen de la revisión de la OC: el icono queda a la derecha del dato de la cotización. */
+.pur-review-facts__item dd.pur-order-quotation {
+    align-items: center;
+}

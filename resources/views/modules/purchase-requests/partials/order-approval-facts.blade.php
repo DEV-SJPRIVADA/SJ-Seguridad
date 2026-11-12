@@ -38,13 +38,25 @@
             <dt>Aprobador</dt>
             <dd>{{ $order->aprobacionAprobador?->name ?? '—' }}</dd>
         </div>
-        {{-- Cotización aprobada que Compras vinculó al emitir la OC (opcional). --}}
+        {{-- Cotización aprobada que Compras vinculó al emitir la OC (opcional), con su archivo. --}}
         @if ($order->purchaseQuotation)
             <div class="pur-review-facts__item">
                 <dt>Cotización aprobada</dt>
-                <dd>
-                    {{ $order->purchaseQuotation->descripcionVisible() }}
-                    <span class="pur-review-facts__hint">{{ $order->purchaseQuotation->loteLabel() }}</span>
+                <dd class="pur-order-quotation">
+                    <span class="pur-order-quotation__body">
+                        {{ $order->purchaseQuotation->descripcionVisible() }}
+                        <span class="pur-review-facts__hint">{{ $order->purchaseQuotation->loteLabel() }}</span>
+                    </span>
+                    <a
+                        href="{{ route('purchase-requests.approval.order-approval.quotation-file', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"
+                        class="cursos-catalogo-page__icon-btn pur-order-quotation__preview"
+                        title="Previsualizar cotización aprobada"
+                        aria-label="Previsualizar cotización aprobada"
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        <x-lucide-eye width="16" height="16" aria-hidden="true" />
+                    </a>
                 </dd>
             </div>
             <div class="pur-review-facts__item">

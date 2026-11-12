@@ -9,6 +9,7 @@ use App\Http\Requests\PurchaseRequests\StorePurchaseQuotationRequest;
 use App\Models\PurchaseQuotation;
 use App\Models\PurchaseRequest;
 use App\Services\PurchaseRequests\PurchaseQuotationBatchService;
+use App\Services\PurchaseRequests\PurchaseQuotationFileService;
 use App\Services\PurchaseRequests\PurchaseQuotationService;
 use App\Support\PurchaseQuotationBatch;
 use App\Traits\HasPurchaseTabs;
@@ -16,7 +17,6 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\View\View;
 use InvalidArgumentException;
@@ -350,19 +350,7 @@ class PurchaseQuotationController extends Controller
 
     private function fileResponse(PurchaseQuotation $quotation): BinaryFileResponse
     {
-        $disk = (string) config('purchase-requests.quotations.disk', 'local');
-        $storage = Storage::disk($disk);
-
-        abort_unless($storage->exists($quotation->stored_path), 404);
-
-        $filename = str_replace(['"', "\r", "\n"], '', $quotation->original_name);
-        $mime = $quotation->mime_type ?: 'application/octet-stream';
-
-        return response()->file($storage->path($quotation->stored_path), [
-            'Content-Type' => $mime,
-            'Content-Disposition' => 'inline; filename="'.$filename.'"',
-            'X-Content-Type-Options' => 'nosniff',
-        ]);
+        return app(PurchaseQuotationFileService::class)->response($quotation);
     }
 
     private function assertBelongsToRequest(PurchaseRequest $purchaseRequest, PurchaseQuotation $quotation): void

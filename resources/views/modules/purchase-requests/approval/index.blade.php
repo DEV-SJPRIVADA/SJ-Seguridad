@@ -111,13 +111,27 @@
                                             <td>{{ $order->provider_nombre }}</td>
                                             <td>
                                                 @if ($order->purchaseQuotation)
-                                                    {{-- Cotización aprobada que Compras vinculó al emitir la OC. --}}
-                                                    <span>{{ $order->purchaseQuotation->descripcionVisible() }}</span>
-                                                    <br>
-                                                    <span class="text-muted">
-                                                        {{ $order->purchaseQuotation->loteLabel() }}
-                                                        · {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}
-                                                    </span>
+                                                    {{-- Cotización aprobada que Compras vinculó al emitir la OC, con vista previa del archivo. --}}
+                                                    <div class="pur-order-quotation">
+                                                        <div class="pur-order-quotation__body">
+                                                            <span>{{ $order->purchaseQuotation->descripcionVisible() }}</span>
+                                                            <br>
+                                                            <span class="text-muted">
+                                                                {{ $order->purchaseQuotation->loteLabel() }}
+                                                                · {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}
+                                                            </span>
+                                                        </div>
+                                                        <a
+                                                            href="{{ route('purchase-requests.approval.order-approval.quotation-file', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"
+                                                            class="cursos-catalogo-page__icon-btn pur-order-quotation__preview"
+                                                            title="Previsualizar cotización aprobada"
+                                                            aria-label="Previsualizar cotización aprobada"
+                                                            target="_blank"
+                                                            rel="noopener"
+                                                        >
+                                                            <x-lucide-eye width="16" height="16" aria-hidden="true" />
+                                                        </a>
+                                                    </div>
                                                 @else
                                                     <span class="text-muted">Sin cotización</span>
                                                 @endif
