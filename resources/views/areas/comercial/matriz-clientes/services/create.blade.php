@@ -43,19 +43,17 @@
                 </div>
 
                 <aside class="comercial-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de enviar</h3>
-                            <p class="panel-text">Checklist rapido de alta.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="comercial-form-guide__list">
-                                <li class="comercial-form-guide__item">Seleccione el cliente correcto por NIT o razón social.</li>
-                                <li class="comercial-form-guide__item">Defina portafolio y tipo de servicio.</li>
-                                <li class="comercial-form-guide__item">Registre fechas de vigencia para alertas automaticas.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist de alta del servicio. --}}
+                    <x-form-aside-guide
+                        title="Antes de enviar"
+                        subtitle="Checklist rápido de alta."
+                        icon="list-checks"
+                        :items="[
+                            'Seleccione el cliente correcto por NIT o razón social.',
+                            'Defina portafolio y tipo de servicio.',
+                            'Registre fechas de vigencia para alertas automáticas.',
+                        ]"
+                    />
                 </aside>
             </div>
         </div>

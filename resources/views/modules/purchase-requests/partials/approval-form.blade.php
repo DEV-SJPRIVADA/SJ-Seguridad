@@ -1,5 +1,5 @@
 @can('approve', $purchaseRequest)
-    <div class="panel pur-req-approval-panel">
+    <div class="panel pur-req-approval-panel form-aside-panel">
         <div class="panel__header">
             <h3 class="panel-title">Autorización de solicitud</h3>
             <p class="panel-text">Revise los datos y registre su decision. Al aprobar, pasa a la bandeja de Compras.</p>

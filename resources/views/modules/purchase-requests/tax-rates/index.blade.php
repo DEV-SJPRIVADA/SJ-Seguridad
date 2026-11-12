@@ -70,7 +70,7 @@
                 @if ($canEdit)
                     {{-- Formulario: alta por defecto; edición si llega ?editar={id}. --}}
                     <aside class="pur-req-form-aside">
-                        <div class="panel">
+                        <div class="panel form-aside-panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">{{ $editing ? 'Editar tasa' : 'Nueva tasa' }}</h3>
                                 <p class="panel-text">{{ $editing ? 'Cambiar una tasa no modifica las órdenes ya emitidas.' : 'Ejemplo: 19 para IVA 19%.' }}</p>

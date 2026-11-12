@@ -66,7 +66,8 @@
 
                 <aside class="req-form-aside">
 
-                <div class="panel">
+                    {{-- Historial de estados de la requisición (timeline). --}}
+                    <div class="panel form-aside-panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Historial de estados</h3>
                             <p class="panel-text">Traza de cambios y responsable del movimiento.</p>
@@ -99,7 +100,8 @@
                         </div>
                     </div>
 
-                    <div class="panel">
+                    {{-- Historial de cambios campo a campo. --}}
+                    <div class="panel form-aside-panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Historial de cambios</h3>
                             <p class="panel-text">Trazabilidad de modificaciones en campos de la requisición.</p>
@@ -141,21 +143,19 @@
                         </div>
                     </div>
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de guardar</h3>
-                            <p class="panel-text">Verifica coherencia entre motivo, cliente y compensación.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="req-form-guide__list">
-                                <li class="req-form-guide__item">Confirma que el estado refleje el avance real del proceso.</li>
-                                <li class="req-form-guide__item">Asigna reclutador cuando la solicitud entre en gestión activa.</li>
-                                <li class="req-form-guide__item">Valida la matriz de compensación antes de contratación.</li>
-                                <li class="req-form-guide__item">Usa observaciones de GH para contexto visible en seguimiento.</li>
-                                <li class="req-form-guide__item">Cliente externo debe coincidir con la matriz comercial.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist previo a guardar los cambios de la requisición. --}}
+                    <x-form-aside-guide
+                        title="Antes de guardar"
+                        subtitle="Verifica coherencia entre motivo, cliente y compensación."
+                        icon="list-checks"
+                        :items="[
+                            'Confirma que el estado refleje el avance real del proceso.',
+                            'Asigna reclutador cuando la solicitud entre en gestión activa.',
+                            'Valida la matriz de compensación antes de contratación.',
+                            'Usa observaciones de GH para contexto visible en seguimiento.',
+                            'Cliente externo debe coincidir con la matriz comercial.',
+                        ]"
+                    />
 
 
                 </aside>

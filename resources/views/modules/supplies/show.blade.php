@@ -320,35 +320,34 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Contexto rapido de la solicitud.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folioVisible() }}</li>
-                                <li class="pur-req-form-guide__item">Estado: {{ $etapa->label() }}</li>
-                                <li class="pur-req-form-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Área: {{ $areaLabel }}</li>
-                                <li class="pur-req-form-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Contexto rápido del suministro. --}}
+                    <x-form-aside-guide title="Resumen" subtitle="Contexto rápido de la solicitud." icon="info">
+                        <li class="form-aside-guide__item">Folio: {{ $supplyRequest->folioVisible() }}</li>
+                        <li class="form-aside-guide__item">Estado: {{ $etapa->label() }}</li>
+                        <li class="form-aside-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
+                        <li class="form-aside-guide__item">Área: {{ $areaLabel }}</li>
+                        <li class="form-aside-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
+                    </x-form-aside-guide>
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Flujo</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item"><strong>Pendiente calidad</strong>: espera revision.</li>
-                                <li class="pur-req-form-guide__item"><strong>Aprobada</strong>: lista para bandeja Compras.</li>
-                                <li class="pur-req-form-guide__item"><strong>En compras</strong>: costeo en curso.</li>
-                                <li class="pur-req-form-guide__item"><strong>Completada</strong>: tramite cerrado.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Etapas del flujo del suministro. --}}
+                    <x-form-aside-guide title="Flujo" icon="route" numbered>
+                        <li class="form-aside-guide__flow-item">
+                            <span class="form-aside-guide__step" aria-hidden="true">1</span>
+                            <span class="form-aside-guide__text"><strong>Pendiente calidad</strong>: espera revisión.</span>
+                        </li>
+                        <li class="form-aside-guide__flow-item">
+                            <span class="form-aside-guide__step" aria-hidden="true">2</span>
+                            <span class="form-aside-guide__text"><strong>Aprobada</strong>: lista para bandeja Compras.</span>
+                        </li>
+                        <li class="form-aside-guide__flow-item">
+                            <span class="form-aside-guide__step" aria-hidden="true">3</span>
+                            <span class="form-aside-guide__text"><strong>En compras</strong>: costeo en curso.</span>
+                        </li>
+                        <li class="form-aside-guide__flow-item">
+                            <span class="form-aside-guide__step" aria-hidden="true">4</span>
+                            <span class="form-aside-guide__text"><strong>Completada</strong>: trámite cerrado.</span>
+                        </li>
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

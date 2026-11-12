@@ -348,46 +348,34 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de enviar</h3>
-                            <p class="panel-text">Reduce devoluciones con estos puntos.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Elige el director correcto: solo él puede autorizar.</li>
-                                <li class="pur-req-form-guide__item">Interno vs Cliente: si es Cliente, completa razón social.</li>
-                                <li class="pur-req-form-guide__item">Cada línea necesita cantidad, descripción, referencia, uso y ubicación.</li>
-                                <li class="pur-req-form-guide__item">La foto es opcional en cada línea. Formatos: JPG, PNG, WEBP o GIF (máx. 5 MB).</li>
-                                <li class="pur-req-form-guide__item">Número de cotización y Comentarios son opcionales. (Comercial)</li>
-                                <li class="pur-req-form-guide__item">Usa la plantilla Excel si vas a cargar muchos productos.</li>
-                                <li class="pur-req-form-guide__item">Marca urgente solo cuando el impacto lo justifique.</li>
-                                <li class="pur-req-form-guide__item">Adjuntos son opcionales; ayudan a Compras.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist previo al envío: reduce devoluciones del director. --}}
+                    <x-form-aside-guide
+                        title="Antes de enviar"
+                        subtitle="Reduce devoluciones con estos puntos."
+                        icon="list-checks"
+                        :items="[
+                            'Elige el director correcto: solo él puede autorizar.',
+                            'Interno vs Cliente: si es Cliente, completa razón social.',
+                            'Cada línea necesita cantidad, descripción, referencia, uso y ubicación.',
+                            'La foto es opcional en cada línea. Formatos: JPG, PNG, WEBP o GIF (máx. 5 MB).',
+                            'Número de cotización y Comentarios son opcionales. (Comercial)',
+                            'Usa la plantilla Excel si vas a cargar muchos productos.',
+                            'Marca urgente solo cuando el impacto lo justifique.',
+                            'Adjuntos son opcionales; ayudan a Compras.',
+                        ]"
+                    />
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Qué pasa después</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ol class="pur-req-form-flow">
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">1</span>
-                                    <span>El director aprueba o rechaza (plataforma o correo).</span>
-                                </li>
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">2</span>
-                                    <span>Si aprueba, entra a la bandeja de Compras.</span>
-                                </li>
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">3</span>
-                                    <span>Sigue el avance desde Mis solicitudes.</span>
-                                </li>
-                            </ol>
-                        </div>
-                    </div>
+                    {{-- Ruta que sigue la solicitud una vez enviada. --}}
+                    <x-form-aside-guide
+                        title="Qué pasa después"
+                        icon="route"
+                        numbered
+                        :items="[
+                            'El director aprueba o rechaza (plataforma o correo).',
+                            'Si aprueba, entra a la bandeja de Compras.',
+                            'Sigue el avance desde Mis solicitudes.',
+                        ]"
+                    />
                 </aside>
             </div>
         </div>

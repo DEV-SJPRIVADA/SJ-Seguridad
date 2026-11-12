@@ -44,45 +44,33 @@
                 </div>
 
                 <aside class="dev-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de enviar</h3>
-                            <p class="panel-text">Reduce devoluciones con estos puntos.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="dev-req-form-guide__list">
-                                <li class="dev-req-form-guide__item">Prioridad alineada con el impacto real del negocio.</li>
-                                <li class="dev-req-form-guide__item">Título concreto: qué se pide y para qué área.</li>
-                                <li class="dev-req-form-guide__item">Describe el proceso actual y el problema, no solo la solución.</li>
-                                <li class="dev-req-form-guide__item">Pasos esperados del sistema en orden operativo.</li>
-                                <li class="dev-req-form-guide__item">Alcance SI / NO claro para evitar ambiguedades.</li>
-                                <li class="dev-req-form-guide__item">Criterio de aceptación verificable al entregar.</li>
-                                <li class="dev-req-form-guide__item">Si hay urgencia, justifica la fecha deseada.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist previo al envío de la solicitud de desarrollo. --}}
+                    <x-form-aside-guide
+                        title="Antes de enviar"
+                        subtitle="Reduce devoluciones con estos puntos."
+                        icon="list-checks"
+                        :items="[
+                            'Prioridad alineada con el impacto real del negocio.',
+                            'Título concreto: qué se pide y para qué área.',
+                            'Describe el proceso actual y el problema, no solo la solución.',
+                            'Pasos esperados del sistema en orden operativo.',
+                            'Alcance SI / NO claro para evitar ambigüedades.',
+                            'Criterio de aceptación verificable al entregar.',
+                            'Si hay urgencia, justifica la fecha deseada.',
+                        ]"
+                    />
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Qué pasa después</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ol class="dev-req-form-flow">
-                                <li class="dev-req-form-flow__item">
-                                    <span class="dev-req-form-flow__step">1</span>
-                                    <span>El líder aprueba o devuelve la solicitud.</span>
-                                </li>
-                                <li class="dev-req-form-flow__item">
-                                    <span class="dev-req-form-flow__step">2</span>
-                                    <span>TIC la analiza, prioriza y planifica el desarrollo.</span>
-                                </li>
-                                <li class="dev-req-form-flow__item">
-                                    <span class="dev-req-form-flow__step">3</span>
-                                    <span>Puedes seguir el avance y el chat desde Mis solicitudes.</span>
-                                </li>
-                            </ol>
-                        </div>
-                    </div>
+                    {{-- Ruta de la solicitud dentro de TIC. --}}
+                    <x-form-aside-guide
+                        title="Qué pasa después"
+                        icon="route"
+                        numbered
+                        :items="[
+                            'El líder aprueba o devuelve la solicitud.',
+                            'TIC la analiza, prioriza y planifica el desarrollo.',
+                            'Puedes seguir el avance y el chat desde Mis solicitudes.',
+                        ]"
+                    />
                 </aside>
             </div>
         </div>

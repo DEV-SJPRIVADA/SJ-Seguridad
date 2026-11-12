@@ -173,36 +173,23 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Contexto rápido de la solicitud.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Folio: {{ $purchaseRequest->folioVisible() }}</li>
-                                <li class="pur-req-form-guide__item">Solicitante: {{ $purchaseRequest->user?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Director: {{ $purchaseRequest->aprobador?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Productos: {{ $purchaseRequest->items->count() }}</li>
-                                @if ($estadoCompras)
-                                    <li class="pur-req-form-guide__item">Estado actual: {{ $purchaseRequest->etiquetaFlujoCompras() }}</li>
-                                @endif
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Contexto rápido del pedido en la bandeja de Compras. --}}
+                    <x-form-aside-guide title="Resumen" subtitle="Contexto rápido de la solicitud." icon="info">
+                        <li class="form-aside-guide__item">Folio: {{ $purchaseRequest->folioVisible() }}</li>
+                        <li class="form-aside-guide__item">Solicitante: {{ $purchaseRequest->user?->name ?? '—' }}</li>
+                        <li class="form-aside-guide__item">Director: {{ $purchaseRequest->aprobador?->name ?? '—' }}</li>
+                        <li class="form-aside-guide__item">Productos: {{ $purchaseRequest->items->count() }}</li>
+                        @if ($estadoCompras)
+                            <li class="form-aside-guide__item">Estado actual: {{ $purchaseRequest->etiquetaFlujoCompras() }}</li>
+                        @endif
+                    </x-form-aside-guide>
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Guía de estados</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item"><strong>Por comprar</strong>: aprobada y todavía sin cantidades en una orden.</li>
-                                <li class="pur-req-form-guide__item"><strong>Con orden</strong>: hay una orden y queda saldo.</li>
-                                <li class="pur-req-form-guide__item"><strong>Cerrado</strong>: saldo en cero o cierre con motivo. No admite otra orden.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Significado de cada etapa del flujo de compras. --}}
+                    <x-form-aside-guide title="Guía de estados" icon="list-checks">
+                        <li class="form-aside-guide__item"><strong>Por comprar</strong>: aprobada y todavía sin cantidades en una orden.</li>
+                        <li class="form-aside-guide__item"><strong>Con orden</strong>: hay una orden y queda saldo.</li>
+                        <li class="form-aside-guide__item"><strong>Cerrado</strong>: saldo en cero o cierre con motivo. No admite otra orden.</li>
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

@@ -49,35 +49,29 @@
                 </div>
 
                 <aside class="req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de enviar</h3>
-                            <p class="panel-text">Verifica estos puntos para evitar devoluciones.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="req-form-guide__list">
-                                <li class="req-form-guide__item">Interno: personal administrativo; no requiere cliente de matriz.</li>
-                                <li class="req-form-guide__item">Externo: debe elegir cliente por nombre o NIT.</li>
-                                <li class="req-form-guide__item">Motivo alineado con la necesidad real del servicio.</li>
-                                <li class="req-form-guide__item">Reemplazo: incluir datos del colaborador saliente.</li>
-                                <li class="req-form-guide__item">Cargo o servicio nuevo: puede indicar cantidad de plazas.</li>
-                                <li class="req-form-guide__item">Perfil detallado: funciones, turno y responsabilidades.</li>
-                                <li class="req-form-guide__item">Centro de costo válido para facturación interna.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist previo al envío de la requisición. --}}
+                    <x-form-aside-guide
+                        title="Antes de enviar"
+                        subtitle="Verifica estos puntos para evitar devoluciones."
+                        icon="list-checks"
+                        :items="[
+                            'Interno: personal administrativo; no requiere cliente de matriz.',
+                            'Externo: debe elegir cliente por nombre o NIT.',
+                            'Motivo alineado con la necesidad real del servicio.',
+                            'Reemplazo: incluir datos del colaborador saliente.',
+                            'Cargo o servicio nuevo: puede indicar cantidad de plazas.',
+                            'Perfil detallado: funciones, turno y responsabilidades.',
+                            'Centro de costo válido para facturación interna.',
+                        ]"
+                    />
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Qué pasa después</h3>
-                        </div>
-                        <div class="panel__body">
-                            <p class="panel-text" style="margin: 0; line-height: 1.55;">
-                                Gestión Humana recibe la solicitud, asigna reclutador y actualiza el estado.
-                                Puedes consultar el estado desde Mis requisiciones de tu área.
-                            </p>
-                        </div>
-                    </div>
+                    {{-- Qué ocurre con la requisición después del envío. --}}
+                    <x-form-aside-guide title="Qué pasa después" icon="route">
+                        <li class="form-aside-guide__item">
+                            Gestión Humana recibe la solicitud, asigna reclutador y actualiza el estado.
+                            Puedes consultar el estado desde Mis requisiciones de tu área.
+                        </li>
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

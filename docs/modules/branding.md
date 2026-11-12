@@ -175,6 +175,42 @@ Regla Cursor (obligatoria para agentes): [`.cursor/rules/module-ui-quality.mdc`]
 | Resultado de import (modal compartido) | `resources/views/components/import-result-modal.blade.php` |
 | Subnav tablero | `areas/gestion_humana/desvinculaciones/partials/subnav.blade.php` |
 
+## Guía lateral de formularios (`<x-form-aside-guide>`)
+
+Tarjetas de la columna derecha de formularios y detalles: "Antes de enviar", "Qué pasa después", "Resumen", "Al editar", "Recordatorio". **No** se escriben a mano: se usa el componente compartido.
+
+| Pieza | Ubicación |
+| --- | --- |
+| Componente | `resources/views/components/form-aside-guide.blade.php` |
+| CSS | `resources/css/base/120-base.css` (`.form-aside-guide*`, `.form-aside-panel`) — chrome compartido, capa 120 |
+| Columna | Cada módulo conserva su `. {modulo}-form-aside` (sticky + breakpoint propios) |
+
+Props: `title`, `subtitle`, `icon` (nombre Lucide: `list-checks`, `route`, `info`), `items` (array) y `numbered` (pasos). Sin `items`, el componente usa el slot con `<li class="form-aside-guide__item">`, para ítems con enlaces, `<strong>` o `@if`.
+
+```blade
+<x-form-aside-guide title="Antes de enviar" subtitle="Reduce devoluciones." icon="list-checks" :items="['Punto uno.', 'Punto dos.']" />
+<x-form-aside-guide title="Qué pasa después" icon="route" numbered :items="['Primero.', 'Segundo.']" />
+```
+
+### Tarjetas laterales que no son guías
+
+Historiales, resumen, acciones o formularios cortos del `aside` usan `<div class="panel form-aside-panel">`. La clase `.form-aside-panel` aplica el **mismo acabado** (borde, sombra en capas, franja de acento superior de 3px, header con tinte degradado y elevación en hover) **sin imponer estructura interna**: el contenido sigue siendo libre.
+
+```blade
+<aside class="req-form-aside">
+    <div class="panel form-aside-panel">
+        <div class="panel__header">…</div>
+        <div class="panel__body">…</div>
+    </div>
+</aside>
+```
+
+Aplicada en: requisiciones (`edit`, `tracking/view-rq`), Compras (`show`, panel de autorización, catálogo de IVA), Calidad Planeación (`version-history` solo cuando va en el aside) y TIC (`show`, rail de acciones).
+
+**Regla:** la franja de acento se dibuja con `background-image` y `background-size: 100% 3px`, **no** con `::before` + `overflow: hidden`. `overflow: hidden` recortaría los desplegables de `<x-searchable-select>` (son `position: fixed`, pero dentro de un ancestro recortado pierden clic en algunos navegadores). No reintroducirlo.
+
+Migradas: Compras (create/edit/show/orders/procesamiento/evaluación), Suministros (create/show), Requisiciones (create/edit), Calidad (Planeación y Servicio al cliente), TIC (Solicitudes de desarrollo) y Comercial (servicios y detalle de cliente). **Gestión Humana no se tocó**: no usa estas tarjetas y sus capas CSS siguen intactas.
+
 ## Regla de mantenimiento
 
 Si cambia el logo oficial de la empresa, la actualizacion debe hacerse primero en el componente `application-logo` para evitar inconsistencias entre pantallas.

@@ -357,7 +357,7 @@
                     @endif
 
                     @if ($canLeaderDecide)
-                        <div class="panel">
+                        <div class="panel form-aside-panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">Decisión del líder</h3>
                                 <p class="panel-text">Aprueba para radicar o rechaza con observacion.</p>
@@ -397,7 +397,7 @@
                                 ['value' => 'alta', 'label' => 'Alta'],
                             ];
                         @endphp
-                        <div class="panel">
+                        <div class="panel form-aside-panel">
                             <form
                                 method="POST"
                                 action="{{ route('development-requests.tic.transition', ['module' => $module, 'development_request' => $developmentRequest]) }}"
@@ -514,7 +514,7 @@
                     @endif
 
                     @if ($canUat)
-                        <div class="panel">
+                        <div class="panel form-aside-panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">UAT</h3>
                                 <p class="panel-text">Prueba de aceptación del solicitante.</p>

@@ -423,36 +423,30 @@
                 </div>
 
                 <aside class="req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de {{ $isEdit ? 'guardar' : 'crear' }}</h3>
-                            <p class="panel-text">Verifique estos puntos para no devolver el caso.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="req-form-guide__list">
-                                <li class="req-form-guide__item">Interno: el cliente queda SJSEGURIDAD.</li>
-                                <li class="req-form-guide__item">Externo: elija el cliente por nombre en la matriz comercial.</li>
-                                <li class="req-form-guide__item">El plazo son 10 días hábiles después de la recepción.</li>
-                                <li class="req-form-guide__item">Cerrar exige al menos un PDF, JPG o PNG.</li>
-                                <li class="req-form-guide__item">Si falta categoría o responsable, créelos en Catálogos.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist previo a guardar el caso de servicio al cliente. --}}
+                    <x-form-aside-guide
+                        title="Antes de {{ $isEdit ? 'guardar' : 'crear' }}"
+                        subtitle="Verifique estos puntos para no devolver el caso."
+                        icon="list-checks"
+                        :items="[
+                            'Interno: el cliente queda SJSEGURIDAD.',
+                            'Externo: elija el cliente por nombre en la matriz comercial.',
+                            'El plazo son 10 días hábiles después de la recepción.',
+                            'Cerrar exige al menos un PDF, JPG o PNG.',
+                            'Si falta categoría o responsable, créelos en Catálogos.',
+                        ]"
+                    />
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Qué pasa después</h3>
-                        </div>
-                        <div class="panel__body">
-                            <p class="panel-text" style="margin: 0; line-height: 1.55;">
-                                @if ($isEdit)
-                                    El listado y el dashboard toman la eficacia y las fechas guardadas. Las observaciones nuevas quedan en el historial del caso.
-                                @else
-                                    El caso entra al listado FO-GI-22 con un consecutivo automático. Las observaciones se agregan al abrir el caso.
-                                @endif
-                            </p>
-                        </div>
-                    </div>
+                    {{-- Efecto del guardado sobre el listado y el dashboard. --}}
+                    <x-form-aside-guide title="Qué pasa después" icon="route">
+                        <li class="form-aside-guide__item">
+                            @if ($isEdit)
+                                El listado y el dashboard toman la eficacia y las fechas guardadas. Las observaciones nuevas quedan en el historial del caso.
+                            @else
+                                El caso entra al listado FO-GI-22 con un consecutivo automático. Las observaciones se agregan al abrir el caso.
+                            @endif
+                        </li>
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

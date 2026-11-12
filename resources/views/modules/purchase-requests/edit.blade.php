@@ -407,42 +407,30 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de reenviar</h3>
-                            <p class="panel-text">Corrige el motivo del rechazo.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Revisa el comentario del director arriba.</li>
-                                <li class="pur-req-form-guide__item">Confirma director, productos y urgencia.</li>
-                                <li class="pur-req-form-guide__item">Si es Cliente, completa razón social.</li>
-                                <li class="pur-req-form-guide__item">Puedes quitar o agregar adjuntos antes de enviar.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Recordatorio de qué revisar antes de reenviar tras un rechazo. --}}
+                    <x-form-aside-guide
+                        title="Antes de reenviar"
+                        subtitle="Corrige el motivo del rechazo."
+                        icon="list-checks"
+                        :items="[
+                            'Revisa el comentario del director arriba.',
+                            'Confirma director, productos y urgencia.',
+                            'Si es Cliente, completa razón social.',
+                            'Puedes quitar o agregar adjuntos antes de enviar.',
+                        ]"
+                    />
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Qué pasa después</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ol class="pur-req-form-flow">
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">1</span>
-                                    <span>La solicitud vuelve a pendiente.</span>
-                                </li>
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">2</span>
-                                    <span>El director recibe la nueva notificación.</span>
-                                </li>
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">3</span>
-                                    <span>Si aprueba, entra de nuevo a bandeja de Compras.</span>
-                                </li>
-                            </ol>
-                        </div>
-                    </div>
+                    {{-- Efecto del reenvío sobre el flujo de aprobación. --}}
+                    <x-form-aside-guide
+                        title="Qué pasa después"
+                        icon="route"
+                        numbered
+                        :items="[
+                            'La solicitud vuelve a pendiente.',
+                            'El director recibe la nueva notificación.',
+                            'Si aprueba, entra de nuevo a bandeja de Compras.',
+                        ]"
+                    />
                 </aside>
             </div>
         </div>

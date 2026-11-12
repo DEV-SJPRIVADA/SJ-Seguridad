@@ -205,42 +205,30 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de enviar</h3>
-                            <p class="panel-text">Reduce devoluciones con estos puntos.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Usa el catálogo cuando el producto exista.</li>
-                                <li class="pur-req-form-guide__item">Reporta inventario actual en cada línea de catálogo.</li>
-                                <li class="pur-req-form-guide__item">Producto no listado solo si no está en catálogo.</li>
-                                <li class="pur-req-form-guide__item">Debes tener sede asignada y activa.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist previo al envío del suministro. --}}
+                    <x-form-aside-guide
+                        title="Antes de enviar"
+                        subtitle="Reduce devoluciones con estos puntos."
+                        icon="list-checks"
+                        :items="[
+                            'Usa el catálogo cuando el producto exista.',
+                            'Reporta inventario actual en cada línea de catálogo.',
+                            'Producto no listado solo si no está en catálogo.',
+                            'Debes tener sede asignada y activa.',
+                        ]"
+                    />
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Qué pasa después</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ol class="pur-req-form-flow">
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">1</span>
-                                    <span>Calidad revisa y autoriza cantidades.</span>
-                                </li>
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">2</span>
-                                    <span>Si aprueba, entra a la bandeja de Compras.</span>
-                                </li>
-                                <li class="pur-req-form-flow__item">
-                                    <span class="pur-req-form-flow__step">3</span>
-                                    <span>Sigue el avance desde Mis solicitudes.</span>
-                                </li>
-                            </ol>
-                        </div>
-                    </div>
+                    {{-- Ruta del suministro después de enviado. --}}
+                    <x-form-aside-guide
+                        title="Qué pasa después"
+                        icon="route"
+                        numbered
+                        :items="[
+                            'Calidad revisa y autoriza cantidades.',
+                            'Si aprueba, entra a la bandeja de Compras.',
+                            'Sigue el avance desde Mis solicitudes.',
+                        ]"
+                    />
                 </aside>
             </div>
         </div>

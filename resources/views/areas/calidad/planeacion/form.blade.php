@@ -340,20 +340,18 @@
                 </div>
 
                 <aside class="req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de {{ $isEdit ? 'guardar' : 'crear' }}</h3>
-                            <p class="panel-text">La fórmula solo puede usar las claves definidas arriba.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="req-form-guide__list">
-                                <li class="req-form-guide__item">Ejemplo: <code>((campo_1 / campo_2) + campo_3) * 100</code>.</li>
-                                <li class="req-form-guide__item">No se permiten funciones tipo SI() ni MIN().</li>
-                                <li class="req-form-guide__item">Una división entre cero no deja guardar la captura.</li>
-                                <li class="req-form-guide__item">Publicar congela la versión. La siguiente edición abre un borrador nuevo.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Reglas de la fórmula del indicador. --}}
+                    <x-form-aside-guide
+                        title="Antes de {{ $isEdit ? 'guardar' : 'crear' }}"
+                        subtitle="La fórmula solo puede usar las claves definidas arriba."
+                        icon="list-checks"
+                        :items="[
+                            'Ejemplo: ((campo_1 / campo_2) + campo_3) * 100.',
+                            'No se permiten funciones tipo SI() ni MIN().',
+                            'Una división entre cero no deja guardar la captura.',
+                            'Publicar congela la versión. La siguiente edición abre un borrador nuevo.',
+                        ]"
+                    />
 
                     @if ($isEdit)
                         @include('areas.calidad.planeacion.partials.version-history', [
@@ -362,6 +360,7 @@
                             'consultQuery' => [
                                 'indicator' => $indicator,
                             ],
+                            'inAside' => true,
                         ])
                     @endif
                 </aside>

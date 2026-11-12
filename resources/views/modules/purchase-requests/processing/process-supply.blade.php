@@ -152,35 +152,22 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Contexto rápido del suministro.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Folio: {{ $supplyRequest->folioVisible() }}</li>
-                                <li class="pur-req-form-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Área: {{ $areaLabel }}</li>
-                                <li class="pur-req-form-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
-                                <li class="pur-req-form-guide__item">Revisor: {{ $supplyRequest->qualityReviewer?->name ?? '—' }}</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Contexto rápido del suministro en la bandeja de Compras. --}}
+                    <x-form-aside-guide title="Resumen" subtitle="Contexto rápido del suministro." icon="info">
+                        <li class="form-aside-guide__item">Folio: {{ $supplyRequest->folioVisible() }}</li>
+                        <li class="form-aside-guide__item">Solicitante: {{ $supplyRequest->user?->name ?? '—' }}</li>
+                        <li class="form-aside-guide__item">Área: {{ $areaLabel }}</li>
+                        <li class="form-aside-guide__item">Productos: {{ $supplyRequest->items->count() }}</li>
+                        <li class="form-aside-guide__item">Revisor: {{ $supplyRequest->qualityReviewer?->name ?? '—' }}</li>
+                    </x-form-aside-guide>
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Guía del pedido</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">El precio se captura al emitir la orden: valor unidad e IVA.</li>
-                                <li class="pur-req-form-guide__item">Si la línea ya tenía costo, la orden lo trae como valor unidad.</li>
-                                <li class="pur-req-form-guide__item">Cerrar saldo exige un motivo y deja el pedido en Cerrado.</li>
-                                <li class="pur-req-form-guide__item">PDF y Excel FO-AD-44 siguen disponibles desde el detalle.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Reglas de precio y cierre del pedido de suministro. --}}
+                    <x-form-aside-guide title="Guía del pedido" icon="list-checks">
+                        <li class="form-aside-guide__item">El precio se captura al emitir la orden: valor unidad e IVA.</li>
+                        <li class="form-aside-guide__item">Si la línea ya tenía costo, la orden lo trae como valor unidad.</li>
+                        <li class="form-aside-guide__item">Cerrar saldo exige un motivo y deja el pedido en Cerrado.</li>
+                        <li class="form-aside-guide__item">PDF y Excel FO-AD-44 siguen disponibles desde el detalle.</li>
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

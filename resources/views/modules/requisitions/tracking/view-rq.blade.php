@@ -37,7 +37,7 @@
                 </div>
 
                 <aside class="req-form-aside">
-                    <div class="panel">
+                    <div class="panel form-aside-panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Historial de estados</h3>
                             <p class="panel-text">Traza de cambios y responsable del movimiento.</p>
@@ -70,7 +70,7 @@
                         </div>
                     </div>
 
-                    <div class="panel">
+                    <div class="panel form-aside-panel">
                         <div class="panel__header">
                             <h3 class="panel-title">Historial de cambios</h3>
                             <p class="panel-text">Trazabilidad de modificaciones en campos de la requisición.</p>

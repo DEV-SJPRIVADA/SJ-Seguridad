@@ -294,77 +294,56 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Datos de la orden emitida.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">OC: {{ $order->numeroOc }}</li>
-                                <li class="pur-req-form-guide__item">Origen: {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }}</li>
-                                <li class="pur-req-form-guide__item">Fecha: {{ $order->fecha }}</li>
-                                <li class="pur-req-form-guide__item">Líneas: {{ $order->items->count() }}</li>
-                                <li class="pur-req-form-guide__item">Total: {{ number_format((float) $order->total, 2) }}</li>
-                                <li class="pur-req-form-guide__item">Estado: {{ $order->estadoLabel() }}</li>
-                                @if ($order->purchaseQuotation)
-                                    <li class="pur-req-form-guide__item">Cotización: {{ $order->purchaseQuotation->descripcionVisible() }}</li>
-                                    <li class="pur-req-form-guide__item">Aprobó cotización: {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}</li>
-                                @endif
-                                <li class="pur-req-form-guide__item">
-                                    Recibido:
-                                    {{ $order->evaluation?->fecha_recibido?->format('d/m/Y') ?? 'pendiente' }}
-                                </li>
-                                <li class="pur-req-form-guide__item">
-                                    <a href="{{ route('purchase-requests.orders.index', ['module' => $module]) }}">
-                                        Ver todas las órdenes de compra
+                    {{-- Datos clave de la OC emitida. --}}
+                    <x-form-aside-guide title="Resumen" subtitle="Datos de la orden emitida." icon="info">
+                        <li class="form-aside-guide__item">OC: {{ $order->numeroOc }}</li>
+                        <li class="form-aside-guide__item">Origen: {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }}</li>
+                        <li class="form-aside-guide__item">Fecha: {{ $order->fecha }}</li>
+                        <li class="form-aside-guide__item">Líneas: {{ $order->items->count() }}</li>
+                        <li class="form-aside-guide__item">Total: {{ number_format((float) $order->total, 2) }}</li>
+                        <li class="form-aside-guide__item">Estado: {{ $order->estadoLabel() }}</li>
+                        @if ($order->purchaseQuotation)
+                            <li class="form-aside-guide__item">Cotización: {{ $order->purchaseQuotation->descripcionVisible() }}</li>
+                            <li class="form-aside-guide__item">Aprobó cotización: {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}</li>
+                        @endif
+                        <li class="form-aside-guide__item">
+                            Recibido:
+                            {{ $order->evaluation?->fecha_recibido?->format('d/m/Y') ?? 'pendiente' }}
+                        </li>
+                        <li class="form-aside-guide__item">
+                            <a href="{{ route('purchase-requests.orders.index', ['module' => $module]) }}">
+                                Ver todas las órdenes de compra
+                            </a>
+                        </li>
+                    </x-form-aside-guide>
+
+                    {{-- Notas del formato impreso FO-AD-07. --}}
+                    <x-form-aside-guide title="Documento" icon="list-checks">
+                        <li class="form-aside-guide__item">FO-AD-07 · {{ config('purchase-orders.form_period') }} · Versión {{ config('purchase-orders.form_version') }}</li>
+                        <li class="form-aside-guide__item">El número de OC corresponde al identificador interno.</li>
+                        <li class="form-aside-guide__item">La evaluación post-entrega no se imprime en el documento.</li>
+                    </x-form-aside-guide>
+
+                    {{-- Órdenes hermanas cuando la solicitud se repartió entre proveedores. --}}
+                    <x-form-aside-guide title="Otras órdenes de esta solicitud" icon="route">
+                        @if ($siblings->isEmpty())
+                            <li class="form-aside-guide__item">Esta es la única orden emitida para esta solicitud.</li>
+                        @else
+                            <li class="form-aside-guide__item">
+                                Reparto entre proveedores: {{ $siblings->count() + 1 }} órdenes en total.
+                            </li>
+                            @foreach ($siblings as $sibling)
+                                <li class="form-aside-guide__item">
+                                    <a href="{{ route('purchase-requests.orders.show', ['module' => $module, 'purchase_order' => $sibling->getKey()]) }}">
+                                        OC N.º {{ $sibling->numeroOc }}
                                     </a>
+                                    — {{ $sibling->provider_nombre }}
+                                    — {{ $sibling->fecha }}
+                                    — {{ number_format((float) $sibling->total, 2) }}
                                 </li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Documento</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">FO-AD-07 · {{ config('purchase-orders.form_period') }} · Versión {{ config('purchase-orders.form_version') }}</li>
-                                <li class="pur-req-form-guide__item">El número de OC corresponde al identificador interno.</li>
-                                <li class="pur-req-form-guide__item">La evaluación post-entrega no se imprime en el documento.</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Otras órdenes de esta solicitud</h3>
-                            <p class="panel-text">
-                                @if ($siblings->isEmpty())
-                                    Esta es la única orden emitida para esta solicitud.
-                                @else
-                                    Reparto entre proveedores: {{ $siblings->count() + 1 }} órdenes en total.
-                                @endif
-                            </p>
-                        </div>
-                        <div class="panel__body">
-                            @if ($siblings->isNotEmpty())
-                                <ul class="pur-req-form-guide__list">
-                                    @foreach ($siblings as $sibling)
-                                        <li class="pur-req-form-guide__item">
-                                            <a href="{{ route('purchase-requests.orders.show', ['module' => $module, 'purchase_order' => $sibling->getKey()]) }}">
-                                                OC N.º {{ $sibling->numeroOc }}
-                                            </a>
-                                            — {{ $sibling->provider_nombre }}
-                                            — {{ $sibling->fecha }}
-                                            — {{ number_format((float) $sibling->total, 2) }}
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            @endif
-                        </div>
-                    </div>
+                            @endforeach
+                        @endif
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

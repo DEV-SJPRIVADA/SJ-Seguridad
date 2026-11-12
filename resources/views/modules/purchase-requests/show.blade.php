@@ -452,23 +452,16 @@
                 </div>
 
                 <aside class="pur-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Datos rapidos de seguimiento.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">Estado: {{ $etapa->label() }}</li>
-                                <li class="pur-req-form-guide__item">Solicitante: {{ $purchaseRequest->user?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Director: {{ $purchaseRequest->aprobador?->name ?? '—' }}</li>
-                                <li class="pur-req-form-guide__item">Productos: {{ $purchaseRequest->items->count() }}</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Contexto del pedido: estado y responsables. --}}
+                    <x-form-aside-guide title="Resumen" subtitle="Datos rápidos de seguimiento." icon="info">
+                        <li class="form-aside-guide__item">Estado: {{ $etapa->label() }}</li>
+                        <li class="form-aside-guide__item">Solicitante: {{ $purchaseRequest->user?->name ?? '—' }}</li>
+                        <li class="form-aside-guide__item">Director: {{ $purchaseRequest->aprobador?->name ?? '—' }}</li>
+                        <li class="form-aside-guide__item">Productos: {{ $purchaseRequest->items->count() }}</li>
+                    </x-form-aside-guide>
 
                     @if ($fromKey === 'processing' && $canProcess)
-                        <div class="panel">
+                        <div class="panel form-aside-panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">Acción compras</h3>
                                 <p class="panel-text">Actualiza el estado operativo en bandeja.</p>
@@ -484,18 +477,11 @@
 
                     @include('modules.purchase-requests.partials.approval-form')
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Recordatorio</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="pur-req-form-guide__list">
-                                <li class="pur-req-form-guide__item">PDF y Excel exportan el formato FO-AD-44.</li>
-                                <li class="pur-req-form-guide__item">Los comentarios quedan abiertos hasta completado en Compras.</li>
-                                <li class="pur-req-form-guide__item">Si fue rechazada, puedes reabrir y reenviar al director.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    <x-form-aside-guide title="Recordatorio" icon="list-checks">
+                        <li class="form-aside-guide__item">PDF y Excel exportan el formato FO-AD-44.</li>
+                        <li class="form-aside-guide__item">Los comentarios quedan abiertos hasta completado en Compras.</li>
+                        <li class="form-aside-guide__item">Si fue rechazada, puedes reabrir y reenviar al director.</li>
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

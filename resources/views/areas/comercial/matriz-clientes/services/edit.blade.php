@@ -48,20 +48,18 @@
                 </div>
 
                 <aside class="comercial-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Antes de guardar</h3>
-                            <p class="panel-text">Evite inconsistencias en la matriz.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="comercial-form-guide__list">
-                                <li class="comercial-form-guide__item">El cliente se selecciona por búsqueda de nombre o NIT.</li>
-                                <li class="comercial-form-guide__item">Portafolio y tipo de servicio deben coincidir con la operación real.</li>
-                                <li class="comercial-form-guide__item">Fin de contrato alimenta alertas de por vencer / vencido.</li>
-                                <li class="comercial-form-guide__item">Inactivar el servicio se hace desde el detalle del cliente o listado.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist para no dejar inconsistencias en la matriz comercial. --}}
+                    <x-form-aside-guide
+                        title="Antes de guardar"
+                        subtitle="Evite inconsistencias en la matriz."
+                        icon="list-checks"
+                        :items="[
+                            'El cliente se selecciona por búsqueda de nombre o NIT.',
+                            'Portafolio y tipo de servicio deben coincidir con la operación real.',
+                            'Fin de contrato alimenta alertas de por vencer / vencido.',
+                            'Inactivar el servicio se hace desde el detalle del cliente o listado.',
+                        ]"
+                    />
                 </aside>
             </div>
         </div>

@@ -156,35 +156,22 @@
                     </div>
 
                     <aside class="pur-req-form-aside">
-                        <div class="panel">
-                            <div class="panel__header">
-                                <h3 class="panel-title">Resultado</h3>
-                                <p class="panel-text">Se calcula al guardar las tres calificaciones.</p>
-                            </div>
-                            <div class="panel__body">
-                                @if ($evaluation?->puntaje_porcentaje !== null)
-                                    <ul class="pur-req-form-guide__list">
-                                        <li class="pur-req-form-guide__item">Puntaje: {{ number_format((float) $evaluation->puntaje_porcentaje, 2) }}%</li>
-                                        <li class="pur-req-form-guide__item">{{ $labels[$umbral] ?? $umbral }}</li>
-                                    </ul>
-                                @else
-                                    <p class="panel-text">Aún no hay puntaje. La fecha de recibido ya puede quedar registrada.</p>
-                                @endif
-                            </div>
-                        </div>
+                        {{-- Puntaje de la evaluación; se calcula al guardar las tres notas. --}}
+                        <x-form-aside-guide title="Resultado" subtitle="Se calcula al guardar las tres calificaciones." icon="info">
+                            @if ($evaluation?->puntaje_porcentaje !== null)
+                                <li class="form-aside-guide__item">Puntaje: {{ number_format((float) $evaluation->puntaje_porcentaje, 2) }}%</li>
+                                <li class="form-aside-guide__item">{{ $labels[$umbral] ?? $umbral }}</li>
+                            @else
+                                <li class="form-aside-guide__item">Aún no hay puntaje. La fecha de recibido ya puede quedar registrada.</li>
+                            @endif
+                        </x-form-aside-guide>
 
-                        <div class="panel">
-                            <div class="panel__header">
-                                <h3 class="panel-title">Umbrales</h3>
-                            </div>
-                            <div class="panel__body">
-                                <ul class="pur-req-form-guide__list">
-                                    <li class="pur-req-form-guide__item">{{ $thresholds['satisfactoria'] ?? 80 }}–100: {{ $labels['satisfactoria'] ?? 'Compra satisfactoria' }}</li>
-                                    <li class="pur-req-form-guide__item">{{ $thresholds['seguimiento'] ?? 60 }}–{{ ((int) ($thresholds['satisfactoria'] ?? 80)) - 1 }}: {{ $labels['seguimiento'] ?? 'Requiere seguimiento' }}</li>
-                                    <li class="pur-req-form-guide__item">Menos de {{ $thresholds['seguimiento'] ?? 60 }}: {{ $labels['insatisfactoria'] ?? 'Compra insatisfactoria' }}</li>
-                                </ul>
-                            </div>
-                        </div>
+                        {{-- Rangos configurados para clasificar la compra. --}}
+                        <x-form-aside-guide title="Umbrales" icon="list-checks">
+                            <li class="form-aside-guide__item">{{ $thresholds['satisfactoria'] ?? 80 }}–100: {{ $labels['satisfactoria'] ?? 'Compra satisfactoria' }}</li>
+                            <li class="form-aside-guide__item">{{ $thresholds['seguimiento'] ?? 60 }}–{{ ((int) ($thresholds['satisfactoria'] ?? 80)) - 1 }}: {{ $labels['seguimiento'] ?? 'Requiere seguimiento' }}</li>
+                            <li class="form-aside-guide__item">Menos de {{ $thresholds['seguimiento'] ?? 60 }}: {{ $labels['insatisfactoria'] ?? 'Compra insatisfactoria' }}</li>
+                        </x-form-aside-guide>
                     </aside>
                 </div>
             </form>

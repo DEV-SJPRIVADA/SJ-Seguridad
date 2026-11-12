@@ -184,23 +184,16 @@
                 </div>
 
                 <aside class="comercial-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Resumen</h3>
-                            <p class="panel-text">Datos rapidos del NIT.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="comercial-form-guide__list">
-                                <li class="comercial-form-guide__item">Servicios activos: {{ $activeCount }}</li>
-                                <li class="comercial-form-guide__item">Total servicios: {{ $totalCount }}</li>
-                                <li class="comercial-form-guide__item">Ciudad: {{ $client->city ?: '—' }}</li>
-                                <li class="comercial-form-guide__item">Teléfono: {{ $client->phone ?: '—' }}</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Datos rápidos del cliente. --}}
+                    <x-form-aside-guide title="Resumen" subtitle="Datos rápidos del NIT." icon="info">
+                        <li class="form-aside-guide__item">Servicios activos: {{ $activeCount }}</li>
+                        <li class="form-aside-guide__item">Total servicios: {{ $totalCount }}</li>
+                        <li class="form-aside-guide__item">Ciudad: {{ $client->city ?: '—' }}</li>
+                        <li class="form-aside-guide__item">Teléfono: {{ $client->phone ?: '—' }}</li>
+                    </x-form-aside-guide>
 
                     @if ($canManage || $canEditServices)
-                        <div class="panel">
+                        <div class="panel form-aside-panel">
                             <div class="panel__header">
                                 <h3 class="panel-title">Acciones</h3>
                             </div>
@@ -215,18 +208,12 @@
                         </div>
                     @endif
 
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Recordatorio</h3>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="comercial-form-guide__list">
-                                <li class="comercial-form-guide__item">El estado del cliente depende de servicios activos.</li>
-                                <li class="comercial-form-guide__item">Inactivar un servicio no cambia su portafolio.</li>
-                                <li class="comercial-form-guide__item">Use Checklist documental desde el listado de clientes.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Notas sobre el estado del cliente y sus servicios. --}}
+                    <x-form-aside-guide title="Recordatorio" icon="list-checks">
+                        <li class="form-aside-guide__item">El estado del cliente depende de servicios activos.</li>
+                        <li class="form-aside-guide__item">Inactivar un servicio no cambia su portafolio.</li>
+                        <li class="form-aside-guide__item">Use Checklist documental desde el listado de clientes.</li>
+                    </x-form-aside-guide>
                 </aside>
             </div>
         </div>

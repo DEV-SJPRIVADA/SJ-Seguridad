@@ -49,20 +49,18 @@
                 </div>
 
                 <aside class="dev-req-form-aside">
-                    <div class="panel">
-                        <div class="panel__header">
-                            <h3 class="panel-title">Al editar</h3>
-                            <p class="panel-text">Revisa estos puntos antes de reenviar.</p>
-                        </div>
-                        <div class="panel__body">
-                            <ul class="dev-req-form-guide__list">
-                                <li class="dev-req-form-guide__item">Corrige los campos que motivaron la devolución.</li>
-                                <li class="dev-req-form-guide__item">Mantén alcance y criterios de aceptación alineados.</li>
-                                <li class="dev-req-form-guide__item">Actualiza anexos si aportan evidencia nueva.</li>
-                                <li class="dev-req-form-guide__item">Verifica líder y prioridad antes de radicar.</li>
-                            </ul>
-                        </div>
-                    </div>
+                    {{-- Checklist para corregir una solicitud devuelta. --}}
+                    <x-form-aside-guide
+                        title="Al editar"
+                        subtitle="Revisa estos puntos antes de reenviar."
+                        icon="list-checks"
+                        :items="[
+                            'Corrige los campos que motivaron la devolución.',
+                            'Mantén alcance y criterios de aceptación alineados.',
+                            'Actualiza anexos si aportan evidencia nueva.',
+                            'Verifica líder y prioridad antes de radicar.',
+                        ]"
+                    />
                 </aside>
             </div>
         </div>

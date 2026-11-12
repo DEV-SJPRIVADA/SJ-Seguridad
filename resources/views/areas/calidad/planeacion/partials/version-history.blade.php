@@ -3,9 +3,11 @@
     /** @var list<array<string, mixed>> $versionHistory */
     $consultQuery = $consultQuery ?? null;
     $activeVersionId = (int) ($activeVersionId ?? 0);
+    {{-- El acabado de tarjeta lateral solo aplica cuando el partial va dentro del aside del formulario. --}}
+    $inAside = (bool) ($inAside ?? false);
 @endphp
 
-<div class="panel planeacion-version-history">
+<div class="panel planeacion-version-history{{ $inAside ? ' form-aside-panel' : '' }}">
     <div class="panel__header">
         <h3 class="panel-title">Historial de versiones</h3>
         <p class="panel-text">Consulte una versión anterior y revise los cambios respecto a la previa.</p>
