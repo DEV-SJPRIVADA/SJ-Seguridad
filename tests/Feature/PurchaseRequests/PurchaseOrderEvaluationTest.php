@@ -215,6 +215,15 @@ class PurchaseOrderEvaluationTest extends TestCase
         $this->assertCount(2, $orders);
         $this->assertSame(PurchaseRequest::COMPRAS_EN_CURSO, $purchase->fresh()->estado_compras);
 
+        // Las dos OC deben estar autorizadas para poder evaluarse (flujo real: firma del director).
+        foreach ($orders as $order) {
+            $order->update([
+                'estado' => PurchaseOrder::ESTADO_EMITIDA,
+                'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+                'aprobacion_requerida' => true,
+            ]);
+        }
+
         $this->actingAs($this->editor)
             ->put($this->evaluationRoute($orders[0]), $this->evaluationPayload())
             ->assertRedirect();
@@ -244,6 +253,13 @@ class PurchaseOrderEvaluationTest extends TestCase
             ->where('source_type', 'supply_request')
             ->where('source_id', $supply->id)
             ->firstOrFail();
+
+        // Autorizada por el director administrativo: recién ahí se puede registrar el recibido.
+        $order->update([
+            'estado' => PurchaseOrder::ESTADO_EMITIDA,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+            'aprobacion_requerida' => true,
+        ]);
 
         $this->actingAs($this->editor)
             ->put($this->evaluationRoute($order), $this->evaluationPayload())
@@ -433,11 +449,21 @@ class PurchaseOrderEvaluationTest extends TestCase
             'purchase_request' => $purchase->id,
         ]), $this->orderPayload($provider->id, $cantidad))->assertRedirect();
 
-        return PurchaseOrder::query()
+        $order = PurchaseOrder::query()
             ->where('source_type', 'purchase_request')
             ->where('source_id', $purchase->id)
             ->latest('id')
             ->firstOrFail();
+
+        // La OC nace pendiente de autorización; estos tests cubren la evaluación posterior,
+        // así que se simula la firma del director administrativo.
+        $order->update([
+            'estado' => PurchaseOrder::ESTADO_EMITIDA,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+            'aprobacion_requerida' => true,
+        ]);
+
+        return $order->fresh();
     }
 
     /**

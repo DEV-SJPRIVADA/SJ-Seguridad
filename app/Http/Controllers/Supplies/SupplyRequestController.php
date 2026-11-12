@@ -134,6 +134,9 @@ class SupplyRequestController extends Controller
             404,
         );
 
+        // Una OC sin autorizar no se puede imprimir ni enviar al proveedor.
+        abort_unless($purchaseOrder->estaAutorizada(), 403, 'La orden todavía no está autorizada.');
+
         $this->auditLogService->logEvent(
             eventType: 'export',
             action: 'order_pdf_from_supply',

@@ -34,7 +34,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 | Solicitud de compra | Pedido formal de bienes o servicios con lineas de detalle (cantidad, descripcion, referencia, etc.). |
 | Folio | Número visible de la solicitud. Empieza por **SC-** (por ejemplo SC-0042). El número de adentro no cambia. |
 | Director aprobador | Persona con rol de director o de administrador elegida al crear la solicitud; es quien puede autorizarla. |
-| Aprobación de orden | Paso opcional: Compras pide que un director o administrador apruebe una orden emitida. Si la aprueba, su nombre sale en la orden impresa; si la rechaza, la orden queda Anulada. |
+| Aprobación de orden | Paso **obligatorio**: el director administrativo (o su reemplazo) autoriza la orden emitida por Compras. Mientras no firme, la orden reserva saldo pero no se imprime ni se evalúa. Si la rechaza, la orden queda Anulada y el saldo vuelve al pedido. |
 | Estado | Una sola etapa para compras y suministros, con el mismo nombre y color: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. |
 | Por autorizar | Esperando la decisión del director (o de Calidad, si es un insumo). |
 | Devuelta | El director no autorizó. El solicitante puede corregirla y enviarla de nuevo. |
@@ -178,17 +178,17 @@ Una orden emitida no se edita ni se borra. Si quedó mal (proveedor, precio, can
 
 El sistema no envía las órdenes al proveedor; si ya se la había entregado, avísele por fuera.
 
-### Pedir la aprobación de una orden de compra (Compras, director o administrador)
+### Autorizar una orden de compra (obligatorio)
 
-Es **opcional**. Sin pedirla, la orden sigue **Emitida** y se puede descargar como siempre.
+**Toda orden nace pendiente de autorización.** La firma la da el **director administrativo** o quien haga sus veces, no el director de área que autorizó la solicitud. Mientras no esté autorizada, la orden **no se puede imprimir, ni enviar al proveedor, ni evaluar**, aunque sí reserva el saldo del pedido para que nadie emita otra orden sobre las mismas cantidades.
 
-1. **Compras:** abra la orden en **Órdenes** y use el icono **Solicitar aprobación** (junto a **Evaluar entrega**). En el modal elija quién aprueba (directores y administradores) y, si quiere, una nota. Pulse **Solicitar aprobación**.
-2. La orden muestra **Aprobación pendiente**. Mientras espera se puede descargar, pero no se puede pedir su anulación.
-3. Si se equivocó de aprobador, pulse **Retirar solicitud de aprobación** y pídala de nuevo.
-4. **Aprobador:** recibe un correo con el botón para revisar la orden (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Órdenes de Compra** (muestra entre paréntesis cuántas tiene pendientes). Solo la persona elegida puede decidir. Si la orden se emitió con una cotización aprobada, la lista muestra su **Cotización aprobada** (descripción, grupo / OC futura y quién la aprobó) y el detalle de la revisión y el correo repiten esos datos. Al abrir **Revisar orden** verá el resumen de la orden, el detalle de líneas y montos, y a la derecha el panel con los botones **Aprobar orden** y **Rechazar**.
-5. Al **aprobar**, la orden sigue Emitida y en el PDF y el Excel aparece su nombre en **Aprobado 2 por**.
-6. Al **rechazar**, debe escribir el motivo y la orden queda **Anulada**: su cantidad vuelve al saldo del pedido y Compras puede emitir una orden corregida.
-7. Quien pidió la aprobación recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
+1. **Compras:** al guardar la orden en **Emitir orden de compra**, el sistema abre el detalle con el modal **Autorización de la orden**: elija en **Aprobador** a la persona de la dirección administrativa (o su reemplazo) y, si quiere, deje una nota. Pulse **Enviar a autorización**.
+2. La orden queda en estado **Pendiente de autorización**. En el detalle verá el bloque **Pendiente de autorización** con el nombre de quien debe decidir, la fecha de envío y la nota. Los iconos de PDF y Excel muestran un candado hasta que se autorice.
+3. Si se equivocó de persona, o el elegido está de vacaciones, use el icono **Cambiar aprobador** (el mismo que **Asignar aprobador** cuando aún no tiene) y elija a otra persona. La orden sigue pendiente, el saldo sigue reservado y la nueva persona recibe el correo.
+4. **Aprobador:** recibe un correo con el botón para revisar la orden (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Órdenes de Compra** (muestra entre paréntesis cuántas tiene pendientes). Solo la persona asignada puede decidir. Si la orden se emitió con una cotización aprobada, la lista muestra su **Cotización aprobada** (descripción, grupo / OC futura y quién la aprobó) y el detalle de la revisión y el correo repiten esos datos. Al abrir **Revisar orden** verá el resumen, el detalle de líneas y montos, y a la derecha el panel con **Aprobar orden** y **Rechazar**.
+5. Al **aprobar**, la orden pasa a **Emitida**: recién ahí se habilita el PDF y el Excel, y en ellos aparece su nombre en **Aprobado 2 por**.
+6. Al **rechazar**, debe escribir el motivo y la orden queda **Anulada**: su cantidad vuelve al saldo del pedido y Compras puede emitir una corregida. Para cancelar una orden que aún está pendiente de autorización, este es el camino: rechazarla.
+7. Quien emitió la orden recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
 8. Lo ya decidido sale de la lista de pendientes pero no se pierde: en **Órdenes de Compra** (y también en **Anulaciones de órdenes**) cambie **Vista** a **Historial completo**, **Aprobadas** o **Rechazadas**, y use **Ver detalle** para consultar la decisión y el comentario.
 
 ### Cargar y aprobar cotizaciones por grupo (Compras y director)

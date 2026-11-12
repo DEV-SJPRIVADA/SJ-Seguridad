@@ -80,9 +80,8 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/ordenes-compra/{purchase_order}/pdf', [PurchaseOrderController::class, 'pdf'])->name('orders.pdf');
         Route::get('/ordenes-compra/{purchase_order}/excel', [PurchaseOrderController::class, 'excel'])->name('orders.excel');
 
-        // Compras solicita (eligiendo director o administrador) o retira la aprobación de una OC.
+        // Compras asigna o cambia al director administrativo mientras la OC siga pendiente.
         Route::post('/ordenes-compra/{purchase_order}/aprobacion', [PurchaseOrderApprovalController::class, 'request'])->name('orders.approval.request');
-        Route::delete('/ordenes-compra/{purchase_order}/aprobacion', [PurchaseOrderApprovalController::class, 'withdraw'])->name('orders.approval.withdraw');
 
         // Compras solicita (eligiendo director) o retira la anulación de una OC.
         Route::post('/ordenes-compra/{purchase_order}/anulacion', [PurchaseOrderCancellationController::class, 'request'])->name('orders.cancellation.request');

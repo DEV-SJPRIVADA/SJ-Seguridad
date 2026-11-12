@@ -97,6 +97,7 @@ class PurchaseOrderService
             ->whereIn('purchase_order_id', PurchaseOrder::query()
                 ->where('source_type', $sourceType)
                 ->where('source_id', $sourceId)
+                // La pendiente de autorización reserva saldo: evita emitir una OC duplicada.
                 ->where('estado', '!=', PurchaseOrder::ESTADO_ANULADA)
                 ->select('id'))
             ->whereNotNull('source_item_id')
@@ -148,8 +149,7 @@ class PurchaseOrderService
 
             $order = PurchaseOrder::query()->create([
                 'source_type' => $sourceType,
-                'source_id' => $source->getKey(),
-                'provider_id' => $provider->getKey(),
+                'source_id' => $source->getKey(),                'provider_id' => $provider->getKey(),
                 'provider_identificacion' => $provider->identificacion,
                 'provider_nombre' => $provider->nombre,
                 'provider_telefono' => $provider->telefono,
@@ -167,7 +167,14 @@ class PurchaseOrderService
                 'comodato' => $extra['comodato'],
                 'activo' => $extra['activo'],
                 'observaciones' => $data['observaciones'] ?? null,
-                'estado' => 'emitida',
+                // Toda OC nace pendiente: reserva saldo pero no se imprime ni evalúa
+                // hasta que el director administrativo la autorice. El aprobador se
+                // asigna desde el detalle (`orders.approval.request`).
+                'estado' => PurchaseOrder::ESTADO_PENDIENTE_APROBACION,
+                'aprobacion_requerida' => true,
+                'aprobacion_estado' => PurchaseOrder::APROBACION_PENDIENTE,
+                'aprobacion_solicitada_por' => $user->getKey(),
+                'aprobacion_solicitada_at' => now(),
                 'total' => 0,
                 'created_by' => $user->getKey(),
                 'purchase_quotation_id' => $quotation?->getKey(),

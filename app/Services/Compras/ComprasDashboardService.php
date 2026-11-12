@@ -356,10 +356,14 @@ class ComprasDashboardService
 
         return PurchaseOrder::query()
             ->with(['source', 'evaluation'])
+            // Solo órdenes autorizadas: una OC pendiente de firma todavía no es gasto comprometido.
             ->whereIn('estado', [
                 PurchaseOrder::ESTADO_EMITIDA,
                 PurchaseOrder::ESTADO_ANULACION_PENDIENTE,
             ])
+            ->where(fn (Builder $query) => $query
+                ->where('aprobacion_requerida', false)
+                ->orWhere('aprobacion_estado', PurchaseOrder::APROBACION_APROBADA))
             ->when($dateFrom !== null, fn (Builder $query) => $query->where('fecha', '>=', $dateFrom))
             ->when($dateTo !== null, fn (Builder $query) => $query->where('fecha', '<=', $dateTo))
             ->when(

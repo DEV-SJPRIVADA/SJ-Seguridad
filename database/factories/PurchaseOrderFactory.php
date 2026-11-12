@@ -42,8 +42,23 @@ class PurchaseOrderFactory extends Factory
             'activo' => null,
             'observaciones' => null,
             'estado' => 'emitida',
+            // Las OC de prueba representan documentos históricos: se emitían sin autorización.
+            // Las que exigen firma se crean con `->requiereAprobacion()`.
+            'aprobacion_requerida' => false,
             'total' => 0,
             'created_by' => User::factory(),
         ];
+    }
+
+    /**
+     * OC sujeta a la autorización obligatoria del director administrativo.
+     */
+    public function requiereAprobacion(): static
+    {
+        return $this->state(fn (): array => [
+            'estado' => PurchaseOrder::ESTADO_PENDIENTE_APROBACION,
+            'aprobacion_requerida' => true,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_PENDIENTE,
+        ]);
     }
 }

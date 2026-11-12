@@ -294,6 +294,7 @@ class PurchaseOrderCancellationTest extends TestCase
             'fecha' => now()->toDateString(),
             'items' => [['cantidad' => 2, 'descripcion' => 'INSUMO', 'valor_unidad' => 10, 'iva' => 0]],
         ], $this->compras);
+        $this->authorizeOrder($order);
         app(PurchaseFlowStateService::class)->sync($supply->fresh(), $this->compras);
         $this->assertSame('en_compras', $supply->fresh()->status);
 
@@ -339,8 +340,23 @@ class PurchaseOrderCancellationTest extends TestCase
             'items' => [['cantidad' => 2, 'descripcion' => 'CAMARA', 'valor_unidad' => 100, 'iva' => 0]],
         ], $this->compras);
 
+        // La OC nace pendiente; para anularla debe estar autorizada y emitida.
+        $this->authorizeOrder($order);
+
         app(PurchaseFlowStateService::class)->sync($purchase->fresh(), $this->compras);
 
         return [$purchase->fresh(), $order->fresh()];
+    }
+
+    /**
+     * Simula la autorización del director administrativo para poder operar sobre la OC.
+     */
+    private function authorizeOrder(PurchaseOrder $order): void
+    {
+        $order->update([
+            'estado' => PurchaseOrder::ESTADO_EMITIDA,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+            'aprobacion_requerida' => true,
+        ]);
     }
 }

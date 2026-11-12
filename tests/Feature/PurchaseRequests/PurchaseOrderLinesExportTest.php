@@ -81,7 +81,8 @@ class PurchaseOrderLinesExportTest extends TestCase
         $alfaRows = array_values(array_filter($rows, fn (array $row): bool => (int) $row['N.º OC'] === $orderAlfa->id));
         $this->assertCount(2, $alfaRows);
         $this->assertSame('PROVEEDOR ALFA', $alfaRows[0]['Proveedor']);
-        $this->assertSame('Emitida', $alfaRows[0]['Estado OC']);
+        // La OC nace pendiente de autorización; el estado la refleja en el export.
+        $this->assertSame('Pendiente de autorización', $alfaRows[0]['Estado OC']);
         $this->assertSame('SC-'.str_pad((string) $purchase->numero_solicitud, 4, '0', STR_PAD_LEFT), $alfaRows[0]['Folio origen']);
         $this->assertSame('COT-ALFA', $alfaRows[0]['N.º cotización']);
         $this->assertSame('CAM-1', $alfaRows[0]['Artículo / referencia']);
@@ -118,8 +119,14 @@ class PurchaseOrderLinesExportTest extends TestCase
         $this->assertSame($this->compras->name, $alfaEval['Evaluado por']);
         $this->assertSame('No', collect($evalRows)->first(fn (array $row): bool => (int) $row['N.º OC'] === $orderBeta->id)['Evaluada']);
 
-        // Filtro de estado del panel: solo las 2 líneas de la OC emitida.
+        // Filtro de estado del panel: solo las 2 líneas de la OC autorizada.
+        $orderAlfa->update([
+            'estado' => PurchaseOrder::ESTADO_EMITIDA,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+        ]);
         $this->assertSame(4, $this->downloadSheet(['estado' => 'emitida'])->getHighestDataRow());
+        // Ninguna OC queda pendiente: solo el encabezado (título + columnas).
+        $this->assertSame(2, $this->downloadSheet(['estado' => PurchaseOrder::ESTADO_PENDIENTE_APROBACION])->getHighestDataRow());
         // Proveedor y búsqueda del buscador (q): solo la línea de la OC Beta.
         $this->assertSame(3, $this->downloadSheet(['proveedor_id' => $beta->id])->getHighestDataRow());
         $this->assertSame(3, $this->downloadSheet(['q' => 'BETA'])->getHighestDataRow());

@@ -9,7 +9,7 @@
             <div>
                 <h3 class="pur-req-form__section-title">Órdenes de compra</h3>
                 <p class="pur-req-form__section-desc">
-                    {{ $orders->count() }} {{ $orders->count() === 1 ? 'orden emitida' : 'órdenes emitidas' }} para este pedido. Descargue el PDF FO-AD-07 de cada una.
+                    {{ $orders->count() }} {{ $orders->count() === 1 ? 'orden de compra' : 'órdenes de compra' }} para este pedido. Descargue el PDF FO-AD-07 de cada orden autorizada.
                 </p>
             </div>
         </header>
@@ -35,6 +35,7 @@
                             $iva = $order->items->sum(fn ($line) => (float) $line->iva);
                             $pill = match ($order->estado) {
                                 \App\Models\PurchaseOrder::ESTADO_EMITIDA => 'status-pill--success',
+                                \App\Models\PurchaseOrder::ESTADO_PENDIENTE_APROBACION => 'status-pill--warning',
                                 \App\Models\PurchaseOrder::ESTADO_ANULACION_PENDIENTE => 'status-pill--warning',
                                 \App\Models\PurchaseOrder::ESTADO_ANULADA => 'status-pill--danger',
                                 default => 'status-pill--muted',
@@ -50,16 +51,27 @@
                             <td><span class="status-pill {{ $pill }}">{{ $order->estadoLabel() }}</span></td>
                             <td class="text-center">{{ $order->evaluation?->fecha_recibido?->format('d/m/Y') ?? 'Pendiente' }}</td>
                             <td class="text-center">
-                                <a
-                                    href="{{ $orderPdfUrl($order) }}"
-                                    class="cursos-catalogo-page__icon-btn"
-                                    title="Descargar PDF FO-AD-07 de la OC {{ $order->numeroOc }}"
-                                    aria-label="Descargar PDF FO-AD-07 de la OC {{ $order->numeroOc }}"
-                                    target="_blank"
-                                    rel="noopener"
-                                >
-                                    <x-lucide-file-text width="16" height="16" aria-hidden="true" />
-                                </a>
+                                @if ($order->estaAutorizada())
+                                    <a
+                                        href="{{ $orderPdfUrl($order) }}"
+                                        class="cursos-catalogo-page__icon-btn"
+                                        title="Descargar PDF FO-AD-07 de la OC {{ $order->numeroOc }}"
+                                        aria-label="Descargar PDF FO-AD-07 de la OC {{ $order->numeroOc }}"
+                                        target="_blank"
+                                        rel="noopener"
+                                    >
+                                        <x-lucide-file-text width="16" height="16" aria-hidden="true" />
+                                    </a>
+                                @else
+                                    <span
+                                        class="cursos-catalogo-page__icon-btn"
+                                        title="El PDF se habilita cuando la orden esté autorizada"
+                                        aria-label="PDF pendiente de autorización"
+                                        aria-disabled="true"
+                                    >
+                                        <x-lucide-lock width="16" height="16" aria-hidden="true" />
+                                    </span>
+                                @endif
                             </td>
                         </tr>
                     @endforeach

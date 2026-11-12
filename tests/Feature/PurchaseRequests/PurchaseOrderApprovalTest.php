@@ -18,7 +18,8 @@ use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 /**
- * Aprobación opcional de OC por director o administrador (plataforma o correo); rechazar anula la orden.
+ * Autorización obligatoria de la OC por el director administrativo (plataforma o correo).
+ * Sin firma no se imprime ni se evalúa; rechazar anula la orden y libera el saldo.
  */
 class PurchaseOrderApprovalTest extends TestCase
 {
@@ -46,15 +47,18 @@ class PurchaseOrderApprovalTest extends TestCase
         $this->admin->assignRole('administrador');
     }
 
-    public function test_selector_lists_directors_and_administrators_and_request_notifies_approver(): void
+    public function test_selector_lists_directors_and_administrators_and_assigns_approver(): void
     {
         Mail::fake();
         [, $order] = $this->purchaseWithOrder();
 
+        // Toda OC nace pendiente de autorización, con el saldo reservado.
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->estado);
+
         $this->actingAs($this->compras)
             ->get(route('purchase-requests.orders.show', ['module' => 'compras', 'purchase_order' => $order->id]))
             ->assertOk()
-            ->assertSee('Solicitar aprobación')
+            ->assertSee('Asignar aprobador')
             ->assertSee('Directora Prueba')
             ->assertSee('Administrador Prueba');
 
@@ -67,13 +71,66 @@ class PurchaseOrderApprovalTest extends TestCase
 
         $order->refresh();
         $this->assertSame(PurchaseOrder::APROBACION_PENDIENTE, $order->aprobacion_estado);
-        $this->assertSame(PurchaseOrder::ESTADO_EMITIDA, $order->estado);
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->estado);
         $this->assertSame('URGENTE PARA EL LUNES', $order->aprobacion_nota);
         $this->assertFalse($order->puedeSolicitarAnulacion());
         Mail::assertSent(PurchaseOrderApprovalRequestedMail::class, fn ($mail) => $mail->hasTo($this->admin->email));
     }
 
-    public function test_administrator_approves_in_app_and_pdf_shows_the_approver(): void
+    public function test_pending_order_cannot_be_printed_nor_evaluated(): void
+    {
+        Mail::fake();
+        [, $order] = $this->purchaseWithOrder();
+
+        $this->actingAs($this->compras)
+            ->get(route('purchase-requests.orders.pdf', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertForbidden();
+
+        $this->actingAs($this->compras)
+            ->get(route('purchase-requests.orders.excel', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertForbidden();
+
+        // Quien evalúa tampoco entra: la OC aún no está autorizada (el 404 llega tras el permiso).
+        $evaluator = User::factory()->create(['area_key' => 'compras', 'must_change_password' => false]);
+        $evaluator->givePermissionTo(['purchase.tab.processing', 'purchase.providers.edit']);
+
+        $this->actingAs($evaluator)
+            ->get(route('purchase-requests.orders.evaluation.edit', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertNotFound();
+    }
+
+    public function test_pending_order_reserves_the_balance(): void
+    {
+        Mail::fake();
+        [$purchase, $order] = $this->purchaseWithOrder();
+
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->estado);
+
+        $lines = app(PurchaseOrderService::class)->sourceLines(PurchaseOrderService::SOURCE_PURCHASE, $purchase->fresh('items'));
+
+        // 3 solicitadas y 3 ordenadas en una OC pendiente: no queda saldo para emitir otra.
+        $this->assertSame(0.0, (float) $lines[0]['cantidad_pendiente']);
+    }
+
+    public function test_compras_can_reassign_the_approver_while_pending(): void
+    {
+        Mail::fake();
+        [, $order] = $this->purchaseWithOrder();
+        app(PurchaseOrderApprovalService::class)->request($order, $this->compras, $this->director->id, null);
+
+        $this->actingAs($this->compras)
+            ->post(route('purchase-requests.orders.approval.request', ['module' => 'compras', 'purchase_order' => $order->id]), [
+                'aprobacion_aprobador_id' => $this->admin->id,
+            ])
+            ->assertRedirect();
+
+        $order->refresh();
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->estado);
+        $this->assertSame($this->admin->id, (int) $order->aprobacion_aprobador_id);
+        Mail::assertSent(PurchaseOrderApprovalRequestedMail::class, fn ($mail) => $mail->hasTo($this->admin->email));
+    }
+
+    public function test_administrator_approves_in_app_and_order_becomes_issued(): void
     {
         Mail::fake();
         [, $order] = $this->purchaseWithOrder();
@@ -108,11 +165,18 @@ class PurchaseOrderApprovalTest extends TestCase
 
         $order->refresh();
         $this->assertSame(PurchaseOrder::APROBACION_APROBADA, $order->aprobacion_estado);
+        // Aprobar habilita el documento: la OC pasa de pendiente a emitida.
         $this->assertSame(PurchaseOrder::ESTADO_EMITIDA, $order->estado);
+        $this->assertTrue($order->estaAutorizada());
         Mail::assertSent(PurchaseOrderApprovalResolvedMail::class, fn ($mail) => $mail->hasTo($this->compras->email) && $mail->approved);
 
         $html = app(PurchaseOrderPdfExporter::class)->html($order->fresh());
         $this->assertStringContainsString('Administrador Prueba', $html);
+
+        // Ya autorizada, el PDF y el Excel responden.
+        $this->actingAs($this->compras)
+            ->get(route('purchase-requests.orders.pdf', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertOk();
 
         // Ya resuelta, el detalle muestra el resultado y oculta el formulario de decisión.
         $this->actingAs($this->admin)
@@ -182,7 +246,7 @@ class PurchaseOrderApprovalTest extends TestCase
             ->assertSee('status-pill--danger', false);
     }
 
-    public function test_approver_decides_from_signed_email_link_and_compras_can_withdraw(): void
+    public function test_approver_decides_from_signed_email_link(): void
     {
         Mail::fake();
         [, $order] = $this->purchaseWithOrder();
@@ -197,22 +261,31 @@ class PurchaseOrderApprovalTest extends TestCase
             ->assertOk()
             ->assertSee('aprobada');
 
-        $this->assertTrue($order->fresh()->isAprobada());
+        $order->refresh();
+        $this->assertTrue($order->isAprobada());
+        $this->assertSame(PurchaseOrder::ESTADO_EMITIDA, $order->estado);
+    }
 
-        // Retirar una solicitud pendiente.
-        [, $other] = $this->purchaseWithOrder(7702);
-        $service->request($other, $this->compras, $this->director->id, null);
+    public function test_approver_cannot_be_changed_once_authorized(): void
+    {
+        Mail::fake();
+        [, $order] = $this->purchaseWithOrder();
+        $service = app(PurchaseOrderApprovalService::class);
+        $service->request($order, $this->compras, $this->director->id, null);
+        $service->resolve($order->fresh(), $this->director->id, true, null);
 
         $this->actingAs($this->compras)
-            ->delete(route('purchase-requests.orders.approval.withdraw', ['module' => 'compras', 'purchase_order' => $other->id]))
-            ->assertRedirect();
+            ->post(route('purchase-requests.orders.approval.request', ['module' => 'compras', 'purchase_order' => $order->id]), [
+                'aprobacion_aprobador_id' => $this->admin->id,
+            ])
+            ->assertSessionHasErrors('aprobacion_aprobador_id');
 
-        $this->assertNull($other->fresh()->aprobacion_estado);
-        $this->assertTrue($other->fresh()->puedeSolicitarAprobacion());
+        $this->assertSame($this->director->id, (int) $order->fresh()->aprobacion_aprobador_id);
     }
 
     public function test_request_rejects_users_who_are_not_director_or_administrator(): void
     {
+        Mail::fake();
         [, $order] = $this->purchaseWithOrder();
         $plain = User::factory()->create(['must_change_password' => false]);
 
@@ -222,7 +295,9 @@ class PurchaseOrderApprovalTest extends TestCase
             ])
             ->assertSessionHasErrors('aprobacion_aprobador_id');
 
-        $this->assertNull($order->fresh()->aprobacion_estado);
+        // Sigue pendiente, sin aprobador asignado.
+        $this->assertNull($order->fresh()->aprobacion_aprobador_id);
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->fresh()->estado);
     }
 
     /**

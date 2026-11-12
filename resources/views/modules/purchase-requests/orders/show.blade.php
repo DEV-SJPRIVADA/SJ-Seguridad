@@ -6,8 +6,11 @@
     @php
         $subtotal = $order->items->sum(fn ($item) => ((float) $item->cantidad) * ((float) $item->valor_unidad));
         $ivaTotal = $order->items->sum(fn ($item) => (float) $item->iva);
+        // El modal de aprobador se abre solo cuando falta asignarlo (o hay errores de validación).
         $showApprovalRequestModal = $canRequestApproval
-            && ($errors->has('aprobacion_aprobador_id') || $errors->has('aprobacion_nota'));
+            && ($order->aprobacion_aprobador_id === null
+                || $errors->has('aprobacion_aprobador_id')
+                || $errors->has('aprobacion_nota'));
         $showCancellationRequestModal = $canRequestCancellation
             && ($errors->has('anulacion_aprobador_id') || $errors->has('motivo_anulacion'));
     @endphp
@@ -42,9 +45,9 @@
                         @if ($canRequestApproval)
                             <button
                                 type="button"
-                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                title="Solicitar aprobación"
-                                aria-label="Solicitar aprobación"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
+                                title="{{ $order->aprobacion_aprobador_id ? 'Cambiar aprobador' : 'Asignar aprobador' }}"
+                                aria-label="{{ $order->aprobacion_aprobador_id ? 'Cambiar aprobador' : 'Asignar aprobador' }}"
                                 x-data
                                 x-on:click.prevent="$dispatch('open-modal', 'purchase-order-request-approval')"
                             >
@@ -73,33 +76,45 @@
                                 <x-lucide-eye width="18" height="18" aria-hidden="true" />
                             </a>
                         @endif
-                        <a
-                            href="{{ $pdfUrl }}"
-                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                            title="Descargar PDF"
-                            aria-label="Descargar PDF"
-                            target="_blank"
-                            rel="noopener"
-                        >
-                            <x-lucide-file-text width="18" height="18" aria-hidden="true" />
-                        </a>
-                        <x-export-excel
-                            id="purchase-order-excel"
-                            route="{{ $excelUrl }}"
-                            label=""
-                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                            title="Exportar Excel"
-                            aria-label="Exportar Excel FO-AD-07"
-                            target="_blank"
-                            rel="noopener"
-                        />
+                        {{-- El documento solo se libera cuando el director administrativo autorizó la OC. --}}
+                        @if ($order->estaAutorizada())
+                            <a
+                                href="{{ $pdfUrl }}"
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Descargar PDF"
+                                aria-label="Descargar PDF"
+                                target="_blank"
+                                rel="noopener"
+                            >
+                                <x-lucide-file-text width="18" height="18" aria-hidden="true" />
+                            </a>
+                            <x-export-excel
+                                id="purchase-order-excel"
+                                route="{{ $excelUrl }}"
+                                label=""
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Exportar Excel"
+                                aria-label="Exportar Excel FO-AD-07"
+                                target="_blank"
+                                rel="noopener"
+                            />
+                        @else
+                            <span
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Disponible cuando la orden esté autorizada"
+                                aria-label="Documento bloqueado hasta la autorización"
+                                aria-disabled="true"
+                            >
+                                <x-lucide-lock width="18" height="18" aria-hidden="true" />
+                            </span>
+                        @endif
                     </div>
                 </div>
 
                 <h2 class="page-title">Orden de compra N.º {{ $order->numeroOc }}</h2>
                 <p class="page-subtitle">FO-AD-07 · {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }} · {{ $order->fecha }}</p>
                 <div class="pur-req-detail__pills">
-                    <span class="status-pill status-pill--{{ match ($order->estado) { 'emitida' => 'success', 'anulada' => 'danger', 'anulacion_pendiente' => 'warning', default => 'info' } }}">{{ $order->estadoLabel() }}</span>
+                    <span class="status-pill status-pill--{{ match ($order->estado) { 'emitida' => 'success', 'pendiente_aprobacion' => 'warning', 'anulada' => 'danger', 'anulacion_pendiente' => 'warning', default => 'info' } }}">{{ $order->estadoLabel() }}</span>
                     @if ($order->asume_cliente !== null)
                         <span class="status-pill status-pill--info">Asume cliente: {{ $order->asume_cliente }}</span>
                     @endif

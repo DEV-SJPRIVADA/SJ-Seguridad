@@ -1,4 +1,4 @@
-{{-- Modal: solicitar aprobación opcional de la OC (Compras). --}}
+{{-- Modal: asignar o cambiar al director administrativo que autoriza la OC (Compras). --}}
 <x-modal name="purchase-order-request-approval" maxWidth="lg" :show="$show ?? false" focusable>
     <div class="modal-card ficha-empleados-masivos-modal">
         <div class="ficha-empleados-masivos-modal__header">
@@ -7,9 +7,10 @@
                     <x-lucide-badge-check width="18" height="18" aria-hidden="true" />
                 </span>
                 <div>
-                    <h3 class="ficha-empleados-masivos-modal__title">Solicitar aprobación</h3>
+                    <h3 class="ficha-empleados-masivos-modal__title">Autorización de la orden</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
-                        Opcional. El aprobador decide por correo o en Autorizaciones compras. Si la rechaza, la orden queda anulada.
+                        Elija al director administrativo o a quien haga sus veces. Decide por correo o en Autorizaciones compras.
+                        Sin su autorización la orden no se puede imprimir ni enviar al proveedor; si la rechaza, queda anulada y el saldo vuelve al pedido.
                     </p>
                 </div>
             </div>
@@ -49,7 +50,7 @@
                     id="aprobacion_aprobador_id"
                     name="aprobacion_aprobador_id"
                     :options="$approverOptions"
-                    :value="old('aprobacion_aprobador_id', '')"
+                    :value="old('aprobacion_aprobador_id', $order->aprobacion_aprobador_id)"
                     placeholder="Seleccione el aprobador"
                     searchPlaceholder="Buscar…"
                     required
@@ -64,7 +65,7 @@
                     rows="3"
                     maxlength="5000"
                     placeholder="Contexto para quien aprueba…"
-                >{{ old('aprobacion_nota') }}</textarea>
+                >{{ old('aprobacion_nota', $order->aprobacion_nota) }}</textarea>
             </div>
             <div class="ficha-empleados-masivos-modal__footer">
                 <button
@@ -76,7 +77,7 @@
                 </button>
                 <button type="submit" class="btn btn--primary">
                     <x-lucide-send width="16" height="16" aria-hidden="true" />
-                    Solicitar aprobación
+                    Enviar a autorización
                 </button>
             </div>
         </form>

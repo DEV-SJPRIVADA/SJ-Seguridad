@@ -136,7 +136,7 @@ class PurchaseOrderController extends Controller
 
         return redirect()
             ->route('purchase-requests.orders.show', ['module' => $module, 'purchase_order' => $order->getKey()])
-            ->with('status', 'Orden de compra N.º '.$order->numeroOc.' emitida.');
+            ->with('status', 'Orden de compra N.º '.$order->numeroOc.' creada. Asigne al director administrativo que la autorizará.');
     }
 
     public function storeFromSupply(
@@ -160,7 +160,7 @@ class PurchaseOrderController extends Controller
 
         return redirect()
             ->route('purchase-requests.orders.show', ['module' => $module, 'purchase_order' => $order->getKey()])
-            ->with('status', 'Orden de compra N.º '.$order->numeroOc.' emitida.');
+            ->with('status', 'Orden de compra N.º '.$order->numeroOc.' creada. Asigne al director administrativo que la autorizará.');
     }
 
     public function index(string $module, Request $request, PurchaseOrderDatatableService $datatable): View
@@ -224,8 +224,8 @@ class PurchaseOrderController extends Controller
         $canProcess = auth()->user() !== null && $access->canEmitOrder(auth()->user());
 
         return view('modules.purchase-requests.orders.show', [
-            'canRequestApproval' => $canProcess && $purchaseOrder->puedeSolicitarAprobacion(),
-            'canWithdrawApproval' => $canProcess && $purchaseOrder->tieneAprobacionPendiente(),
+            // Asignar o cambiar al director administrativo mientras la OC siga pendiente.
+            'canRequestApproval' => $canProcess && $purchaseOrder->puedeReasignarAprobador(),
             'canRequestCancellation' => $canProcess && $purchaseOrder->puedeSolicitarAnulacion(),
             'canWithdrawCancellation' => $canProcess && $purchaseOrder->tieneAnulacionPendiente(),
             'approverOptions' => $access->approversQuery()->get(['id', 'name'])
@@ -250,6 +250,8 @@ class PurchaseOrderController extends Controller
         PurchaseOrderPdfExporter $exporter,
         PurchaseRequestAuditLogService $audit,
     ): Response {
+        // Una OC sin autorizar no se puede imprimir ni enviar al proveedor.
+        abort_unless($purchaseOrder->estaAutorizada(), 403, 'La orden todavía no está autorizada.');
         $purchaseOrder->loadMissing(['items', 'source']);
 
         $audit->logEvent(
@@ -271,6 +273,8 @@ class PurchaseOrderController extends Controller
         PurchaseOrderExcelExporter $exporter,
         PurchaseRequestAuditLogService $audit,
     ): StreamedResponse {
+        // Una OC sin autorizar no se puede exportar ni enviar al proveedor.
+        abort_unless($purchaseOrder->estaAutorizada(), 403, 'La orden todavía no está autorizada.');
         $purchaseOrder->loadMissing(['items', 'source']);
 
         $audit->logEvent(
@@ -492,7 +496,8 @@ class PurchaseOrderController extends Controller
     {
         $user = auth()->user();
 
-        if ($order->estado !== 'emitida' || $user === null || ! $user->canAccessPurchaseTab($module, 'providers.edit')) {
+        // La evaluación exige una OC autorizada y emitida.
+        if ($order->estado !== PurchaseOrder::ESTADO_EMITIDA || ! $order->estaAutorizada() || $user === null || ! $user->canAccessPurchaseTab($module, 'providers.edit')) {
             return null;
         }
 

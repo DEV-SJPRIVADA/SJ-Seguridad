@@ -283,6 +283,7 @@ final class PurchaseOrderDatatableService
     {
         $pill = match ($order->estado) {
             PurchaseOrder::ESTADO_EMITIDA => 'status-pill--success',
+            PurchaseOrder::ESTADO_PENDIENTE_APROBACION => 'status-pill--warning',
             PurchaseOrder::ESTADO_ANULACION_PENDIENTE => 'status-pill--warning',
             PurchaseOrder::ESTADO_ANULADA => 'status-pill--danger',
             default => 'status-pill--muted',
@@ -298,10 +299,11 @@ final class PurchaseOrderDatatableService
     {
         return [
             ['value' => self::ESTADO_TODOS, 'label' => 'Todas'],
-            ['value' => 'emitida', 'label' => 'Emitidas'],
-            ['value' => 'anulacion_pendiente', 'label' => 'Anulación pendiente'],
-            ['value' => 'anulada', 'label' => 'Anuladas'],
-            ['value' => 'borrador', 'label' => 'Borrador'],
+            ['value' => PurchaseOrder::ESTADO_PENDIENTE_APROBACION, 'label' => 'Pendientes de autorización'],
+            ['value' => PurchaseOrder::ESTADO_EMITIDA, 'label' => 'Emitidas'],
+            ['value' => PurchaseOrder::ESTADO_ANULACION_PENDIENTE, 'label' => 'Anulación pendiente'],
+            ['value' => PurchaseOrder::ESTADO_ANULADA, 'label' => 'Anuladas'],
+            ['value' => PurchaseOrder::ESTADO_BORRADOR, 'label' => 'Borrador'],
         ];
     }
 

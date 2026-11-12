@@ -21,7 +21,8 @@ class UpdatePurchaseOrderEvaluationRequest extends FormRequest
 
         return $user !== null
             && $order instanceof PurchaseOrder
-            && $order->estado === 'emitida'
+            && $order->estado === PurchaseOrder::ESTADO_EMITIDA
+            && $order->estaAutorizada()
             && app(PurchaseAccessService::class)->canEditProviders($user);
     }
 

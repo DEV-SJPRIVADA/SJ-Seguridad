@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\RequestPurchaseOrderApprovalRequest;
 use App\Http\Requests\PurchaseRequests\ResolvePurchaseOrderApprovalRequest;
 use App\Models\PurchaseOrder;
-use App\Services\Access\PurchaseAccessService;
 use App\Services\PurchaseRequests\PurchaseOrderApprovalService;
 use App\Services\PurchaseRequests\PurchaseQuotationFileService;
 use App\Traits\HasPurchaseTabs;
@@ -18,7 +17,7 @@ use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
 /**
- * Aprobación opcional de OC: Compras la pide (eligiendo director o administrador) o la retira;
+ * Autorización obligatoria de OC: Compras asigna o cambia al director administrativo;
  * el aprobador decide en la plataforma o por el enlace firmado del correo.
  */
 class PurchaseOrderApprovalController extends Controller
@@ -44,27 +43,7 @@ class PurchaseOrderApprovalController extends Controller
 
         return redirect()
             ->route('purchase-requests.orders.show', ['module' => $module, 'purchase_order' => $purchaseOrder->getKey()])
-            ->with('status', 'Aprobación de la orden N.º '.$purchaseOrder->numeroOc.' solicitada.');
-    }
-
-    public function withdraw(
-        Request $request,
-        string $module,
-        PurchaseOrder $purchaseOrder,
-        PurchaseOrderApprovalService $service,
-        PurchaseAccessService $access,
-    ): RedirectResponse {
-        abort_unless($access->canEmitOrder($request->user()), 403);
-
-        try {
-            $service->withdraw($purchaseOrder, $request->user());
-        } catch (InvalidArgumentException $exception) {
-            return back()->withErrors(['aprobacion_aprobador_id' => $exception->getMessage()]);
-        }
-
-        return redirect()
-            ->route('purchase-requests.orders.show', ['module' => $module, 'purchase_order' => $purchaseOrder->getKey()])
-            ->with('status', 'Solicitud de aprobación de la orden N.º '.$purchaseOrder->numeroOc.' retirada.');
+            ->with('status', 'Orden N.º '.$purchaseOrder->numeroOc.' enviada a autorización.');
     }
 
     /**

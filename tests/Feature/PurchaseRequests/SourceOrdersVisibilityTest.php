@@ -51,6 +51,19 @@ class SourceOrdersVisibilityTest extends TestCase
                 ->assertSee('Ver líneas y valores unitarios')
                 ->assertSee('Pendiente');
 
+            // Sin autorización del director administrativo el PDF no se libera.
+            $this->actingAs($user)
+                ->get(route('purchase-requests.source-orders.pdf', ['module' => 'compras', 'purchase_request' => $purchase->id, 'purchase_order' => $order->id]))
+                ->assertForbidden();
+        }
+
+        // Autorizada: el solicitante y el director ya descargan el FO-AD-07.
+        $order->update([
+            'estado' => PurchaseOrder::ESTADO_EMITIDA,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+        ]);
+
+        foreach ([$requester, $director] as $user) {
             $this->actingAs($user)
                 ->get(route('purchase-requests.source-orders.pdf', ['module' => 'compras', 'purchase_request' => $purchase->id, 'purchase_order' => $order->id]))
                 ->assertOk()
@@ -114,6 +127,16 @@ class SourceOrdersVisibilityTest extends TestCase
             ->assertSee('Órdenes de compra')
             ->assertSee('PROVEEDOR INSUMOS')
             ->assertSee('Ordenado');
+
+        // Sin autorización del director administrativo el FO-AD-07 no se libera.
+        $this->actingAs($owner)
+            ->get(route('supplies.orders.pdf', ['module' => 'operaciones', 'supply_request' => $supply->id, 'purchase_order' => $order->id]))
+            ->assertForbidden();
+
+        $order->update([
+            'estado' => PurchaseOrder::ESTADO_EMITIDA,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+        ]);
 
         $this->actingAs($owner)
             ->get(route('supplies.orders.pdf', ['module' => 'operaciones', 'supply_request' => $supply->id, 'purchase_order' => $order->id]))

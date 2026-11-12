@@ -38,6 +38,7 @@ TXT),
 
     'estados' => [
         'borrador' => 'Borrador',
+        'pendiente_aprobacion' => 'Pendiente de autorización',
         'emitida' => 'Emitida',
         'anulacion_pendiente' => 'Anulación pendiente',
         'anulada' => 'Anulada',

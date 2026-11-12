@@ -19,10 +19,11 @@ use Illuminate\Support\Facades\Mail;
 use InvalidArgumentException;
 
 /**
- * Aprobación opcional de una OC por un director o administrador elegido por Compras.
+ * Autorización obligatoria de una OC por el director administrativo (o quien haga sus veces).
  *
- * Sin pedir → Pendiente → Aprobada (la OC sigue Emitida y el FO-AD-07 muestra al aprobador)
- * o Rechazada (la OC queda Anulada, su cantidad vuelve al saldo y la máquina recalcula el pedido).
+ * Enviada (Compras elige aprobador) → Pendiente → Autorizada (la OC pasa a Emitida y el FO-AD-07
+ * muestra al aprobador) o Rechazada (la OC queda Anulada, su cantidad vuelve al saldo y la
+ * máquina recalcula el pedido). Mientras esté pendiente, Compras puede cambiar al aprobador.
  */
 class PurchaseOrderApprovalService
 {
@@ -34,8 +35,8 @@ class PurchaseOrderApprovalService
 
     public function request(PurchaseOrder $order, User $actor, int $approverId, ?string $nota): PurchaseOrder
     {
-        if (! $order->puedeSolicitarAprobacion()) {
-            throw new InvalidArgumentException('Solo se puede pedir la aprobación de una orden emitida que aún no la tenga.');
+        if (! $order->puedeReasignarAprobador()) {
+            throw new InvalidArgumentException('Solo se puede asignar o cambiar el aprobador de una orden pendiente de autorización.');
         }
 
         if (! $this->access->isValidApprover($approverId)) {
@@ -43,6 +44,7 @@ class PurchaseOrderApprovalService
         }
 
         $nota = $this->normalize((string) $nota);
+        $previousApproverId = $order->aprobacion_aprobador_id;
 
         DB::transaction(function () use ($order, $actor, $approverId, $nota): void {
             $order->update([
@@ -55,16 +57,16 @@ class PurchaseOrderApprovalService
                 'aprobacion_resuelta_at' => null,
             ]);
 
-            $this->comment($order, $actor, 'SOLICITUD DE APROBACIÓN OC N.º '.$order->numeroOc.($nota !== '' ? ': '.$nota : '.'));
+            $this->comment($order, $actor, 'ORDEN OC N.º '.$order->numeroOc.' ENVIADA A AUTORIZACIÓN'.($nota !== '' ? ': '.$nota : '.'));
         });
 
         $order->refresh();
 
         $this->audit->logModelChange(
             eventType: 'purchase_order',
-            action: 'approval_requested',
+            action: $previousApproverId === null ? 'approval_requested' : 'approval_reassigned',
             model: $order,
-            before: ['aprobacion_estado' => null],
+            before: ['aprobacion_estado' => null, 'aprobacion_aprobador_id' => $previousApproverId],
             after: ['aprobacion_estado' => $order->aprobacion_estado, 'aprobacion_aprobador_id' => $approverId],
             reason: $nota !== '' ? $nota : null,
             metadata: ['numero_oc' => $order->numeroOc],
@@ -76,43 +78,9 @@ class PurchaseOrderApprovalService
         return $order;
     }
 
-    public function withdraw(PurchaseOrder $order, User $actor): PurchaseOrder
-    {
-        if (! $order->tieneAprobacionPendiente()) {
-            throw new InvalidArgumentException('La orden no tiene una solicitud de aprobación pendiente.');
-        }
-
-        $approverId = $order->aprobacion_aprobador_id;
-
-        DB::transaction(function () use ($order, $actor): void {
-            $order->update([
-                'aprobacion_estado' => null,
-                'aprobacion_aprobador_id' => null,
-                'aprobacion_solicitada_por' => null,
-                'aprobacion_nota' => null,
-                'aprobacion_solicitada_at' => null,
-                'aprobacion_comentario' => null,
-                'aprobacion_resuelta_at' => null,
-            ]);
-
-            $this->comment($order, $actor, 'SOLICITUD DE APROBACIÓN OC N.º '.$order->numeroOc.' RETIRADA POR COMPRAS.');
-        });
-
-        $this->audit->logModelChange(
-            eventType: 'purchase_order',
-            action: 'approval_withdrawn',
-            model: $order,
-            before: ['aprobacion_estado' => PurchaseOrder::APROBACION_PENDIENTE, 'aprobacion_aprobador_id' => $approverId],
-            after: ['aprobacion_estado' => null],
-            metadata: ['numero_oc' => $order->numeroOc],
-            userId: $actor->id,
-        );
-
-        return $order->refresh();
-    }
-
     /**
-     * El aprobador elegido decide. Rechazar exige comentario y anula la OC. `channel`: web | email.
+     * El aprobador elegido decide. Rechazar exige comentario y anula la OC (`channel`: web | email).
+     * Aprobar deja la OC en `emitida`: recién ahí se imprime, se envía y se evalúa.
      */
     public function resolve(PurchaseOrder $order, int $approverId, bool $approve, ?string $comentario, string $channel = 'web'): PurchaseOrder
     {
@@ -138,11 +106,12 @@ class PurchaseOrderApprovalService
                 'aprobacion_estado' => $approve ? PurchaseOrder::APROBACION_APROBADA : PurchaseOrder::APROBACION_RECHAZADA,
                 'aprobacion_comentario' => $comentario !== '' ? $comentario : null,
                 'aprobacion_resuelta_at' => now(),
+                // Aprobada: la OC pasa de pendiente a emitida (recién ahí es imprimible).
                 // Rechazada: la orden queda Anulada para emitir una nueva corregida.
-                'estado' => $approve ? $order->estado : PurchaseOrder::ESTADO_ANULADA,
+                'estado' => $approve ? PurchaseOrder::ESTADO_EMITIDA : PurchaseOrder::ESTADO_ANULADA,
             ]);
 
-            $decision = $approve ? 'APROBADA' : 'RECHAZADA (ORDEN ANULADA)';
+            $decision = $approve ? 'AUTORIZADA' : 'RECHAZADA (ORDEN ANULADA)';
             $body = 'OC N.º '.$order->numeroOc.' '.$decision.' POR '.UppercaseFormText::uppercaseString((string) $approver->name)
                 .($comentario !== '' ? ': '.$comentario : '.');
 

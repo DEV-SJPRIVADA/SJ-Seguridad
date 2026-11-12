@@ -55,7 +55,8 @@ class PurchaseOrderEvaluationController extends Controller
         $user = auth()->user();
 
         abort_unless($user !== null && $user->canAccessPurchaseTab($module, 'providers.edit'), 403);
-        abort_unless($order->estado === 'emitida', 404);
+        // Solo una OC autorizada y emitida puede evaluarse: sin firma el pedido no se ha entregado.
+        abort_unless($order->estado === PurchaseOrder::ESTADO_EMITIDA && $order->estaAutorizada(), 404);
     }
 
     /**

@@ -49,6 +49,14 @@ class PurchaseOrder extends Model
     /** @use HasFactory<PurchaseOrderFactory> */
     use HasFactory;
 
+    public const ESTADO_BORRADOR = 'borrador';
+
+    /**
+     * OC recién creada por Compras: reserva saldo pero no se imprime ni se evalúa
+     * hasta que el director administrativo la autorice.
+     */
+    public const ESTADO_PENDIENTE_APROBACION = 'pendiente_aprobacion';
+
     public const ESTADO_EMITIDA = 'emitida';
 
     public const ESTADO_ANULACION_PENDIENTE = 'anulacion_pendiente';
@@ -85,6 +93,7 @@ class PurchaseOrder extends Model
         'activo',
         'observaciones',
         'estado',
+        'aprobacion_requerida',
         'total',
         'created_by',
         'purchase_quotation_id',
@@ -107,6 +116,7 @@ class PurchaseOrder extends Model
     protected $casts = [
         'provider_dias_pago' => 'integer',
         'total' => 'decimal:2',
+        'aprobacion_requerida' => 'boolean',
         'anulacion_solicitada_at' => 'datetime',
         'anulacion_resuelta_at' => 'datetime',
         'aprobacion_solicitada_at' => 'datetime',
@@ -125,7 +135,8 @@ class PurchaseOrder extends Model
 
     public function tieneAprobacionPendiente(): bool
     {
-        return $this->aprobacion_estado === self::APROBACION_PENDIENTE;
+        return $this->estado === self::ESTADO_PENDIENTE_APROBACION
+            || $this->aprobacion_estado === self::APROBACION_PENDIENTE;
     }
 
     public function isAprobada(): bool
@@ -134,20 +145,35 @@ class PurchaseOrder extends Model
     }
 
     /**
-     * Compras puede pedir la aprobación (opcional) de una OC emitida que aún no la tiene ni la pidió,
-     * y que no tiene una anulación en curso.
+     * OC lista para imprimirse, enviarse al proveedor y evaluarse.
+     *
+     * Las OC anteriores a la autorización obligatoria (`aprobacion_requerida = false`)
+     * siguen siendo válidas sin firma. Las nuevas solo con la autorización aprobada.
      */
-    public function puedeSolicitarAprobacion(): bool
+    public function estaAutorizada(): bool
     {
-        return $this->estado === self::ESTADO_EMITIDA
-            && $this->aprobacion_estado === null;
+        if (! $this->aprobacion_requerida) {
+            return true;
+        }
+
+        return $this->isAprobada();
+    }
+
+    /**
+     * Compras puede elegir o cambiar al director administrativo mientras la OC
+     * siga pendiente de autorización (vacaciones, ausencias o error en el elegido).
+     */
+    public function puedeReasignarAprobador(): bool
+    {
+        return $this->aprobacion_requerida
+            && $this->estado === self::ESTADO_PENDIENTE_APROBACION;
     }
 
     public function aprobacionLabel(): string
     {
         return match ($this->aprobacion_estado) {
-            self::APROBACION_PENDIENTE => 'Aprobación pendiente',
-            self::APROBACION_APROBADA => 'Aprobada',
+            self::APROBACION_PENDIENTE => 'Pendiente de autorización',
+            self::APROBACION_APROBADA => 'Autorizada',
             self::APROBACION_RECHAZADA => 'Rechazada',
             default => 'Sin solicitar',
         };

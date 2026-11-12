@@ -37,6 +37,19 @@ class PurchaseOrderEmissionTest extends TestCase
         $this->compras->givePermissionTo('purchase.tab.processing');
     }
 
+    /**
+     * Autoriza la OC (director administrativo) para poder descargar el documento.
+     * El flujo real pasa por el director; aquí se simula la firma.
+     */
+    private function authorizeOrder(PurchaseOrder $order): void
+    {
+        $order->update([
+            'estado' => PurchaseOrder::ESTADO_EMITIDA,
+            'aprobacion_estado' => PurchaseOrder::APROBACION_APROBADA,
+            'aprobacion_requerida' => true,
+        ]);
+    }
+
     public function test_compras_can_open_the_order_form_from_a_purchase_request(): void
     {
         $request = $this->approvedPurchaseRequest();
@@ -214,7 +227,8 @@ class PurchaseOrderEmissionTest extends TestCase
         $this->assertSame('900123456-1', $order->provider_identificacion);
         $this->assertSame('MEDELLIN', $order->provider_ciudad);
         $this->assertSame(45, (int) $order->provider_dias_pago);
-        $this->assertSame('emitida', $order->estado);
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->estado);
+        $this->assertTrue($order->aprobacion_requerida);
         $this->assertCount(2, $order->items);
         // 2 * 150.50 + 20 + 1 * 100 = 421.00
         $this->assertSame(421.0, (float) $order->total);
@@ -337,7 +351,19 @@ class PurchaseOrderEmissionTest extends TestCase
             ]))
             ->assertOk()
             ->assertSee('PROVEEDOR DESCARGABLE')
-            ->assertSee('Orden de compra N.º '.$order->numeroOc);
+            ->assertSee('Orden de compra N.º '.$order->numeroOc)
+            // Aún sin autorizar: el documento está bloqueado.
+            ->assertSee('Disponible cuando la orden esté autorizada');
+
+        $this->actingAs($this->compras)
+            ->get(route('purchase-requests.orders.pdf', [
+                'module' => 'compras',
+                'purchase_order' => $order->getKey(),
+            ]))
+            ->assertForbidden();
+
+        // Autorizada por el director administrativo: recién ahí se puede descargar.
+        $this->authorizeOrder($order);
 
         $this->actingAs($this->compras)
             ->get(route('purchase-requests.orders.pdf', [
