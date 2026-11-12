@@ -197,7 +197,7 @@ class PurchaseOrderApprovalService
 
     private function notifyApprover(PurchaseOrder $order): void
     {
-        $order->loadMissing(['aprobacionAprobador', 'aprobacionSolicitadaPor', 'source']);
+        $order->loadMissing(['aprobacionAprobador', 'aprobacionSolicitadaPor', 'source', 'purchaseQuotation.aprobador']);
         $email = $order->aprobacionAprobador?->email;
 
         if (filled($email)) {

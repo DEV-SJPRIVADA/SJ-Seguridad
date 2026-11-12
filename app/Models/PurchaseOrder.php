@@ -87,6 +87,7 @@ class PurchaseOrder extends Model
         'estado',
         'total',
         'created_by',
+        'purchase_quotation_id',
         'anulacion_aprobador_id',
         'anulacion_solicitada_por',
         'anulacion_motivo',
@@ -235,6 +236,28 @@ class PurchaseOrder extends Model
     }
 
     /**
+     * Cotización aprobada que Compras vinculó (opcional) al emitir la OC.
+     */
+    public function purchaseQuotation(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseQuotation::class, 'purchase_quotation_id');
+    }
+
+    public function cotizacionAprobadaLabel(): string
+    {
+        $this->loadMissing('purchaseQuotation');
+
+        return (string) ($this->purchaseQuotation?->descripcionVisible() ?? '');
+    }
+
+    public function cotizacionAprobadaPorNombre(): string
+    {
+        $this->loadMissing('purchaseQuotation.aprobador');
+
+        return trim((string) ($this->purchaseQuotation?->aprobador?->name ?? ''));
+    }
+
+    /**
      * Fuente polimórfica: PurchaseRequest o SupplyRequest.
      */
     public function source(): MorphTo
@@ -269,7 +292,7 @@ class PurchaseOrder extends Model
      */
     public function loadDocumentRelations(): self
     {
-        $this->loadMissing(['items', 'createdBy', 'source']);
+        $this->loadMissing(['items', 'createdBy', 'source', 'purchaseQuotation.aprobador']);
 
         $source = $this->source;
 

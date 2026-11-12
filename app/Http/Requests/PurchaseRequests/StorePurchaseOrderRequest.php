@@ -3,6 +3,7 @@
 namespace App\Http\Requests\PurchaseRequests;
 
 use App\Http\Requests\Concerns\UppercasesValidatedText;
+use App\Models\PurchaseQuotation;
 use App\Models\PurchaseRequest;
 use App\Models\PurchaseTaxRate;
 use App\Models\SupplyRequest;
@@ -57,6 +58,8 @@ class StorePurchaseOrderRequest extends FormRequest
             // Tasa del catálogo (activa). El IVA en valor solo se acepta si no llega tasa (compatibilidad).
             'items.*.iva_porcentaje' => ['nullable', 'numeric', $this->activeTaxRate()],
             'items.*.iva' => ['nullable', 'numeric', 'min:0', 'max:999999999'],
+            // Opcional: vincular una cotización aprobada y disponible de la solicitud.
+            'purchase_quotation_id' => ['nullable', 'integer', $this->validOptionalQuotation()],
         ];
     }
 
@@ -87,7 +90,7 @@ class StorePurchaseOrderRequest extends FormRequest
      */
     protected function uppercaseExceptKeys(): array
     {
-        return ['provider_id', 'fecha', 'ciudad', 'iva_porcentaje'];
+        return ['provider_id', 'fecha', 'ciudad', 'iva_porcentaje', 'purchase_quotation_id'];
     }
 
     /**
@@ -137,6 +140,45 @@ class StorePurchaseOrderRequest extends FormRequest
                     $this->formatQuantity((float) $line['cantidad_ordenada']),
                     $this->formatQuantity((float) $line['cantidad_solicitada']),
                 ));
+            }
+        };
+    }
+
+    /**
+     * La cotización vinculada es opcional, pero si llega debe ser de esta solicitud,
+     * estar aprobada por el director y no haber sido consumida por otra OC.
+     */
+    protected function validOptionalQuotation(): Closure
+    {
+        return function (string $attribute, mixed $value, Closure $fail): void {
+            if ($value === null || $value === '') {
+                return;
+            }
+
+            $purchaseRequest = $this->route('purchase_request');
+
+            if (! $purchaseRequest instanceof PurchaseRequest) {
+                $fail('La cotización solo aplica a solicitudes de compra.');
+
+                return;
+            }
+
+            $quotation = PurchaseQuotation::query()->find((int) $value);
+
+            if ($quotation === null || (int) $quotation->purchase_request_id !== (int) $purchaseRequest->getKey()) {
+                $fail('Seleccione una cotización aprobada de esta solicitud.');
+
+                return;
+            }
+
+            if (! $quotation->estaAprobada() || ! $quotation->seleccionada) {
+                $fail('Seleccione la cotización ganadora que el director aprobó para un grupo.');
+
+                return;
+            }
+
+            if ($quotation->purchaseOrder()->exists()) {
+                $fail('La cotización seleccionada ya está vinculada a otra orden de compra.');
             }
         };
     }

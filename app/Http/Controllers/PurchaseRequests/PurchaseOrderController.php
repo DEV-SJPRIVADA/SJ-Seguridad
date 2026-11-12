@@ -44,7 +44,17 @@ class PurchaseOrderController extends Controller
             return $this->closedSourceRedirect($module, $purchaseRequest);
         }
 
-        $purchaseRequest->load(['items', 'user']);
+        // Con una cotización pendiente de aprobación no se emite la OC.
+        if ($purchaseRequest->tieneCotizacionPendienteAprobacion()) {
+            return redirect()
+                ->route('purchase-requests.processing.purchase', [
+                    'module' => $module,
+                    'purchase_request' => $purchaseRequest->getKey(),
+                ])
+                ->with('error', 'No se puede emitir la orden: hay grupos de cotizaciones pendientes de aprobación. Espere la decisión del director.');
+        }
+
+        $purchaseRequest->load(['items', 'user', 'quotations.aprobador', 'quotations.purchaseOrder']);
 
         return $this->createView(
             module: $module,
@@ -61,6 +71,16 @@ class PurchaseOrderController extends Controller
                 'purchase_request' => $purchaseRequest->getKey(),
             ]),
             defaultCity: '',
+            quotationOptions: $purchaseRequest->cotizacionesAprobadasDisponibles()
+                ->with('aprobador')
+                ->get()
+                ->map(fn ($quotation): array => [
+                    'value' => (string) $quotation->getKey(),
+                    'label' => $quotation->loteLabel()
+                        .' — '.$quotation->descripcionVisible()
+                        .' — aprobada por '.($quotation->aprobador?->name ?? 'director'),
+                ])
+                ->all(),
         );
     }
 
@@ -198,7 +218,7 @@ class PurchaseOrderController extends Controller
     public function show(string $module, PurchaseOrder $purchaseOrder, PurchaseAccessService $access): View
     {
         $purchaseOrder->load([
-            'items', 'source', 'provider', 'evaluation',
+            'items', 'source', 'provider', 'evaluation', 'purchaseQuotation.aprobador',
             'anulacionAprobador', 'anulacionSolicitadaPor', 'aprobacionAprobador', 'aprobacionSolicitadaPor',
         ]);
         $canProcess = auth()->user() !== null && $access->canEmitOrder(auth()->user());
@@ -275,6 +295,7 @@ class PurchaseOrderController extends Controller
         string $storeUrl,
         string $backUrl,
         string $defaultCity,
+        array $quotationOptions = [],
     ): View {
         return view('modules.purchase-requests.orders.create', [
             'module' => $module,
@@ -289,6 +310,7 @@ class PurchaseOrderController extends Controller
             'storeUrl' => $storeUrl,
             'backUrl' => $backUrl,
             'defaultCity' => $defaultCity,
+            'quotationOptions' => $quotationOptions,
             'issuedOrders' => $this->issuedOrdersFor($sourceType, (int) $source->getKey()),
         ]);
     }

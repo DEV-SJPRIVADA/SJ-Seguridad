@@ -9,9 +9,11 @@ use App\Http\Requests\PurchaseRequests\ReturnToRequesterRequest;
 use App\Mail\SupplyRequestReturnedMail;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
+use App\Services\Access\PurchaseAccessService;
 use App\Services\Compras\ComprasQueueFilterBag;
 use App\Services\Compras\ComprasQueueService;
 use App\Services\PurchaseRequests\PurchaseFlowStateService;
+use App\Services\PurchaseRequests\PurchaseQuotationBatchService;
 use App\Services\PurchaseRequests\PurchaseRequestAuditLogService;
 use App\Services\PurchaseRequests\PurchaseRequestNotificationService;
 use App\Services\Supplies\SupplyPurchasePdfExporter;
@@ -50,16 +52,28 @@ class PurchaseProcessingController extends Controller
         ]);
     }
 
-    public function editPurchase(string $module, PurchaseRequest $purchaseRequest): View
-    {
+    public function editPurchase(
+        string $module,
+        PurchaseRequest $purchaseRequest,
+        PurchaseAccessService $access,
+        PurchaseQuotationBatchService $quotationBatches,
+    ): View {
         Gate::authorize('process', $purchaseRequest);
 
-        $purchaseRequest->load(['user', 'aprobador', 'items']);
+        $purchaseRequest->load([
+            'user', 'aprobador', 'items',
+            'quotations.aprobador', 'quotations.solicitadaPor', 'quotations.uploadedBy', 'quotations.purchaseOrder',
+        ]);
 
         return view('modules.purchase-requests.processing.process-purchase', [
             'module' => $module,
             'purchaseRequest' => $purchaseRequest,
             'estadosCompras' => PurchaseRequest::estadosComprasLabels(),
+            'quotationBatches' => $quotationBatches->forRequest($purchaseRequest),
+            'quotationMaxPerBatch' => max(1, (int) config('purchase-requests.quotations.max_per_batch', 3)),
+            'approverOptions' => $access->approversQuery()->get(['id', 'name'])
+                ->map(fn ($user): array => ['value' => (string) $user->id, 'label' => $user->name])
+                ->all(),
         ]);
     }
 

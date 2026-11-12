@@ -139,6 +139,32 @@ class PurchaseRequest extends Model
         return $this->hasMany(PurchaseRequestAttachment::class)->orderBy('sort_order')->orderBy('id');
     }
 
+    /**
+     * Cotizaciones cargadas por Compras en la bandeja (con estado de aprobación).
+     */
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(PurchaseQuotation::class)->oldest('id');
+    }
+
+    public function cotizacionesAprobadasDisponibles(): HasMany
+    {
+        return $this->quotations()->aprobadasDisponibles();
+    }
+
+    /**
+     * Con una cotización pendiente no se emite la OC: Compras debe esperar la decisión.
+     * Sin cotizaciones o con cotizaciones cargadas/rechazadas, la OC se emite normal.
+     */
+    public function tieneCotizacionPendienteAprobacion(): bool
+    {
+        if ($this->relationLoaded('quotations')) {
+            return $this->quotations->contains(fn (PurchaseQuotation $quotation): bool => $quotation->estaPendiente());
+        }
+
+        return $this->quotations()->where('estado', PurchaseQuotation::ESTADO_PENDIENTE)->exists();
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(PurchaseRequestComment::class)->oldest('id');

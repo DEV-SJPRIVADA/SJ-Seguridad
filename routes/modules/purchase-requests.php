@@ -7,6 +7,7 @@ use App\Http\Controllers\PurchaseRequests\PurchaseOrderController;
 use App\Http\Controllers\PurchaseRequests\PurchaseOrderEvaluationController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProcessingController;
 use App\Http\Controllers\PurchaseRequests\PurchaseProviderController;
+use App\Http\Controllers\PurchaseRequests\PurchaseQuotationController;
 use App\Http\Controllers\PurchaseRequests\PurchaseRequestController;
 use App\Http\Controllers\PurchaseRequests\PurchaseTaxRateController;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,11 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::get('/pendientes-autorizacion/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'show'])->name('approval.order-approval.show');
         Route::patch('/pendientes-autorizacion/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'update'])->name('approval.order-approval.update');
 
+        // Cotizaciones: el director elegido revisa el lote y elige la cotización ganadora.
+        Route::get('/pendientes-autorizacion/cotizaciones/lote/{lote}', [PurchaseQuotationController::class, 'show'])->name('approval.quotation.show');
+        Route::get('/pendientes-autorizacion/cotizaciones/{purchase_quotation}/archivo', [PurchaseQuotationController::class, 'approvalFile'])->name('approval.quotation.file');
+        Route::patch('/pendientes-autorizacion/cotizaciones/lote/{lote}', [PurchaseQuotationController::class, 'update'])->name('approval.quotation.update');
+
         // Anulación de OC: la decide el director que Compras eligió.
         Route::get('/pendientes-autorizacion/anulaciones/{purchase_order}', [PurchaseOrderCancellationController::class, 'show'])->name('approval.order-cancellation.show');
         Route::patch('/pendientes-autorizacion/anulaciones/{purchase_order}', [PurchaseOrderCancellationController::class, 'update'])->name('approval.order-cancellation.update');
@@ -44,6 +50,13 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
         Route::patch('/bandeja-compras/solicitud/{purchase_request}', [PurchaseProcessingController::class, 'updatePurchase'])->name('processing.purchase.update');
         Route::post('/bandeja-compras/solicitud/{purchase_request}/cerrar-saldo', [PurchaseProcessingController::class, 'closePurchase'])->name('processing.purchase.close');
         Route::post('/bandeja-compras/solicitud/{purchase_request}/devolver', [PurchaseProcessingController::class, 'returnPurchase'])->name('processing.purchase.return');
+
+        // Cotizaciones: Compras carga lotes de 1..3 archivos y pide aprobación de un director (opcional).
+        Route::post('/bandeja-compras/solicitud/{purchase_request}/cotizaciones', [PurchaseQuotationController::class, 'store'])->name('quotations.store');
+        Route::delete('/bandeja-compras/solicitud/{purchase_request}/cotizaciones/{purchase_quotation}', [PurchaseQuotationController::class, 'destroy'])->name('quotations.destroy');
+        Route::post('/bandeja-compras/solicitud/{purchase_request}/cotizaciones/lotes/{lote}/aprobacion', [PurchaseQuotationController::class, 'requestApproval'])->name('quotations.approval.request');
+        Route::delete('/bandeja-compras/solicitud/{purchase_request}/cotizaciones/lotes/{lote}/aprobacion', [PurchaseQuotationController::class, 'withdraw'])->name('quotations.approval.withdraw');
+        Route::get('/bandeja-compras/solicitud/{purchase_request}/cotizaciones/{purchase_quotation}/archivo', [PurchaseQuotationController::class, 'file'])->name('quotations.file');
         Route::get('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'editSupply'])->name('processing.supply');
         Route::patch('/bandeja-compras/suministro/{supply_request}', [PurchaseProcessingController::class, 'updateSupply'])->name('processing.supply.update');
         Route::post('/bandeja-compras/suministro/{supply_request}/cerrar-saldo', [PurchaseProcessingController::class, 'closeSupply'])->name('processing.supply.close');

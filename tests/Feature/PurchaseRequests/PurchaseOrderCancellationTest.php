@@ -161,6 +161,10 @@ class PurchaseOrderCancellationTest extends TestCase
         $this->actingAs($this->director)
             ->get(route('purchase-requests.approval.order-cancellation.show', ['module' => 'compras', 'purchase_order' => $order->id]))
             ->assertOk()
+            ->assertSee('Anulación de orden de compra')
+            ->assertSee('Resumen de la orden')
+            ->assertSee('Productos de la orden')
+            ->assertSee('Motivo de la anulación')
             ->assertSee('Aprobar anulación');
 
         $this->actingAs($this->director)
@@ -198,6 +202,7 @@ class PurchaseOrderCancellationTest extends TestCase
         $this->actingAs($this->director)
             ->get(route('purchase-requests.approval.order-cancellation.show', ['module' => 'compras', 'purchase_order' => $order->id]))
             ->assertOk()
+            ->assertSee('Resultado')
             ->assertDontSee('Aprobar anulación');
 
         // Sin otras órdenes, el pedido vuelve a Por comprar con todo el saldo disponible.

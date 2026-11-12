@@ -5,6 +5,7 @@ namespace App\Services\PurchaseRequests;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\PurchaseProvider;
+use App\Models\PurchaseQuotation;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
 use App\Models\User;
@@ -117,6 +118,11 @@ class PurchaseOrderService
             throw new InvalidArgumentException('No se puede emitir otra orden: el pedido está cerrado.');
         }
 
+        // Un grupo de cotizaciones pendiente bloquea la emisión (aplica solo a solicitudes de compra).
+        if ($source instanceof PurchaseRequest && $source->tieneCotizacionPendienteAprobacion()) {
+            throw new InvalidArgumentException('Hay grupos de cotizaciones pendientes de aprobación: espere la decisión del director antes de emitir la orden.');
+        }
+
         $provider = PurchaseProvider::query()->findOrFail($data['provider_id']);
 
         if (! $provider->isActivo()) {
@@ -130,6 +136,12 @@ class PurchaseOrderService
         }
 
         return DB::transaction(function () use ($sourceType, $source, $data, $user, $extra, $provider, $postedItems): PurchaseOrder {
+            // Revalidación bajo transacción: evita vincular una cotización consumida en paralelo.
+            if ($source instanceof PurchaseRequest && $source->tieneCotizacionPendienteAprobacion()) {
+                throw new InvalidArgumentException('Hay grupos de cotizaciones pendientes de aprobación: espere la decisión del director antes de emitir la orden.');
+            }
+
+            $quotation = $this->resolveQuotation($sourceType, $source, $data);
             $sourceLines = $this->sourceLines($sourceType, $source);
             $ordered = $this->orderedQuantities($sourceType, (int) $source->getKey());
             $contacto = $this->resolveProviderContacto($provider, $data);
@@ -158,6 +170,7 @@ class PurchaseOrderService
                 'estado' => 'emitida',
                 'total' => 0,
                 'created_by' => $user->getKey(),
+                'purchase_quotation_id' => $quotation?->getKey(),
             ]);
 
             // El contacto capturado al emitir se guarda también en el
@@ -234,6 +247,36 @@ class PurchaseOrderService
 
             return $order->fresh(['provider', 'items', 'source']);
         });
+    }
+
+    /**
+     * Cotización aprobada y libre que Compras decidió vincular (opcional).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function resolveQuotation(string $sourceType, PurchaseRequest|SupplyRequest $source, array $data): ?PurchaseQuotation
+    {
+        $quotationId = (int) ($data['purchase_quotation_id'] ?? 0);
+
+        if ($sourceType !== self::SOURCE_PURCHASE || $quotationId <= 0) {
+            return null;
+        }
+
+        $quotation = PurchaseQuotation::query()->whereKey($quotationId)->lockForUpdate()->first();
+
+        if ($quotation === null || (int) $quotation->purchase_request_id !== (int) $source->getKey()) {
+            throw new InvalidArgumentException('La cotización seleccionada no corresponde a esta solicitud.');
+        }
+
+        if (! $quotation->estaAprobada() || ! $quotation->seleccionada) {
+            throw new InvalidArgumentException('Solo se vincula la cotización ganadora que el director aprobó para un grupo.');
+        }
+
+        if ($quotation->purchaseOrder()->exists()) {
+            throw new InvalidArgumentException('La cotización seleccionada ya está vinculada a otra orden de compra.');
+        }
+
+        return $quotation;
     }
 
     /**

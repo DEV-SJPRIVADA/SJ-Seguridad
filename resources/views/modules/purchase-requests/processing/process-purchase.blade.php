@@ -3,6 +3,7 @@
     @php
         $backUrl = route('purchase-requests.processing.index', ['module' => $module]);
         $estadoCompras = $purchaseRequest->estado_compras;
+        $tieneCotizacionPendiente = $purchaseRequest->tieneCotizacionPendienteAprobacion();
     @endphp
 
     <div class="page-section purchase-requests-page purchase-requests-page--detail{{ $module === 'compras' ? ' purchase-requests-page--laptop' : '' }}">
@@ -26,7 +27,7 @@
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
                     <div class="pur-req-detail__toolbar-actions">
-                        @if ($purchaseRequest->puedeEmitirOrden())
+                        @if ($purchaseRequest->puedeEmitirOrden() && ! $tieneCotizacionPendiente)
                             <a
                                 href="{{ route('purchase-requests.orders.purchase.create', ['module' => $module, 'purchase_request' => $purchaseRequest->id]) }}"
                                 class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary"
@@ -49,6 +50,11 @@
 
                 <h2 class="page-title">Procesar solicitud {{ $purchaseRequest->folioVisible() }}</h2>
                 <p class="page-subtitle">El estado lo calcula el sistema según las órdenes emitidas. Puedes cerrar el saldo con un motivo.</p>
+                @if ($tieneCotizacionPendiente)
+                    <div class="alert alert--warning" role="status" style="margin-top: 0.75rem;">
+                        Cotización pendiente de aprobación: la orden de compra se habilita cuando el director decida.
+                    </div>
+                @endif
                 <div class="pur-req-detail__pills">
                     <x-pedido-etapa :etapa="$purchaseRequest->etapa()" />
                     @if ($purchaseRequest->urgente)
@@ -137,6 +143,8 @@
                             </table>
                         </div>
                     </section>
+
+                    @include('modules.purchase-requests.processing.partials.quotations')
 
                     {{-- El estado ya no se elige a mano: lo escribe la máquina al emitir OC o al cerrar saldo. --}}
                     @if ($purchaseRequest->comentarios_compras)

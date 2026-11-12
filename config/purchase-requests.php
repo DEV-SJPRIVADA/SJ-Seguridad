@@ -20,6 +20,19 @@ return [
     ],
 
     /*
+    | Cotizaciones que Compras carga en la bandeja y puede enviar a aprobación de un director.
+    | Son opcionales: sin cotización, la OC se emite igual. Un archivo por cotización.
+    */
+    'quotations' => [
+        'max_per_batch' => 3,
+        'max_kilobytes' => 10240,
+        'mimes' => ['pdf', 'jpg', 'jpeg', 'png'],
+        'disk' => 'local',
+        'directory' => 'purchase-requests',
+        'link_days' => (int) env('PURCHASE_QUOTATION_LINK_DAYS', 7),
+    ],
+
+    /*
     | Columnas de plantilla Excel para precargar ítems en Nueva / Editar solicitud.
     | Fila 1 = claves técnicas, fila 2 = etiquetas, datos desde fila 3.
     | La foto no forma parte de la plantilla (se agrega en pantalla).

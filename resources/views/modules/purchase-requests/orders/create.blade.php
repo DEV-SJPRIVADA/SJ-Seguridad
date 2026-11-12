@@ -160,6 +160,23 @@
                             >{{ old('observaciones') }}</textarea>
                             <x-input-error :messages="$errors->get('observaciones')" />
                         </div>
+
+                        @if ($sourceType === 'purchase' && ! empty($quotationOptions))
+                            <div class="form-field cursos-registros-page__form-span">
+                                <label class="form-label" for="order_purchase_quotation_id">Cotización aprobada (opcional)</label>
+                                <x-searchable-select
+                                    id="order_purchase_quotation_id"
+                                    name="purchase_quotation_id"
+                                    :options="$quotationOptions"
+                                    :value="old('purchase_quotation_id')"
+                                    placeholder="Sin cotización vinculada"
+                                    search-placeholder="Buscar cotización aprobada…"
+                                    :allow-clear="true"
+                                />
+                                <p class="form-help">Solo aparecen cotizaciones ganadoras aprobadas por el director y todavía no vinculadas a otra OC. Es opcional.</p>
+                                <x-input-error :messages="$errors->get('purchase_quotation_id')" />
+                            </div>
+                        @endif
                     </div>
                 </section>
 

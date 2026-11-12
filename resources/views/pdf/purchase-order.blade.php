@@ -234,6 +234,21 @@
             <td class="label">Activo</td>
             <td colspan="2" class="flag-activo">{{ $order->banderaImpresa('activo') }}</td>
         </tr>
+        @if ($order->purchaseQuotation)
+            {{-- Referencia de la cotización aprobada que Compras vinculó (opcional). --}}
+            <tr>
+                <td class="label">Grupo / OC futura</td>
+                <td colspan="2">{{ $order->purchaseQuotation->loteLabel() }}</td>
+            </tr>
+            <tr>
+                <td class="label">Cotización aprobada</td>
+                <td colspan="2">{{ $order->purchaseQuotation->descripcionVisible() }} — {{ $order->purchaseQuotation->original_name }}</td>
+            </tr>
+            <tr>
+                <td class="label">Aprobada por</td>
+                <td colspan="2">{{ $order->purchaseQuotation->aprobador?->name ?? '—' }}</td>
+            </tr>
+        @endif
     </table>
 
     <table class="items" style="margin-top: 3px;">

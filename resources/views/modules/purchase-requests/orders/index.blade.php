@@ -141,6 +141,7 @@
                                     <th>LÍNEAS</th>
                                     <th>TOTAL</th>
                                     <th>ESTADO</th>
+                                    <th>RECIBIDO</th>
                                     <th>ACCIONES</th>
                                 </tr>
                             </thead>
@@ -200,7 +201,8 @@
                     responsive: false,
                     order: [[1, 'desc']],
                     columnDefs: [
-                        { targets: [9], orderable: false, searchable: false },
+                        // Recibido (9) y Acciones (10) no se ordenan ni se buscan en el servidor.
+                        { targets: [9, 10], orderable: false, searchable: false },
                     ],
                 });
 

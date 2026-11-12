@@ -499,6 +499,9 @@ class PurchaseOrderEmissionTest extends TestCase
         $response->assertJsonPath('recordsTotal', 1);
         $response->assertJsonPath('recordsFiltered', 1);
         $response->assertJsonPath('data.0.2', 'PROVEEDOR LISTADO');
+        // La columna «Recibido» va después de Estado y antes de Acciones.
+        $this->assertStringContainsString('No recibido', (string) $response->json('data.0.9'));
+        $this->assertStringContainsString('Ver orden de compra', (string) $response->json('data.0.10'));
     }
 
     public function test_the_orders_list_can_be_filtered(): void

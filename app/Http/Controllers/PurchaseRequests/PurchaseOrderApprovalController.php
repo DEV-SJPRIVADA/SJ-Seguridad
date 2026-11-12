@@ -151,7 +151,7 @@ class PurchaseOrderApprovalController extends Controller
 
     private function loadOrder(PurchaseOrder $order): PurchaseOrder
     {
-        return $order->load(['items', 'source', 'aprobacionAprobador', 'aprobacionSolicitadaPor']);
+        return $order->load(['items', 'source', 'aprobacionAprobador', 'aprobacionSolicitadaPor', 'purchaseQuotation.aprobador']);
     }
 
     private function assertEmailApprover(Request $request, PurchaseOrder $order): int

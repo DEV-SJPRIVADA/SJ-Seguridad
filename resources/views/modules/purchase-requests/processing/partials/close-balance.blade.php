@@ -26,7 +26,7 @@
                 >{{ old('motivo') }}</textarea>
                 <x-input-error :messages="$errors->get('motivo')" />
             </div>
-            <button type="submit" class="btn btn--primary btn--sm">Cerrar saldo</button>
+            <button type="submit" class="btn btn--primary btn--sm btn-fit-content">Cerrar saldo</button>
         </form>
     </section>
 @endif

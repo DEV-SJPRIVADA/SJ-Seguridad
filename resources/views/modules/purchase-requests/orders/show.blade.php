@@ -238,6 +238,56 @@
                         @endif
                     </section>
 
+                    @if ($order->purchaseQuotation)
+                        <section class="pur-req-form__section">
+                            <header class="pur-req-form__section-head">
+                                <span class="pur-req-form__section-step" aria-hidden="true">
+                                    <x-lucide-file-check-2 width="16" height="16" />
+                                </span>
+                                <div>
+                                    <h3 class="pur-req-form__section-title">Cotización aprobada vinculada</h3>
+                                    <p class="pur-req-form__section-desc">Referencia de la cotización que Compras vinculó al emitir esta orden. Los datos del proveedor y los precios son los capturados en la OC.</p>
+                                </div>
+                            </header>
+
+                            <div class="pur-req-form__meta">
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Grupo / OC futura</span>
+                                    <span class="pur-req-form__meta-value">{{ $order->purchaseQuotation->loteLabel() }}</span>
+                                </div>
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Cotización</span>
+                                    <span class="pur-req-form__meta-value">{{ $order->purchaseQuotation->descripcionVisible() }}</span>
+                                </div>
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Archivo</span>
+                                    <span class="pur-req-form__meta-value">{{ $order->purchaseQuotation->original_name }}</span>
+                                </div>
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Aprobada por</span>
+                                    <span class="pur-req-form__meta-value">{{ $order->purchaseQuotation->aprobador?->name ?? '—' }}</span>
+                                </div>
+                                <div class="pur-req-form__meta-item">
+                                    <span class="pur-req-form__meta-label">Fecha de decisión</span>
+                                    <span class="pur-req-form__meta-value">
+                                        @if ($order->purchaseQuotation->resuelta_at)
+                                            <x-date-table :value="$order->purchaseQuotation->resuelta_at" datetime />
+                                        @else
+                                            —
+                                        @endif
+                                    </span>
+                                </div>
+                            </div>
+
+                            @if (filled($order->purchaseQuotation->comentario))
+                                <div class="form-field" style="margin-top: 0.85rem;">
+                                    <span class="form-label">Comentario del aprobador</span>
+                                    <p class="pur-req-form__item-desc">{{ $order->purchaseQuotation->comentario }}</p>
+                                </div>
+                            @endif
+                        </section>
+                    @endif
+
                     @include('modules.purchase-requests.orders.partials.approval')
 
                     @include('modules.purchase-requests.orders.partials.cancellation')
@@ -257,6 +307,10 @@
                                 <li class="pur-req-form-guide__item">Líneas: {{ $order->items->count() }}</li>
                                 <li class="pur-req-form-guide__item">Total: {{ number_format((float) $order->total, 2) }}</li>
                                 <li class="pur-req-form-guide__item">Estado: {{ $order->estadoLabel() }}</li>
+                                @if ($order->purchaseQuotation)
+                                    <li class="pur-req-form-guide__item">Cotización: {{ $order->purchaseQuotation->descripcionVisible() }}</li>
+                                    <li class="pur-req-form-guide__item">Aprobó cotización: {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}</li>
+                                @endif
                                 <li class="pur-req-form-guide__item">
                                     Recibido:
                                     {{ $order->evaluation?->fecha_recibido?->format('d/m/Y') ?? 'pendiente' }}

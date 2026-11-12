@@ -27,7 +27,9 @@
     </x-slot>
 
     @php
-        $currentEstado = $filters['estado'] ?? \App\Models\PurchaseRequest::ESTADO_PENDIENTE;
+        $currentEstado = $filters['estado'] ?? ($vista === 'cotizaciones'
+            ? \App\Models\PurchaseQuotation::ESTADO_PENDIENTE
+            : \App\Models\PurchaseRequest::ESTADO_PENDIENTE);
         $estadoMetaLabels = [
             \App\Models\PurchaseRequest::ESTADO_PENDIENTE => 'pendientes por autorizar',
             'todos' => 'en historial',
@@ -47,6 +49,13 @@
             \App\Models\PurchaseOrder::APROBACION_APROBADA => 'aprobadas',
             \App\Models\PurchaseOrder::APROBACION_RECHAZADA => 'rechazadas',
         ];
+        $quotationEstadoOptions = [
+            \App\Models\PurchaseQuotation::ESTADO_PENDIENTE => 'Pendientes por decidir',
+            'todos' => 'Historial completo',
+            \App\Models\PurchaseQuotation::ESTADO_APROBADA => 'Aprobadas',
+            \App\Models\PurchaseQuotation::ESTADO_RECHAZADA => 'Rechazadas',
+        ];
+        $quotationMetaLabels = $orderMetaLabels;
     @endphp
 
     <div class="page-section req-manage-page">
@@ -78,6 +87,7 @@
                                         <th>OC</th>
                                         <th>Origen</th>
                                         <th>Proveedor</th>
+                                        <th>Cotización aprobada</th>
                                         <th>Total</th>
                                         <th>Solicitada por</th>
                                         <th>Fecha solicitud</th>
@@ -99,6 +109,19 @@
                                             <td class="text-center">{{ $order->numeroOc }}</td>
                                             <td>{{ $order->sourceFolio() }}</td>
                                             <td>{{ $order->provider_nombre }}</td>
+                                            <td>
+                                                @if ($order->purchaseQuotation)
+                                                    {{-- Cotización aprobada que Compras vinculó al emitir la OC. --}}
+                                                    <span>{{ $order->purchaseQuotation->descripcionVisible() }}</span>
+                                                    <br>
+                                                    <span class="text-muted">
+                                                        {{ $order->purchaseQuotation->loteLabel() }}
+                                                        · {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}
+                                                    </span>
+                                                @else
+                                                    <span class="text-muted">Sin cotización</span>
+                                                @endif
+                                            </td>
                                             <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
                                             <td>{{ $order->aprobacionSolicitadaPor?->name ?? '—' }}</td>
                                             <td class="text-center"><x-date-table :value="$order->aprobacion_solicitada_at" datetime /></td>
@@ -119,7 +142,7 @@
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="9" class="text-muted">
+                                            <td colspan="10" class="text-muted">
                                                 @if ($currentEstado === \App\Models\PurchaseOrder::APROBACION_PENDIENTE)
                                                     No hay órdenes de compra pendientes de aprobación.
                                                 @else
@@ -202,6 +225,95 @@
                                                     No hay anulaciones de órdenes pendientes.
                                                 @else
                                                     No hay anulaciones con la vista seleccionada.
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {{-- Subpestaña Cotizaciones: lotes que Compras envió a este director; pendientes por defecto. --}}
+            @elseif ($vista === 'cotizaciones')
+                <div class="panel">
+                    <div class="panel__header panel__header--compact">
+                        <h3 class="panel-title">Cotizaciones</h3>
+                        <p class="panel-text panel-text--compact">Compras cargó estos grupos de cotizaciones y lo eligió a usted para decidir. Cada grupo representa una orden de compra futura: previsualice los documentos, elija la cotización ganadora y apruebe el grupo, o rechace el grupo completo. Por defecto se muestran solo los pendientes; cambie la vista para consultar el historial.</p>
+                    </div>
+                    <div class="panel__body req-manage-shell">
+                        @include('modules.purchase-requests.approval.partials.status-filter', [
+                            'options' => $quotationEstadoOptions,
+                            'count' => $quotationBatches->count(),
+                            'singular' => 'grupo',
+                            'plural' => 'grupos',
+                            'metaLabels' => $quotationMetaLabels,
+                        ])
+
+                        <div class="data-table-wrap req-manage-shell__table">
+                            <table class="supply-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>Solicitud</th>
+                                        <th>Grupo / OC futura</th>
+                                        <th>Cotizaciones</th>
+                                        <th>Solicitada por</th>
+                                        <th>Fecha solicitud</th>
+                                        <th>Decisión</th>
+                                        <th>Fecha resolución</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse ($quotationBatches as $batch)
+                                        <tr>
+                                            <td>
+                                                {{ $batch->purchaseRequest()?->folioVisible() ?? '—' }}
+                                                <br>
+                                                <span class="text-muted">{{ $batch->purchaseRequest()?->user?->name ?? '—' }}</span>
+                                            </td>
+                                            <td>{{ $batch->label }}</td>
+                                            <td>
+                                                {{ $batch->count() }} cotización(es)
+                                                <br>
+                                                <span class="text-muted">
+                                                    @if ($batch->seleccionada())
+                                                        Ganadora: {{ $batch->seleccionada()->descripcionVisible() }}
+                                                    @else
+                                                        {{ $batch->resumenCotizaciones() }}
+                                                    @endif
+                                                </span>
+                                            </td>
+                                            <td>{{ $batch->solicitadaPor()?->name ?? '—' }}</td>
+                                            <td class="text-center"><x-date-table :value="$batch->solicitadaAt()" datetime /></td>
+                                            <td class="text-center">
+                                                <span class="status-pill {{ $batch->estadoPillClass() }}">{{ $batch->estadoLabel() }}</span>
+                                                @if ($batch->seleccionada()?->purchaseOrder)
+                                                    <br>
+                                                    <span class="text-muted">OC N.º {{ $batch->seleccionada()->purchaseOrder->numeroOc }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                @if ($batch->resueltaAt())
+                                                    <x-date-table :value="$batch->resueltaAt()" datetime />
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td class="table-actions">
+                                                <a
+                                                    href="{{ route('purchase-requests.approval.quotation.show', ['module' => $module, 'lote' => $batch->key]) }}"
+                                                    class="btn btn--{{ $batch->estaPendiente() ? 'primary' : 'secondary' }} btn--sm"
+                                                >{{ $batch->estaPendiente() ? 'Revisar grupo' : 'Ver detalle' }}</a>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="8" class="text-muted">
+                                                @if ($currentEstado === \App\Models\PurchaseQuotation::ESTADO_PENDIENTE)
+                                                    No hay grupos de cotizaciones pendientes de aprobación.
+                                                @else
+                                                    No hay grupos de cotizaciones con la vista seleccionada.
                                                 @endif
                                             </td>
                                         </tr>

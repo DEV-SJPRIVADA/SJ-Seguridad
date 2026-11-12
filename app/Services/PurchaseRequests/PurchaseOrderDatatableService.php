@@ -4,6 +4,7 @@ namespace App\Services\PurchaseRequests;
 
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseProvider;
+use App\Support\DisplayDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -129,7 +130,8 @@ final class PurchaseOrderDatatableService
     public function filteredQuery(array $filters): Builder
     {
         return PurchaseOrder::query()
-            ->with('source')
+            // `evaluation` alimenta la columna «Recibido» (fecha de recibido de la OC).
+            ->with(['source', 'evaluation'])
             ->withCount('items')
             ->when(
                 $filters['estado'] !== self::ESTADO_TODOS,
@@ -242,8 +244,26 @@ final class PurchaseOrderDatatableService
             (string) (int) $order->items_count,
             number_format((float) $order->total, 2),
             $this->estadoPill($order),
+            $this->recibidoPill($order),
             $this->rowActions($order),
         ];
+    }
+
+    /**
+     * Columna «Recibido»: indica si la OC ya tiene fecha de recibido (evaluación post-entrega).
+     */
+    private function recibidoPill(PurchaseOrder $order): string
+    {
+        $fecha = $order->evaluation?->fecha_recibido;
+
+        if ($fecha === null) {
+            return '<span class="status-pill status-pill--muted">No recibido</span>';
+        }
+
+        return sprintf(
+            '<span class="status-pill status-pill--success" title="Fecha de recibido">Recibido %s</span>',
+            e(DisplayDate::date($fecha)),
+        );
     }
 
     private function originLabel(PurchaseOrder $order): string

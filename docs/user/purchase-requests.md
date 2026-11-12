@@ -171,7 +171,7 @@ Una orden emitida no se edita ni se borra. Si quedó mal (proveedor, precio, can
 1. **Compras:** abra la orden en **Órdenes** y use el icono **Solicitar anulación** (junto a **Evaluar entrega**). En el modal elija el **director que aprueba** y escriba el motivo. Pulse **Solicitar anulación**.
 2. La orden queda **Anulación pendiente**. Mientras tanto no se puede evaluar y su cantidad sigue apartada, para no emitir otra orden por lo mismo antes de la respuesta.
 3. Si se equivocó al pedirla, pulse **Retirar solicitud de anulación** y la orden vuelve a **Emitida**.
-4. **Director:** recibe un correo con el botón **Revisar anulación** (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Anulaciones de órdenes** (muestra entre paréntesis cuántas tiene pendientes). Solo el director elegido puede decidir.
+4. **Director:** recibe un correo con el botón **Revisar anulación** (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Anulaciones de órdenes** (muestra entre paréntesis cuántas tiene pendientes). Solo el director elegido puede decidir. Al abrir **Revisar anulación** verá el motivo de Compras, el resumen y las líneas de la orden, y a la derecha el panel con **Aprobar anulación** y **Rechazar**.
 5. Al **aprobar**, la orden queda **Anulada**: no se borra, conserva su número y su PDF y Excel muestran **ANULADA**. Su cantidad vuelve al saldo del pedido, que pasa a **Con orden** o **Por comprar** según las otras órdenes. Desde ahí Compras puede emitir la orden correcta o, si no quedan órdenes, devolver el pedido al solicitante.
 6. Al **rechazar**, el director debe escribir el motivo y la orden sigue **Emitida**.
 7. Quien pidió la anulación recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
@@ -185,11 +185,26 @@ Es **opcional**. Sin pedirla, la orden sigue **Emitida** y se puede descargar co
 1. **Compras:** abra la orden en **Órdenes** y use el icono **Solicitar aprobación** (junto a **Evaluar entrega**). En el modal elija quién aprueba (directores y administradores) y, si quiere, una nota. Pulse **Solicitar aprobación**.
 2. La orden muestra **Aprobación pendiente**. Mientras espera se puede descargar, pero no se puede pedir su anulación.
 3. Si se equivocó de aprobador, pulse **Retirar solicitud de aprobación** y pídala de nuevo.
-4. **Aprobador:** recibe un correo con el botón para revisar la orden (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Órdenes de Compra** (muestra entre paréntesis cuántas tiene pendientes). Solo la persona elegida puede decidir.
+4. **Aprobador:** recibe un correo con el botón para revisar la orden (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Órdenes de Compra** (muestra entre paréntesis cuántas tiene pendientes). Solo la persona elegida puede decidir. Si la orden se emitió con una cotización aprobada, la lista muestra su **Cotización aprobada** (descripción, grupo / OC futura y quién la aprobó) y el detalle de la revisión y el correo repiten esos datos. Al abrir **Revisar orden** verá el resumen de la orden, el detalle de líneas y montos, y a la derecha el panel con los botones **Aprobar orden** y **Rechazar**.
 5. Al **aprobar**, la orden sigue Emitida y en el PDF y el Excel aparece su nombre en **Aprobado 2 por**.
 6. Al **rechazar**, debe escribir el motivo y la orden queda **Anulada**: su cantidad vuelve al saldo del pedido y Compras puede emitir una orden corregida.
 7. Quien pidió la aprobación recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
 8. Lo ya decidido sale de la lista de pendientes pero no se pierde: en **Órdenes de Compra** (y también en **Anulaciones de órdenes**) cambie **Vista** a **Historial completo**, **Aprobadas** o **Rechazadas**, y use **Ver detalle** para consultar la decisión y el comentario.
+
+### Cargar y aprobar cotizaciones por grupo (Compras y director)
+
+Es **opcional**. Si la solicitud no tiene cotizaciones, la orden de compra se emite y se procesa como siempre.
+
+Cada **grupo de cotizaciones** representa una **orden de compra futura**. Compras le pone una referencia libre (por ejemplo `OC 1 · Asociado A`) y carga **de 1 a 3 cotizaciones**. El director decide **una vez por grupo** y elige la cotización **ganadora**. Puede haber varios grupos pendientes a la vez (si habrá 2 OC, se crean 2 grupos).
+
+1. **Compras:** en **Pedidos**, abra la solicitud con **Procesar**. En la sección **Cotizaciones** pulse **Cargar cotización**, escriba la **referencia del grupo**, adjunte de 1 a 3 archivos (PDF, JPG o PNG, máximo 10 MB cada uno), escriba una descripción por archivo si quiere y pulse **Cargar grupo**.
+2. Si el grupo aún tiene espacio, use el icono **+** de la tarjeta del grupo para agregar otra cotización. El máximo es 3 por grupo.
+3. Para enviar un grupo a revisión use el icono de **enviar** de la tarjeta y elija el **director o administrador** que decide. Cada grupo genera su propia autorización.
+4. Mientras un grupo esté **Aprobación pendiente**, el botón **Emitir orden de compra** se oculta y no se puede emitir la OC: primero debe decidir el director. Si se equivocó, use el icono de **retirar** para devolver el grupo a En preparación.
+5. **Director:** recibe un correo con el botón para ver los archivos y decidir sin iniciar sesión. También los encuentra en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Cotizaciones** (muestra entre paréntesis cuántos grupos tiene pendientes), con una fila por grupo. Solo la persona elegida puede decidir.
+6. Al **aprobar**, debe marcar la **cotización ganadora** del grupo: esa queda **Aprobada (seleccionada)** y las demás como **No seleccionada**. Al **rechazar**, debe escribir el motivo y todo el grupo queda **Rechazado**; Compras puede cargar otra cotización o volver a pedir la aprobación.
+7. Quien pidió la aprobación recibe un correo con la decisión y la ganadora. Cada paso queda en los comentarios de la solicitud.
+8. Lo ya decidido se consulta cambiando **Vista** a **Historial completo**, **Aprobadas** o **Rechazadas** en la subpestaña **Cotizaciones**.
 
 ### Emitir la orden impresa (FO-AD-07)
 
@@ -197,18 +212,19 @@ Es **opcional**. Sin pedirla, la orden sigue **Emitida** y se puede descargar co
 2. Se abre el formulario con los datos del origen. Las líneas ya vienen con la cantidad y la descripción. En un suministro la cantidad es la autorizada. El **precio se escribe aquí**: valor unidad e IVA. Si el insumo ya tenía un costo, el valor unidad viene precargado.
 3. Elija el **proveedor** (solo activos; use el buscador por nombre o identificación). Al elegirlo, si el proveedor tiene ciudad, esta se completa en **Ciudad de entrega**, y el campo **Contacto** se llena con el contacto guardado de ese proveedor. El contacto se puede **editar**: al emitir, se imprime en la orden (PDF/Excel) y además queda actualizado en el catálogo del proveedor.
 4. Complete por línea el **valor unidad** y el **IVA** (el IVA es un valor, no un porcentaje). El **valor total** de la línea y el **TOTAL** de la orden se calculan solos: `cantidad × valor unidad + IVA`. La columna **Pendiente** indica cuánto falta por pedir de esa línea (si ya se emitieron otras OC de la misma solicitud).
-5. Complete la **fecha**, la **ciudad de entrega** y las **observaciones**: las observaciones son **obligatorias** (el formulario no deja emitir sin ellas). Los textos se guardan en **MAYÚSCULAS**.
-6. Pulse el icono azul de **check** para emitir. La orden queda registrada como **Emitida** y se abre su detalle.
-7. El **número de la orden** es automático y aparece en el encabezado del PDF y del Excel. No es el folio SC- ni SU-.
-8. La orden impresa es una sola hoja: título **ORDEN DE COMPRA O SERVICIO**, código **FO-AD-07**, periodo **Enero de 2025**, versión 04, logo de la empresa, datos del proveedor, las casillas Proyecto nuevo, Reinversión, Comodato y Activo, el detalle con el total, las observaciones, las firmas y las condiciones legales al pie. Esas condiciones salen tal cual el formato oficial.
-9. En una solicitud **Cliente**, Comodato y Activo se imprimen Sí o No. En una solicitud interna, en un suministro y en una orden emitida antes de este cambio, esas casillas salen **en blanco** (no dicen No).
-10. Las firmas traen el nombre de quien elaboró la orden (Analista de Compras) y el del director del área, o de quien revisó en Calidad si el origen es un insumo. Director administrativo y financiero, y Gerente, quedan en blanco para firma manuscrita.
-11. La **evaluación del proveedor no sale** en el PDF ni en el Excel.
-12. Si más tarde edita el catálogo de proveedores, la orden ya emitida **no cambia**. Al volver a imprimirla se usa el formato nuevo; lo que no se había guardado en su momento sigue en blanco y el número de la orden es el mismo.
+5. Si la solicitud tiene cotizaciones **ganadoras aprobadas** y todavía sin usar, aparece **Cotización aprobada (opcional)**: cada opción muestra la referencia del grupo, la cotización y quién la aprobó. Elija una para dejar la referencia en la OC o déjela vacía. Una cotización ya vinculada a otra orden no vuelve a aparecer.
+6. Complete la **fecha**, la **ciudad de entrega** y las **observaciones**: las observaciones son **obligatorias** (el formulario no deja emitir sin ellas). Los textos se guardan en **MAYÚSCULAS**.
+7. Pulse el icono azul de **check** para emitir. La orden queda registrada como **Emitida** y se abre su detalle.
+8. El **número de la orden** es automático y aparece en el encabezado del PDF y del Excel. No es el folio SC- ni SU-.
+9. La orden impresa es una sola hoja: título **ORDEN DE COMPRA O SERVICIO**, código **FO-AD-07**, periodo **Enero de 2025**, versión 04, logo de la empresa, datos del proveedor, las casillas Proyecto nuevo, Reinversión, Comodato y Activo, el detalle con el total, las observaciones, las firmas y las condiciones legales al pie. Esas condiciones salen tal cual el formato oficial. Si vinculó una cotización ganadora, el PDF agrega **Grupo / OC futura**, **Cotización aprobada** y **Aprobada por**.
+10. En una solicitud **Cliente**, Comodato y Activo se imprimen Sí o No. En una solicitud interna, en un suministro y en una orden emitida antes de este cambio, esas casillas salen **en blanco** (no dicen No).
+11. Las firmas traen el nombre de quien elaboró la orden (Analista de Compras) y el del director del área, o de quien revisó en Calidad si el origen es un insumo. Director administrativo y financiero, y Gerente, quedan en blanco para firma manuscrita.
+12. La **evaluación del proveedor no sale** en el PDF ni en el Excel.
+13. Si más tarde edita el catálogo de proveedores, la orden ya emitida **no cambia**. Al volver a imprimirla se usa el formato nuevo; lo que no se había guardado en su momento sigue en blanco y el número de la orden es el mismo.
 
 ### Ver las órdenes de compra emitidas
 
-1. Entre a **Compras → Órdenes**. Ahí están las órdenes emitidas, con su número, fecha, proveedor, origen (folio SC- o SU-), ciudad de entrega, número de líneas, total y estado.
+1. Entre a **Compras → Órdenes**. Ahí están las órdenes emitidas, con su número, fecha, proveedor, origen (folio SC- o SU-), ciudad de entrega, número de líneas, total, estado y la columna **Recibido**, que dice **No recibido** o la fecha en que se recibió (dd/mm/aa).
 2. Use el **buscador** de la tabla para filtrar por proveedor, identificación, observaciones o número de OC.
 3. El panel **Filtros** permite acotar por **Estado** (Todas / Emitidas / Borrador), **Origen** (Solicitud de compra / Solicitud de suministro), **Proveedor** y rango de **fechas**. El botón de **Aplicar** y el de **Limpiar** quedan uno al lado del otro.
 4. En la fila, el icono de **ojo** abre el detalle de la OC y el de **documento** descarga el PDF FO-AD-07.
@@ -266,6 +282,10 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.60 | 2026-11-12 | Compras | **Autorizaciones compras → Órdenes de Compra:** el aprobador ve la **cotización aprobada** vinculada a la orden (columna nueva en la lista y datos en la pantalla de revisión y en el correo). |
+| 1.59 | 2026-11-12 | Compras | **Órdenes:** nueva columna **Recibido** después de Estado. Muestra **No recibido** o la fecha en que se recibió la orden (dd/mm/aa). |
+| 1.58 | 2026-11-12 | Compras | **Cotizaciones por grupo:** cada grupo es una OC futura, con una referencia libre (ej. `OC 1 · Asociado A`) y de 1 a 3 cotizaciones (PDF/JPG/PNG, 10 MB). El director decide una vez por grupo y elige la cotización **ganadora**; las demás quedan **No seleccionada**. Puede haber varios grupos pendientes a la vez y cada OC puede vincular la ganadora de un grupo distinto. Es opcional; un grupo pendiente bloquea la OC. La OC y el PDF muestran **Grupo / OC futura**, la cotización y quién la aprobó. |
+| 1.57 | 2026-11-12 | Compras | **Cotizaciones:** en Procesar se carga una cotización (PDF/JPG/PNG, 10 MB) y se pide su aprobación a un director o administrador. Se decide por correo o en **Autorizaciones compras → Cotizaciones**. Es opcional; una cotización pendiente bloquea la OC. Al emitir se puede vincular una cotización aprobada y la OC y el PDF muestran la cotización y quién la aprobó. |
 | 1.56 | 2026-11-04 | Compras | Dashboard Solicitudes: KPI con nombres de etapa (Por autorizar, Por comprar, Con orden, Cerrado) y gráfico Bandeja por estado con un color por etapa. |
 | 1.55 | 2026-11-04 | Compras | Dashboard: pestañas **Solicitudes** (bandeja) y **Órdenes** (aprobadas, realizadas, días a la OC y evaluación de asociados). Mismo estilo que el dashboard de Gestión Humana. |
 | 1.36 | 2026-10-21 | Compras | Emitir orden de compra: en **Líneas y precios** la columna **Pendiente** aparece antes de **Cantidad**. |
@@ -326,3 +346,4 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 | 1.9 | 2026-09-14 | Compras | Hilo de comentarios en el detalle de la solicitud (varios mensajes post-envio; visible para solicitante, director y Compras). |
 | 1.8 | 2026-09-14 | Compras | Nueva solicitud: plantilla Excel y carga masiva de productos a la tabla (sin fotos en el archivo). |
 | 1.7 | 2026-08-28 | FEAT-030 | Adjuntos opcionales multiples por solicitud (detalle de la plataforma). El correo de autorizacion y el FO-AD-44 no los incluyen. Al reenviar una rechazada se pueden conservar, agregar o quitar |
+| 1.60 | 2026-11-12 | Compras | **Revisión del director rediseñada:** las pantallas **Revisar orden** y **Revisar anulación** muestran ahora el resumen de la orden en tarjetas, el detalle de líneas y montos, y la decisión en un panel lateral fijo con aviso de lo que implica rechazar. |

@@ -6,6 +6,11 @@
 **Origen:** {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }}  
 **Proveedor:** {{ $order->provider_nombre }}  
 **Total:** {{ number_format((float) $order->total, 2) }}
+@if ($order->purchaseQuotation)
+
+**Cotización aprobada:** {{ $order->purchaseQuotation->descripcionVisible() }} · {{ $order->purchaseQuotation->loteLabel() }}  
+**Cotización aprobada por:** {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}
+@endif
 
 @if (filled($order->aprobacion_nota))
 **Nota de Compras:**

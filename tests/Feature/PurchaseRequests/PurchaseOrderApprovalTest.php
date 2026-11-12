@@ -91,6 +91,15 @@ class PurchaseOrderApprovalTest extends TestCase
             ->get(route('purchase-requests.approval.order-approval.show', ['module' => 'compras', 'purchase_order' => $order->id]))
             ->assertForbidden();
 
+        // El aprobador elegido ve la orden con su resumen, líneas y el panel de decisión.
+        $this->actingAs($this->admin)
+            ->get(route('purchase-requests.approval.order-approval.show', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertOk()
+            ->assertSee('Aprobación de orden de compra')
+            ->assertSee('Resumen de la orden')
+            ->assertSee('Productos de la orden')
+            ->assertSee('Aprobar orden');
+
         $this->actingAs($this->admin)
             ->patch(route('purchase-requests.approval.order-approval.update', ['module' => 'compras', 'purchase_order' => $order->id]), [
                 'decision' => 'aprobar',
@@ -104,6 +113,13 @@ class PurchaseOrderApprovalTest extends TestCase
 
         $html = app(PurchaseOrderPdfExporter::class)->html($order->fresh());
         $this->assertStringContainsString('Administrador Prueba', $html);
+
+        // Ya resuelta, el detalle muestra el resultado y oculta el formulario de decisión.
+        $this->actingAs($this->admin)
+            ->get(route('purchase-requests.approval.order-approval.show', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertOk()
+            ->assertSee('Resultado')
+            ->assertDontSee('Aprobar orden');
 
         // Ya resuelta: sale de Pendientes pero queda en el historial con su decisión.
         $this->actingAs($this->admin)

@@ -5,6 +5,11 @@
     <p><strong>Proveedor:</strong> {{ $order->provider_nombre }} ({{ $order->provider_identificacion }})</p>
     <p><strong>Fecha de la orden:</strong> {{ $order->fechaImpresa() }}</p>
     <p><strong>Total:</strong> {{ number_format((float) $order->total, 2) }}</p>
+    {{-- Cotización aprobada vinculada a la OC (opcional). --}}
+    @if ($order->purchaseQuotation)
+        <p><strong>Cotización aprobada:</strong> {{ $order->purchaseQuotation->descripcionVisible() }} · {{ $order->purchaseQuotation->loteLabel() }}</p>
+        <p><strong>Cotización aprobada por:</strong> {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}</p>
+    @endif
     <p><strong>Solicitada por:</strong> {{ $order->aprobacionSolicitadaPor?->name ?? '—' }}</p>
     <p><strong>Aprobador:</strong> {{ $order->aprobacionAprobador?->name ?? '—' }}</p>
     @if ($order->aprobacion_nota)

@@ -288,6 +288,24 @@ class PurchaseOrderEvaluationTest extends TestCase
         $this->assertSame(PurchaseRequest::COMPRAS_COMPLETADO, $purchase->fresh()->estado_compras);
     }
 
+    public function test_the_orders_list_marks_the_order_as_received_after_the_receipt_date(): void
+    {
+        $order = $this->emit($this->approvedPurchase(2), 2);
+
+        $this->actingAs($this->editor)->put($this->evaluationRoute($order), $this->evaluationPayload())
+            ->assertRedirect();
+
+        // El listado vive en el tablero de procesamiento.
+        $this->editor->givePermissionTo('purchase.tab.processing');
+
+        $response = $this->actingAs($this->editor)
+            ->getJson(route('purchase-requests.orders.datatable', ['module' => 'compras']));
+
+        $response->assertOk();
+        // Columna 9 = «Recibido» (después de Estado, antes de Acciones).
+        $this->assertStringContainsString('Recibido 18/10/26', (string) $response->json('data.0.9'));
+    }
+
     public function test_the_order_document_does_not_print_the_evaluation(): void
     {
         $order = $this->emit($this->approvedPurchase(1), 1);
