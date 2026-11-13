@@ -49,74 +49,10 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
             ->assertForbidden();
 
         $this->actingAs($viewer)
-            ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
-                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'document_number' => '123',
             ])
             ->assertForbidden();
-
-        $this->actingAs($viewer)
-            ->post(route('gestion-humana.acreditaciones.export-apo.generate'), [
-                'ids' => [1],
-                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
-                'include_novedades' => false,
-            ])
-            ->assertForbidden();
-    }
-
-    public function test_editor_validate_preview_excludes_acreditado_fresco(): void
-    {
-        $editor = $this->editorUser();
-        $cedula = '1002003001';
-
-        $this->createCompleteFicha($cedula);
-
-        $enProceso = AcreditacionAcreditado::factory()->enProceso()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'ESCOLTA',
-            'full_name' => 'Candidato Uno',
-        ]);
-        $porVencer = AcreditacionAcreditado::factory()->porVencer()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'SUPERVISOR',
-            'full_name' => 'Candidato Uno',
-        ]);
-        $desacreditado = AcreditacionAcreditado::factory()->desacreditado()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'OPERADOR',
-            'full_name' => 'Candidato Uno',
-        ]);
-        AcreditacionAcreditado::factory()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'VIGILANTE',
-            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
-            'full_name' => 'Candidato Uno',
-        ]);
-
-        $this->actingAs($editor)
-            ->get(route('gestion-humana.acreditaciones.export-apo'))
-            ->assertOk()
-            ->assertSee('Export Apo', false)
-            ->assertSee('Política vigencia curso', false)
-            ->assertSee('NoDocumento', false)
-            ->assertSee('CodigoCurso', false)
-            ->assertSee('POR VENCER</strong>, <strong>DESACREDITADO</strong> con ficha activa', false);
-
-        $json = $this->actingAs($editor)
-            ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
-                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
-            ])
-            ->assertOk()
-            ->json();
-
-        $ids = collect($json['rows'] ?? [])->pluck('acreditado_id')->all();
-        $this->assertCount(2, $ids);
-        $this->assertNotContains($enProceso->id, $ids);
-        $this->assertContains($porVencer->id, $ids);
-        $this->assertContains($desacreditado->id, $ids);
-        $this->assertSame(2, $json['summary']['found']);
-        $this->assertArrayHasKey('nombre1', $json['rows'][0]);
-        $this->assertArrayHasKey('codigo_curso', $json['rows'][0]);
-        $this->assertArrayHasKey('valida', $json['rows'][0]);
     }
 
     public function test_resolver_escolta_accepts_f_or_r_and_ignores_other_cargo(): void
@@ -402,126 +338,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
         Carbon::setTestNow();
     }
 
-    public function test_ficha_incompleta_is_hard_block_in_preview(): void
-    {
-        $editor = $this->editorUser();
-        $cedula = '3004005006';
-
-        EmployeeFichaProfile::query()->create([
-            'document_number' => $cedula,
-            'full_name' => 'Incompleto Test',
-            'first_name' => 'Incompleto',
-            'first_surname' => '',
-            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
-            'sex' => 'M',
-        ]);
-
-        AcreditacionCargo::factory()->create([
-            'cargo_apo' => 'ESCOLTA',
-            'cargo_acreditacion' => '2',
-            'is_active' => true,
-        ]);
-
-        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'ESCOLTA',
-        ]);
-
-        $response = $this->actingAs($editor)
-            ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
-                'ids' => [$acreditado->id],
-                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
-            ])
-            ->assertOk()
-            ->json();
-
-        $this->assertSame(1, $response['summary']['bloqueadas']);
-        $this->assertSame(0, $response['summary']['validas']);
-        $this->assertFalse($response['rows'][0]['valida']);
-        $this->assertTrue($response['rows'][0]['hard_block']);
-        $this->assertContains(
-            AcreditacionExportApoRowResolver::NOVEDAD_FICHA_INCOMPLETA,
-            $response['rows'][0]['motivo_codes'],
-        );
-    }
-
-    public function test_editor_preview_without_ids_loads_all_candidates(): void
-    {
-        $editor = $this->editorUser();
-        $cedula = '4005006007';
-        $this->createCompleteFicha($cedula);
-
-        $acreditado = AcreditacionAcreditado::factory()->porVencer()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'ESCOLTA',
-        ]);
-
-        $response = $this->actingAs($editor)
-            ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
-                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
-            ])
-            ->assertOk()
-            ->json();
-
-        $ids = collect($response['rows'] ?? [])->pluck('acreditado_id')->all();
-        $this->assertContains($acreditado->id, $ids);
-        $this->assertGreaterThanOrEqual(1, $response['summary']['found']);
-    }
-
-    public function test_editor_preview_with_ids_includes_fuera_universo_as_hard_block(): void
-    {
-        $editor = $this->editorUser();
-        $cedula = '5006007008';
-        $this->createCompleteFicha($cedula);
-
-        $candidato = AcreditacionAcreditado::factory()->porVencer()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'ESCOLTA',
-        ]);
-        $enProceso = AcreditacionAcreditado::factory()->enProceso()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'SUPERVISOR',
-        ]);
-        $fresco = AcreditacionAcreditado::factory()->create([
-            'document_number' => $cedula,
-            'cargo_apo' => 'VIGILANTE',
-            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
-        ]);
-
-        $response = $this->actingAs($editor)
-            ->postJson(route('gestion-humana.acreditaciones.export-apo.preview'), [
-                'ids' => [$candidato->id, $enProceso->id, $fresco->id, 999999],
-                'vigencia_policy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
-            ])
-            ->assertOk()
-            ->json();
-
-        $byId = collect($response['rows'] ?? [])->keyBy('acreditado_id');
-        $this->assertCount(4, $response['rows']);
-        $this->assertArrayHasKey($candidato->id, $byId->all());
-        $this->assertArrayHasKey($enProceso->id, $byId->all());
-        $this->assertArrayHasKey($fresco->id, $byId->all());
-        $this->assertArrayHasKey(999999, $byId->all());
-
-        $this->assertFalse($byId[$candidato->id]['hard_block'] ?? true);
-        $this->assertContains(
-            AcreditacionExportApoRowResolver::NOVEDAD_FUERA_UNIVERSO,
-            $byId[$enProceso->id]['motivo_codes'],
-        );
-        $this->assertTrue($byId[$enProceso->id]['hard_block']);
-        $this->assertContains(
-            AcreditacionExportApoRowResolver::NOVEDAD_FUERA_UNIVERSO,
-            $byId[$fresco->id]['motivo_codes'],
-        );
-        $this->assertTrue($byId[$fresco->id]['hard_block']);
-        $this->assertContains(
-            AcreditacionExportApoRowResolver::NOVEDAD_REGISTRO_NO_ENCONTRADO,
-            $byId[999999]['motivo_codes'],
-        );
-        $this->assertContains(999999, $response['summary']['missing_ids']);
-    }
-
-    public function test_export_apo_accepts_auto_validate_ids_query(): void
+    public function test_export_apo_accepts_acreditado_ids_query(): void
     {
         $editor = $this->editorUser();
 
@@ -530,7 +347,7 @@ class AcreditacionesExportApoCandidatesTest extends TestCase
                 'ids' => [12, 34],
             ]))
             ->assertOk()
-            ->assertViewHas('autoValidateIds', [12, 34]);
+            ->assertViewHas('initialAcreditadoIds', [12, 34]);
     }
 
     /**

@@ -672,20 +672,17 @@
                         }
                         const ids = this.selectedIds;
                         const docs = this.selectedDocuments;
+                        if (ids.length < 1 && docs.length < 1) {
+                            return;
+                        }
                         const url = new URL(this.exportApoUrl, window.location.origin);
-                        // Con IDs de acreditado → Automática; solo cédulas (sin acreditación) → Manual.
-                        if (ids.length > 0) {
-                            ids.forEach((id) => {
-                                url.searchParams.append('ids[]', String(id));
-                            });
-                            window.location.href = url.toString();
-                            return;
+                        // IDs: una fila por acreditado (con cargo). Cédulas: cola sin acreditación.
+                        ids.forEach((id) => {
+                            url.searchParams.append('ids[]', String(id));
+                        });
+                        if (docs.length > 0) {
+                            url.searchParams.set('document_numbers', docs.join(','));
                         }
-                        if (docs.length < 1) {
-                            return;
-                        }
-                        url.searchParams.set('mode', 'manual');
-                        url.searchParams.set('document_numbers', docs.join(','));
                         window.location.href = url.toString();
                     },
                     setCola(cola) {

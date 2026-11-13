@@ -133,6 +133,46 @@ final class AcreditacionExportApoManualPrefillService
     }
 
     /**
+     * Una fila por acreditado seleccionado (conserva el cargo de ese registro).
+     *
+     * @param  list<int>  $ids
+     * @return list<array{document_number: string, found: bool, source: string|null, row: array<string, string>, avisos: string}>
+     */
+    public function prefillByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), fn (int $id): bool => $id > 0)));
+        if ($ids === []) {
+            return [];
+        }
+
+        $acreditados = AcreditacionAcreditado::query()
+            ->whereIn('id', $ids)
+            ->get()
+            ->keyBy('id');
+
+        $out = [];
+        foreach ($ids as $id) {
+            $acreditado = $acreditados->get($id);
+            if (! $acreditado instanceof AcreditacionAcreditado) {
+                continue;
+            }
+
+            $document = $this->normalizeDocument((string) $acreditado->document_number);
+            $resolved = $this->rowResolver->resolve($acreditado, AcreditacionExportApoRowResolver::POLICY_CUALQUIERA);
+
+            $out[] = [
+                'document_number' => $document,
+                'found' => true,
+                'source' => 'acreditado',
+                'row' => $this->exportableFields($resolved, $document),
+                'avisos' => (string) ($resolved['motivo'] ?? ''),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
      * @param  list<string>  $documents
      * @return list<array{document_number: string, found: bool, source: string|null, row: array<string, string>, avisos: string}>
      */
@@ -219,7 +259,7 @@ final class AcreditacionExportApoManualPrefillService
             'fecha_nacimiento' => $this->formatDate($resolved['fecha_nacimiento'] ?? ''),
             'genero' => (string) ($resolved['genero'] ?? ''),
             'cargo' => (string) ($resolved['cargo'] ?? ''),
-            // Fecha vinc. Manual: siempre ayer (mismo criterio que Automática).
+            // Fecha vinc.: siempre ayer (America/Bogota).
             'fecha_vinculacion' => AcreditacionExportApoRowResolver::defaultFechaVinculacion('Y-m-d'),
             'codigo_curso' => (string) ($resolved['codigo_curso'] ?? ''),
             'nit_escuela' => (string) ($resolved['nit_escuela'] ?? ''),

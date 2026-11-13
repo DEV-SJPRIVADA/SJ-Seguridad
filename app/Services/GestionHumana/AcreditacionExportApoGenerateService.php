@@ -3,7 +3,6 @@
 namespace App\Services\GestionHumana;
 
 use App\Exports\AcreditacionExportApoXlsExport;
-use App\Models\AcreditacionAcreditado;
 use App\Models\AcreditacionExportApoRun;
 use App\Models\AcreditacionExportApoSetting;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -16,102 +15,11 @@ use Throwable;
 final class AcreditacionExportApoGenerateService
 {
     public function __construct(
-        private readonly AcreditacionExportApoCandidateService $candidateService,
-        private readonly AcreditacionExportApoRowResolver $rowResolver,
         private readonly AcreditacionExportApoXlsExport $xlsExport,
     ) {}
 
     /**
-     * @param  list<int>  $ids
-     * @return array{
-     *     response: StreamedResponse,
-     *     run: AcreditacionExportApoRun,
-     *     export_mode: string,
-     * }
-     */
-    public function generate(
-        array $ids,
-        string $vigenciaPolicy,
-        bool $includeNovedades,
-        ?int $userId = null,
-        string $exportMode = AcreditacionExportApoXlsExport::MODE_ACREDITAR,
-    ): array {
-        $policy = $this->rowResolver->normalizePolicy($vigenciaPolicy);
-        $exportMode = $this->xlsExport->normalizeMode($exportMode);
-        $requestedIds = array_values(array_unique(array_filter(array_map('intval', $ids))));
-
-        if ($requestedIds === []) {
-            throw ValidationException::withMessages([
-                'ids' => 'Seleccione al menos un candidato.',
-            ]);
-        }
-
-        // Retirar: permite IDs fuera del universo Export Apo (p. ej. ACREDITADO).
-        if ($exportMode === AcreditacionExportApoXlsExport::MODE_RETIRAR) {
-            return $this->generateRetiros($requestedIds, $policy, $userId);
-        }
-
-        $candidates = $this->candidateService->findCandidatesByIds($requestedIds);
-
-        if ($candidates->isEmpty()) {
-            throw ValidationException::withMessages([
-                'ids' => 'Ningún candidato seleccionado es exportable (fuera del universo o sin ficha activa).',
-            ]);
-        }
-
-        $resolved = $candidates
-            ->map(fn (AcreditacionAcreditado $row): array => $this->rowResolver->resolve($row, $policy))
-            ->values()
-            ->all();
-
-        $rowsOk = 0;
-        $rowsNovedad = 0;
-        $rowsBlocked = 0;
-        $exportRows = [];
-
-        foreach ($resolved as $row) {
-            if ($row['hard_block'] === true) {
-                $rowsBlocked++;
-
-                continue;
-            }
-
-            if ($row['soft_novedad'] === true) {
-                $rowsNovedad++;
-                if ($includeNovedades) {
-                    $exportRows[] = $row;
-                }
-
-                continue;
-            }
-
-            $rowsOk++;
-            $exportRows[] = $row;
-        }
-
-        if ($exportRows === []) {
-            throw ValidationException::withMessages([
-                'ids' => $includeNovedades
-                    ? 'No hay filas exportables: todas tienen bloqueo duro (ficha incompleta) o no se resolvieron.'
-                    : 'No hay filas válidas para exportar. Active «incluir novedades» o corrija las filas con novedad/bloqueo.',
-            ]);
-        }
-
-        return $this->finishGenerate(
-            exportRows: $exportRows,
-            exportMode: AcreditacionExportApoXlsExport::MODE_ACREDITAR,
-            userId: $userId,
-            vigenciaPolicy: $policy,
-            includeNovedades: $includeNovedades,
-            rowsSelected: count($requestedIds),
-            rowsOk: $rowsOk,
-            rowsNovedad: $rowsNovedad,
-            rowsBlocked: $rowsBlocked,
-        );
-    }
-
-    /**
-     * Generación Manual: filas ya editadas en UI, sin Valida/universo/novedades.
+     * Generación desde la grilla Export Apo: filas ya editadas, sin Valida/universo/novedades.
      *
      * @param  list<array<string, mixed>>  $rows
      * @return array{
@@ -184,48 +92,6 @@ final class AcreditacionExportApoGenerateService
         $result['source'] = 'manual';
 
         return $result;
-    }
-
-    /**
-     * Retiros: carga por IDs sin filtro de universo; no aplica bloqueos de curso/ficha Export Apo.
-     *
-     * @param  list<int>  $requestedIds
-     * @return array{
-     *     response: StreamedResponse,
-     *     run: AcreditacionExportApoRun,
-     *     export_mode: string,
-     * }
-     */
-    private function generateRetiros(array $requestedIds, string $policy, ?int $userId): array
-    {
-        $acreditados = $this->candidateService->findByIds($requestedIds);
-
-        if ($acreditados->isEmpty()) {
-            throw ValidationException::withMessages([
-                'ids' => 'No se encontraron acreditados para retirar con los IDs seleccionados.',
-            ]);
-        }
-
-        $exportRows = $acreditados
-            ->map(fn (AcreditacionAcreditado $row): array => [
-                'document_number' => (string) $row->document_number,
-                'cargo_apo' => (string) $row->cargo_apo,
-                'acreditado_id' => (int) $row->id,
-            ])
-            ->values()
-            ->all();
-
-        return $this->finishGenerate(
-            exportRows: $exportRows,
-            exportMode: AcreditacionExportApoXlsExport::MODE_RETIRAR,
-            userId: $userId,
-            vigenciaPolicy: $policy,
-            includeNovedades: false,
-            rowsSelected: count($requestedIds),
-            rowsOk: count($exportRows),
-            rowsNovedad: 0,
-            rowsBlocked: max(0, count($requestedIds) - count($exportRows)),
-        );
     }
 
     /**

@@ -26,6 +26,9 @@ class PrefillAcreditacionExportApoManualRequest extends FormRequest
             'document_number' => ['nullable', 'string', 'max:50'],
             'document_numbers' => ['nullable', 'array', 'max:'.$max],
             'document_numbers.*' => ['string', 'max:50'],
+            // IDs de Acreditados: una fila por registro (conserva cargo).
+            'ids' => ['nullable', 'array', 'max:'.$max],
+            'ids.*' => ['integer', 'min:1'],
             // Cargo elegido en la grilla (número de cargo de acreditación): solo re-busca el curso.
             'cargo' => ['nullable', 'string', 'max:20'],
         ];
@@ -47,9 +50,10 @@ class PrefillAcreditacionExportApoManualRequest extends FormRequest
             $single = trim((string) $this->input('document_number', ''));
             $many = $this->input('document_numbers');
             $hasMany = is_array($many) && collect($many)->filter(fn ($v) => trim((string) $v) !== '')->isNotEmpty();
+            $hasIds = $this->ids() !== [];
 
-            if ($single === '' && ! $hasMany) {
-                $validator->errors()->add('document_number', 'Indique al menos una cédula.');
+            if ($single === '' && ! $hasMany && ! $hasIds) {
+                $validator->errors()->add('document_number', 'Indique al menos una cédula o un acreditado.');
             }
         });
     }
@@ -70,5 +74,21 @@ class PrefillAcreditacionExportApoManualRequest extends FormRequest
         $single = trim((string) $this->input('document_number', ''));
 
         return $single !== '' ? [$single] : [];
+    }
+
+    /**
+     * @return list<int>
+     */
+    public function ids(): array
+    {
+        $max = (int) config('acreditaciones.limits.bulk_max_ids', 500);
+
+        return collect($this->array('ids'))
+            ->map(fn ($id): int => (int) $id)
+            ->filter(fn (int $id): bool => $id > 0)
+            ->unique()
+            ->take($max)
+            ->values()
+            ->all();
     }
 }

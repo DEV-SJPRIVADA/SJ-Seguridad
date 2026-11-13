@@ -1,4 +1,4 @@
-{{-- Export Apo Manual: grilla editable (fechas date + selects searchable); sin Valida/universo --}}
+{{-- Export Apo: grilla editable (fechas date + selects searchable); sin Valida/universo --}}
 <div
     class="acreditaciones-export-apo-manual desvinculaciones-masivos-page cartas-vacaciones-page"
     x-data="acreditacionesExportApoManual(@js([
@@ -7,6 +7,7 @@
         'csrfToken' => csrf_token(),
         'maxRows' => $manualMaxRows ?? 500,
         'defaultFechaVinculacion' => $defaultFechaVinculacion,
+        'initialAcreditadoIds' => $initialAcreditadoIds ?? [],
         'initialDocuments' => $initialManualDocuments ?? [],
         'generoOptions' => $manualGeneroOptions ?? [],
         'cargoOptions' => $manualCargoOptions ?? [],
@@ -33,9 +34,9 @@
             {{-- Franja compacta: título + chips empresa | filtro + acciones icon-only --}}
             <div class="desvinculaciones-masivos__table-top cartas-vacaciones__toolbar acreditaciones-export-apo-manual__toolbar">
                 <div class="cartas-vacaciones__toolbar-meta">
-                    <h2 class="cartas-vacaciones__toolbar-title">Export Apo Manual</h2>
+                    <h2 class="cartas-vacaciones__toolbar-title">Export Apo</h2>
                     <p class="cartas-vacaciones__toolbar-hint">
-                        Filas a mano o por cédula (prefill ficha/acreditado). Datos de empresa: Catálogo (solo lectura).
+                        Filas a mano, por cédula o desde Acreditados/Validaciones. Datos de empresa: Catálogo (solo lectura).
                     </p>
                     <div class="acreditaciones-export-apo-manual__settings" aria-label="Parámetros fijos de empresa">
                         <span class="acreditaciones-export-apo-manual__chip" title="NIT">
@@ -465,6 +466,7 @@
                         cargoOptions: Array.isArray(config.cargoOptions) ? config.cargoOptions : [],
                         codigoCursoOptions: Array.isArray(config.codigoCursoOptions) ? config.codigoCursoOptions : [],
                         nitEscuelaOptions: Array.isArray(config.nitEscuelaOptions) ? config.nitEscuelaOptions : [],
+                        initialAcreditadoIds: Array.isArray(config.initialAcreditadoIds) ? config.initialAcreditadoIds : [],
                         initialDocuments: Array.isArray(config.initialDocuments) ? config.initialDocuments : [],
                         maxRows,
                         rows: Array.from({ length: 2 }, () => emptyRow()),
@@ -479,13 +481,13 @@
                         bulkModalOpen: false,
 
                         async init() {
-                            // Precarga desde Validaciones (cola sin acreditación → Manual).
-                            if (this.initialDocuments.length < 1) {
+                            // Precarga desde Acreditados / Validaciones (ids = una fila por cargo; cédulas sueltas).
+                            if (this.initialAcreditadoIds.length < 1 && this.initialDocuments.length < 1) {
                                 return;
                             }
                             this.bulkApplying = true;
                             try {
-                                const results = await this.prefillDocuments(this.initialDocuments);
+                                const results = await this.prefillSelection(this.initialAcreditadoIds, this.initialDocuments);
                                 this.rows = [];
                                 results.forEach((item) => {
                                     this.fillOrPushRow(item);
@@ -493,9 +495,10 @@
                                 if (this.rows.length < 1) {
                                     this.rows = Array.from({ length: 2 }, () => emptyRow());
                                 }
-                                this.successMessage = 'Se precargaron ' + this.rows.filter((r) => String(r.document_number || '').trim() !== '').length + ' cédula(s) desde Validaciones.';
+                                const filled = this.rows.filter((r) => String(r.document_number || '').trim() !== '').length;
+                                this.successMessage = 'Se precargaron ' + filled + ' fila(s) desde Acreditados o Validaciones.';
                             } catch (e) {
-                                this.errorMessage = e?.message || 'No se pudo precargar las cédulas desde Validaciones.';
+                                this.errorMessage = e?.message || 'No se pudo precargar las filas desde Acreditados o Validaciones.';
                                 this.rows = Array.from({ length: 2 }, () => emptyRow());
                             } finally {
                                 this.bulkApplying = false;
@@ -682,10 +685,17 @@
                             return true;
                         },
 
-                        async prefillDocuments(documentNumbers) {
+                        async prefillSelection(ids, documentNumbers) {
                             const token = this.csrfToken
                                 || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
                                 || '';
+                            const body = {};
+                            if (Array.isArray(ids) && ids.length > 0) {
+                                body.ids = ids;
+                            }
+                            if (Array.isArray(documentNumbers) && documentNumbers.length > 0) {
+                                body.document_numbers = documentNumbers;
+                            }
                             const response = await fetch(this.prefillUrl, {
                                 method: 'POST',
                                 headers: {
@@ -694,9 +704,7 @@
                                     'X-CSRF-TOKEN': token,
                                     'X-Requested-With': 'XMLHttpRequest',
                                 },
-                                body: JSON.stringify({
-                                    document_numbers: documentNumbers,
-                                }),
+                                body: JSON.stringify(body),
                             });
                             const data = await response.json().catch(() => ({}));
                             if (! response.ok || data.ok === false) {
@@ -707,6 +715,10 @@
                                 );
                             }
                             return Array.isArray(data.results) ? data.results : [];
+                        },
+
+                        async prefillDocuments(documentNumbers) {
+                            return this.prefillSelection([], documentNumbers);
                         },
 
                         async lookupRow(row) {
@@ -882,7 +894,7 @@
                                 const contentType = response.headers.get('Content-Type') || '';
 
                                 if (! response.ok) {
-                                    let message = 'No se pudo generar el archivo Export Apo Manual.';
+                                    let message = 'No se pudo generar el archivo Export Apo.';
                                     if (contentType.includes('application/json')) {
                                         const data = await response.json().catch(() => ({}));
                                         message = data.message
@@ -917,7 +929,7 @@
                                     window.showToast(okMsg, 'success');
                                 }
                             } catch (e) {
-                                const message = 'Error de red al generar el archivo Export Apo Manual.';
+                                const message = 'Error de red al generar el archivo Export Apo.';
                                 this.errorMessage = message;
                                 if (typeof window.showToast === 'function') {
                                     window.showToast(message, 'error');

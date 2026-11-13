@@ -291,7 +291,7 @@ Tablero **Acreditaciones** (Dashboard, Acreditados, Reporte Diario APO, Validaci
 | --- | --- |
 | `view.board.gestion_humana.acreditaciones` | Ver tablero **Acreditaciones** en sidebar GH |
 | `acreditaciones.view` | Shell, **Dashboard** (KPIs/metrics), Acreditados (lectura), Reporte Diario (ver/filtrar/export/cargas), export listados. **No** ve ni opera Validaciones, Export Apo ni edita parámetros Catálogo |
-| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo (cargos + params Export Apo), cargar/reemplazar Reporte Diario, **Validaciones**, **Export Apo** (tab, DT, preview, generar `.xls`, modal novedades) (implica view en servicio de acceso) |
+| `acreditaciones.edit` | CRUD Acreditados, import, Catálogo (cargos + params Export Apo), cargar/reemplazar Reporte Diario, **Validaciones**, **Export Apo** (grilla, prefill, generar `.xls`) (implica view en servicio de acceso) |
 
 - Pestanas: `dashboard`, `acreditados`, `reporte_diario`, `validaciones`, `export_apo`, `catalogo` (`config/access.php` → `acreditaciones_tabs`). **Catálogo**, **Validaciones** y **Export Apo** solo con `acreditaciones.edit` (`AcreditacionesAccessService::visibleTabsFor`). **Dashboard** con `view`.
 - **Cambio FEAT-039 vs placeholder FEAT-036:** Export Apo pasó de gate `view` a **`edit`**. Sin permiso Spatie nuevo; **no** se tocó `config/access.php`.

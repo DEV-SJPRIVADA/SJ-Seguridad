@@ -94,7 +94,7 @@ final class AcreditacionValidacionesDatatableService
 
     /**
      * Filas elegibles del filtro actual (todas las páginas) para selección masiva.
-     * Con acreditado_id → Export Apo Automática; sin ID (cola sin acreditación) → por cédula (Manual).
+     * Con acreditado_id → Export Apo (una fila por registro); sin ID (cola sin acreditación) → por cédula.
      *
      * @return list<array{
      *     id: int|null,

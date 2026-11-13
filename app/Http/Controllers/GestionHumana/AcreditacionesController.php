@@ -9,12 +9,10 @@ use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesDatat
 use App\Http\Requests\GestionHumana\Acreditaciones\AcreditacionValidacionesExportRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\BulkUpdateAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\GenerateAcreditacionExportApoManualRequest;
-use App\Http\Requests\GestionHumana\Acreditaciones\GenerateAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\ImportAcreditacionReporteDiarioRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\OmitEmployeeAcreditacionPendingRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\PrefillAcreditacionExportApoManualRequest;
-use App\Http\Requests\GestionHumana\Acreditaciones\PreviewAcreditacionExportApoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\RunAcreditacionValidacionesRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionAcreditadoRequest;
 use App\Http\Requests\GestionHumana\Acreditaciones\StoreAcreditacionCargoRequest;
@@ -42,7 +40,6 @@ use App\Services\GestionHumana\AcreditacionesAuditLogService;
 use App\Services\GestionHumana\AcreditacionEstadoCalculator;
 use App\Services\GestionHumana\AcreditacionExportApoGenerateService;
 use App\Services\GestionHumana\AcreditacionExportApoManualPrefillService;
-use App\Services\GestionHumana\AcreditacionExportApoPreviewService;
 use App\Services\GestionHumana\AcreditacionExportApoRowResolver;
 use App\Services\GestionHumana\AcreditacionImportService;
 use App\Services\GestionHumana\AcreditacionReporteDiarioDatatableService;
@@ -91,7 +88,6 @@ class AcreditacionesController extends Controller
         private readonly AcreditacionValidacionesDatatableService $validacionesDatatableService,
         private readonly AcreditacionValidacionesExportService $validacionesExportService,
         private readonly FichaEmpleadosAccessService $fichaEmpleadosAccess,
-        private readonly AcreditacionExportApoPreviewService $exportApoPreviewService,
         private readonly AcreditacionExportApoGenerateService $exportApoGenerateService,
         private readonly AcreditacionExportApoManualPrefillService $exportApoManualPrefillService,
         private readonly AcreditacionDashboardService $dashboardService,
@@ -1495,17 +1491,11 @@ class AcreditacionesController extends Controller
     {
         abort_unless($this->acreditacionesAccess->canEdit(auth()->user()), 403);
 
-        $vigenciaPolicies = collect(config('acreditaciones.export_apo.vigencia_policies', []))
-            ->map(fn (string $label, string $value): array => [
-                'value' => $value,
-                'label' => $label,
-            ])
-            ->values()
-            ->all();
-
         $settings = AcreditacionExportApoSetting::singleton();
         $maxIds = (int) config('acreditaciones.limits.bulk_max_ids', 500);
-        $autoValidateIds = collect($request->input('ids', []))
+
+        // Desde Acreditados / Validaciones: ids = una fila por registro (con cargo).
+        $initialAcreditadoIds = collect($request->array('ids'))
             ->map(fn ($id): int => (int) $id)
             ->filter(fn (int $id): bool => $id > 0)
             ->unique()
@@ -1513,37 +1503,11 @@ class AcreditacionesController extends Controller
             ->values()
             ->all();
 
-        // Cédulas desde Validaciones (cola sin acreditación) → abrir Manual y precargar.
+        // Cédulas (cola sin acreditación u otras) → precargar por documento.
         $initialManualDocuments = app(DocumentNumberListParser::class)
             ->fromInput($request->input('document_numbers'), $maxIds);
-        $requestedMode = mb_strtolower(trim((string) $request->input('mode', '')), 'UTF-8');
-        $initialWorkMode = $autoValidateIds !== []
-            ? 'automatica'
-            : (($requestedMode === 'manual' || $initialManualDocuments !== []) ? 'manual' : 'automatica');
 
-        /** @var array<string, string> $renovacionLabels */
-        $renovacionLabels = config('acreditaciones.renovaciones', []);
-        $renovacionOptions = collect($renovacionLabels)
-            ->map(fn (string $label, string $value): array => [
-                'value' => $value,
-                'label' => $label,
-            ])
-            ->values()
-            ->all();
-
-        $cargoApoOptions = AcreditacionCargo::query()
-            ->active()
-            ->ordered()
-            ->get(['cargo_apo'])
-            ->map(fn (AcreditacionCargo $row): array => [
-                'value' => (string) $row->cargo_apo,
-                'label' => (string) $row->cargo_apo,
-            ])
-            ->unique('value')
-            ->values()
-            ->all();
-
-        // Opciones Manual: valor exportable = cargo_acreditación (1–6); label = «N — CARGO APO».
+        // Opciones de grilla: valor exportable = cargo_acreditación (1–6); label = «N — CARGO APO».
         $manualCargoOptions = AcreditacionCargo::query()
             ->active()
             ->ordered()
@@ -1611,21 +1575,12 @@ class AcreditacionesController extends Controller
 
         return view('areas.gestion_humana.acreditaciones.export-apo', [
             'subTabs' => $this->getAcreditacionesSubTabs('export_apo'),
-            'vigenciaPolicyOptions' => $vigenciaPolicies,
-            'defaultVigenciaPolicy' => AcreditacionExportApoRowResolver::POLICY_VIGENTE,
             'defaultFechaVinculacion' => AcreditacionExportApoRowResolver::defaultFechaVinculacion('Y-m-d'),
-            'previewUrl' => route('gestion-humana.acreditaciones.export-apo.preview'),
-            'generateUrl' => route('gestion-humana.acreditaciones.export-apo.generate'),
             'manualPrefillUrl' => route('gestion-humana.acreditaciones.export-apo.manual.prefill'),
             'manualGenerateUrl' => route('gestion-humana.acreditaciones.export-apo.manual.generate'),
             'exportApoSettings' => $settings,
-            'autoValidateIds' => $autoValidateIds,
-            'initialWorkMode' => $initialWorkMode,
+            'initialAcreditadoIds' => $initialAcreditadoIds,
             'initialManualDocuments' => $initialManualDocuments,
-            'cargoApoOptions' => $cargoApoOptions,
-            'renovacionOptions' => $renovacionOptions,
-            'lookupUrl' => route('gestion-humana.acreditaciones.acreditados.lookup'),
-            'bulkUpdateUrl' => route('gestion-humana.acreditaciones.acreditados.bulk-update'),
             'manualMaxRows' => $maxIds,
             'manualGeneroOptions' => $manualGeneroOptions,
             'manualCargoOptions' => $manualCargoOptions,
@@ -1634,77 +1589,17 @@ class AcreditacionesController extends Controller
         ]);
     }
 
-    public function exportApoPreview(PreviewAcreditacionExportApoRequest $request): JsonResponse
-    {
-        $preview = $request->previewAll()
-            ? $this->exportApoPreviewService->previewAll($request->vigenciaPolicy())
-            : $this->exportApoPreviewService->preview(
-                $request->ids(),
-                $request->vigenciaPolicy(),
-            );
-
-        return response()->json($preview);
-    }
-
-    public function exportApoGenerate(GenerateAcreditacionExportApoRequest $request): StreamedResponse|RedirectResponse|JsonResponse
-    {
-        try {
-            $result = $this->exportApoGenerateService->generate(
-                $request->ids(),
-                $request->vigenciaPolicy(),
-                $request->includeNovedades(),
-                (int) auth()->id(),
-                $request->exportMode(),
-            );
-        } catch (ValidationException $e) {
-            // Fetch/XHR: JSON 422; POST clásico: redirect con flash.
-            if ($request->expectsJson()) {
-                throw $e;
-            }
-
-            return redirect()
-                ->route('gestion-humana.acreditaciones.export-apo')
-                ->withInput()
-                ->withErrors($e->errors())
-                ->with('error', collect($e->errors())->flatten()->first() ?: 'No se pudo generar el archivo Export Apo.');
-        }
-
-        $run = $result['run'];
-
-        $this->auditLogService->logEvent(
-            eventType: 'export_apo_generate',
-            action: 'generate',
-            reason: null,
-            metadata: [
-                'file_name' => $run->file_name,
-                'export_date' => optional($run->export_date)?->format('Y-m-d'),
-                'seq' => $run->seq,
-                'export_mode' => $result['export_mode'] ?? 'acreditar',
-                'vigencia_policy' => $run->vigencia_policy,
-                'include_novedades' => $run->include_novedades,
-                'rows_selected' => $run->rows_selected,
-                'rows_ok' => $run->rows_ok,
-                'rows_novedad' => $run->rows_novedad,
-                'rows_blocked' => $run->rows_blocked,
-                'rows_exported' => $run->rows_exported,
-            ],
-            model: $run,
-            userId: (int) auth()->id(),
-        );
-
-        return $result['response'];
-    }
-
     /**
-     * Prefill Manual: arma fila desde acreditado/ficha si existe; si no, fila vacía editable.
+     * Prefill Export Apo: por IDs (una fila por acreditado) o por cédula (acreditado/ficha/vacío).
      */
     public function exportApoPrefillManual(PrefillAcreditacionExportApoManualRequest $request): JsonResponse
     {
         $documents = $request->documents();
+        $ids = $request->ids();
 
         // Cambio de cargo en una fila: solo se re-busca el curso de esa cédula con ese cargo.
         $cargo = $request->cargo();
-        if ($cargo !== null && count($documents) === 1) {
+        if ($cargo !== null && count($documents) === 1 && $ids === []) {
             return response()->json([
                 'ok' => true,
                 'document_number' => $documents[0],
@@ -1713,8 +1608,16 @@ class AcreditacionesController extends Controller
             ]);
         }
 
-        if (count($documents) === 1) {
-            $result = $this->exportApoManualPrefillService->prefill($documents[0]);
+        $results = [];
+        if ($ids !== []) {
+            $results = $this->exportApoManualPrefillService->prefillByIds($ids);
+        }
+        if ($documents !== []) {
+            $results = [...$results, ...$this->exportApoManualPrefillService->prefillMany($documents)];
+        }
+
+        if ($ids === [] && count($documents) === 1 && isset($results[0])) {
+            $result = $results[0];
 
             return response()->json([
                 'ok' => true,
@@ -1722,17 +1625,9 @@ class AcreditacionesController extends Controller
                 'source' => $result['source'],
                 'row' => $result['row'],
                 'avisos' => $result['avisos'],
-                'results' => [[
-                    'document_number' => $documents[0],
-                    'found' => $result['found'],
-                    'source' => $result['source'],
-                    'row' => $result['row'],
-                    'avisos' => $result['avisos'],
-                ]],
+                'results' => $results,
             ]);
         }
-
-        $results = $this->exportApoManualPrefillService->prefillMany($documents);
 
         return response()->json([
             'ok' => true,
@@ -1760,7 +1655,7 @@ class AcreditacionesController extends Controller
                 ->route('gestion-humana.acreditaciones.export-apo')
                 ->withInput()
                 ->withErrors($e->errors())
-                ->with('error', collect($e->errors())->flatten()->first() ?: 'No se pudo generar el archivo Export Apo Manual.');
+                ->with('error', collect($e->errors())->flatten()->first() ?: 'No se pudo generar el archivo Export Apo.');
         }
 
         $run = $result['run'];

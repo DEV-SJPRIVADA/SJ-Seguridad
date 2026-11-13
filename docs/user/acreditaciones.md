@@ -14,7 +14,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 - **Acreditados** — listado paginado, filtros, alta/edición/eliminación, exportar a Excel y carga masiva con plantilla. Con permiso de edición, el icono de cola **Nuevos sin acreditación** muestra personas que entraron a ficha y aún no tienen registro acreditado (acciones icon-only: **Nuevo acreditado** u **Omitir** si no aplica; icono Excel para exportar la cola).
 - **Reporte Diario** — carga diaria de uno o dos Excel de la APO (En proceso y/o Acreditados APO), consulta por fecha, filtros, exportar e histórico de cargas. Es un **archivo histórico** de lo que envió la APO ese día; **no** actualiza por sí solo el listado de Acreditados ni Ficha.
 - **Validaciones** — solo con permiso de edición: elige una fecha de reporte, comprueba que ese día tenga **ambos** Excel APO cargados, ejecuta el cruce y obtiene **cuatro colas** para actuar (abrir Ficha, editar o crear acreditado) y exportar. Los resultados viven **solo en pantalla** de esa corrida (no hay histórico de validaciones guardado).
-- **Export Apo** — solo con permiso de edición. Tiene dos modos: **Automática** (Validar universo + preview Valida/motivo + Acreditar/Retirar) y **Manual** (grilla editable como Cartas: agregar/quitar filas, pegar varias cédulas, completar a mano o con prefill de ficha/acreditado). Los datos fijos de empresa se toman del Catálogo. También puede llegar desde Acreditados o Validaciones con **Cargar en Export Apo** (modo Automática).
+- **Export Apo** — solo con permiso de edición. Grilla editable como Cartas: agregar/quitar filas, pegar varias cédulas, completar a mano o con prefill de ficha/acreditado. Los datos fijos de empresa se toman del Catálogo. Desde Acreditados o Validaciones, **Cargar en Export Apo** abre esta pestaña con las filas ya precargadas (si marca varios cargos de la misma persona, llega una fila por cada uno).
 - **Catálogo** — solo con permiso de edición: administrar las filas de cargos (Manager / APO / Informe / Acreditación) y los **parámetros de empresa** usados en Export Apo (Nit, razón social, direcciones, etc.; una sola fila editable).
 
 **En esta versión (Acreditados):**
@@ -47,10 +47,9 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 **En esta versión (Export Apo):**
 
 - Solo con permiso de **edición**. Quien solo consulta **no** ve esta pestaña.
-- Modos **Automática** y **Manual** (pills en la misma pestaña).
-- **Automática:** candidatos **POR VENCER** / **DESACREDITADO** con Ficha activa (no incluye EN PROCESO); Validar + preview Valida/motivo; modal de novedades leves; Acreditar/Retirar.
-- **Manual:** no usa el universo ni Valida; usted arma la grilla (filas + varias cédulas). Si la cédula está en acreditado o ficha, se precarga; si no, completa a mano. Los campos fijos de empresa (Nit, dirección, etc.) no se editan aquí.
-- El nombre del archivo sigue el patrón `APO` + Nit + fecha + correlativo del día (mismo contador en Automática y Manual).
+- Usted arma la grilla (filas + varias cédulas). Si la cédula está en acreditado o ficha, se precarga; si no, completa a mano. Los campos fijos de empresa (Nit, dirección, etc.) no se editan aquí.
+- Desde Acreditados o Validaciones, **Cargar en Export Apo** trae las filas seleccionadas ya completadas (una fila por acreditado; si la cola no tiene acreditado, por cédula).
+- El nombre del archivo sigue el patrón `APO` + Nit + fecha + correlativo del día.
 - Género en el archivo: **1** (masculino) o **2** (femenino).
 
 **En esta versión (Dashboard):**
@@ -134,7 +133,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
 
 1. Use los filtros (estado de acreditación, cédula, **varias cédulas** con el icono de lista, cargo, CARGO APO, rango de fechas de vigencia) y los chips **En perfil / Sin perfil** y **Activos / Desvinculados / Todos (ficha)**. Por defecto aparecen **todos** los acreditados (con o sin ficha); la columna **EN PERFIL** indica si la cédula está en Ficha. Si una **cédula** tiene más de un registro (por ejemplo varios CARGO APO), aparece en **rojo** en la columna Cédula. El filtro de varias cédulas es exacto (coma, salto de línea o `;`, máximo 500) y **no** guarda historial. En pantallas de escritorio y portátil los campos van en la primera fila y los botones en la segunda: **chips de texto a la izquierda** y **botones de icono a la derecha** (filtrar, varias cédulas, limpiar y exportar; pase el cursor para ver la ayuda). En laptop, la columna **Acciones** queda fija a la derecha al desplazar la tabla horizontalmente, para que **Editar/Eliminar** sigan visibles.
 2. Con permiso de edición puede marcar filas (o «seleccionar todos» del filtro, todas las páginas) y usar **Actualizar seleccionados** para poner la misma observación, fecha de solicitud, **VIGEN.ACR** y/o renovaciones a varios a la vez. Los campos vacíos del modal no se cambian; si pone fecha de solicitud, el estado pasa a EN PROCESO. Si pone **VIGEN.ACR** (con o sin Renovado), se **borra** la fecha de solicitud de cada fila y, si tenía una, se agrega en observaciones una línea `Última solicitud: dd/mm/yyyy` (sin borrar el resto del texto; si escribió observaciones en el modal, primero se aplica ese texto y luego la línea). El mismo criterio aplica al **editar** un acreditado cuando cambia VIGEN.ACR.
-3. Con filas marcadas, el botón icono **Cargar en Export Apo** abre Export Apo y valida solo esos registros (aunque no estén en el universo habitual: aparecerán bloqueados con motivo).
+3. Con filas marcadas, el botón icono **Cargar en Export Apo** abre Export Apo con esas personas ya en la grilla (una fila por registro, conservando el cargo). El botón **Actualizar** sigue sirviendo para cambiar observaciones, fechas o renovaciones en el listado, no para exportar.
 4. Use **Nuevo** o **Editar** para un registro puntual. El estado se calcula solo; no se elige a mano.
 5. Para Excel del listado, use el icono de Excel: se descarga según los filtros actuales. Incluye el estado calculado.
 6. Para eliminar, confirme en el aviso: el registro desaparece de forma permanente.
@@ -174,7 +173,7 @@ Aplica al tablero **Acreditaciones** en **Gestión Humana**, con pestañas:
    - Si ambos están cargados, podrá usar **Ejecutar validaciones**.
 4. Pulse **Ejecutar validaciones**. No se ejecuta solo al entrar ni al cambiar la fecha; al cambiar la fecha se limpian los resultados hasta una nueva ejecución.
 5. Tras ejecutar verá el resumen de conteos y las **cuatro colas**. En las colas de Acreditados **no** entran desvinculados; las cédulas **sin perfil sí** aparecen. La cola **Ficha activa sin acreditación** sigue siendo solo personal activo en Ficha. Si una **cédula** aparece más de una vez en la misma cola (por ejemplo varios CARGO APO), se muestra en **rojo** en la columna Cédula. Cada cola tiene **filtros** propios (cédula, **varias cédulas**, nombre y campos de la cola); en **Ficha activa sin acreditación** el **Cargo Ficha** es un selector con los cargos activos del catálogo de Ficha; en **EN PROCESO en sistema / ACREDITADO en APO** puede filtrar también por **VIGEN.ACR APO** (fecha). Use la lupa para aplicar y la X para limpiar. Los resultados son de esa corrida en pantalla; si sale y vuelve, o la sesión de resultados expiró, debe ejecutar de nuevo.
-6. Las **cuatro colas** tienen casilla por fila y «seleccionar todos» del filtro actual (todas las páginas del filtro). En colas con acreditado, **Cargar en Export Apo** abre Automática con esos IDs. En **Ficha activa sin acreditación** la selección es por cédula y **Cargar en Export Apo** abre el modo **Manual** precargando esas cédulas; también puede crear el registro con **Nuevo**.
+6. Las **cuatro colas** tienen casilla por fila y «seleccionar todos» del filtro actual (todas las páginas del filtro). **Cargar en Export Apo** abre la grilla de Export Apo: en colas con acreditado, una fila por registro (con su cargo); en **Ficha activa sin acreditación**, por cédula. También puede crear el registro con **Nuevo**.
 
 ### Interpretar las cuatro colas
 
@@ -194,10 +193,9 @@ Tras crear o editar desde una cola, conviene **volver a ejecutar** para refresca
 
 ### Generar Export Apo (SuperVigilancia)
 
-1. Con permiso de edición, abra la pestaña **Export Apo**. Elija **Automática** o **Manual**.
-2. **Automática:** al entrar no hay listado hasta **Validar**. Si llegó con **Cargar en Export Apo**, valida solo esos IDs. Elija política de vigencia, pulse **Validar**, marque filas y use **Acreditar .xls** o **Retirar**. Si hay Valida=No, el modal pregunta por novedades leves. Retirar limpia; Acreditar revalida el preview. El campo **Fecha vinc.** sale siempre como el **día anterior** (no la fecha de ingreso de la ficha); en Manual también se precarga así y puede editarla.
-3. **Manual:** use **+** para agregar filas, la basura para quitar, o el icono de lista para **pegar varias cédulas**. Al salir de la cédula (o al pegar el lote) el sistema intenta precargar desde acreditado/ficha; si no hay datos, complete la grilla a mano. **Código curso, NIT escuela y Nro** se traen de la pestaña Cursos: el curso de expedición más reciente cuyo tipo corresponda al número de cargo de acreditación (Gestionar cargos → Tipos de curso), **sin importar si está vigente, por actualizar o vencido**. Si la cédula no está en Acreditados se usa el cargo del perfil. Debajo de la cédula aparecen avisos en naranja (no impiden generar): cargo de Acreditados distinto al del perfil, cargo que no está en Gestionar cargos (debe registrarlo en el catálogo) o sin registro en Acreditados. Si no hay curso del cargo, esos campos quedan vacíos para completarlos a mano. Si la persona tiene varias acreditaciones (por ejemplo ESCOLTA y SUPERVISOR) y usted **cambia el Cargo** de la fila, el sistema busca automáticamente el curso de esa cédula para el nuevo cargo y reemplaza Código curso, NIT escuela y Nro (mientras busca aparece «Buscando curso…»); si no tiene curso de ese cargo, esos campos quedan vacíos con el aviso correspondiente. En **Automática** se aplica la misma regla de cargo con la política de vigencia elegida, y los mismos avisos salen como novedades leves. Luego **Acreditar .xls** o **Retirar** (sin Validar ni modal de novedades).
-4. Confirme la descarga `.xls` (hojas ApoDatos + Retiros). El correlativo del día es compartido entre ambos modos.
+1. Con permiso de edición, abra la pestaña **Export Apo**. Si llegó con **Cargar en Export Apo**, las filas ya vienen precargadas (una por acreditado seleccionado, con su cargo; o por cédula si no hay acreditado).
+2. Use **+** para agregar filas, la basura para quitar, o el icono de lista para **pegar varias cédulas**. Al salir de la cédula (o al pegar el lote) el sistema intenta precargar desde acreditado/ficha; si no hay datos, complete la grilla a mano. **Fecha vinc.** sale siempre como el **día anterior** (no la fecha de ingreso de la ficha) y se puede editar. **Código curso, NIT escuela y Nro** se traen de la pestaña Cursos: el curso de expedición más reciente cuyo tipo corresponda al número de cargo de acreditación (Gestionar cargos → Tipos de curso), **sin importar si está vigente, por actualizar o vencido**. Si la cédula no está en Acreditados se usa el cargo del perfil. Debajo de la cédula aparecen avisos en naranja (no impiden generar): cargo de Acreditados distinto al del perfil, cargo que no está en Gestionar cargos (debe registrarlo en el catálogo) o sin registro en Acreditados. Si no hay curso del cargo, esos campos quedan vacíos para completarlos a mano. Si la persona tiene varias acreditaciones (por ejemplo ESCOLTA y SUPERVISOR) y usted **cambia el Cargo** de la fila, el sistema busca automáticamente el curso de esa cédula para el nuevo cargo y reemplaza Código curso, NIT escuela y Nro (mientras busca aparece «Buscando curso…»); si no tiene curso de ese cargo, esos campos quedan vacíos con el aviso correspondiente.
+3. Use **Acreditar .xls** o **Retirar**. Confirme la descarga `.xls` (hojas ApoDatos + Retiros). El correlativo del día es único para esa fecha.
 
 ### Administrar Catálogo (solo edición)
 
@@ -220,12 +218,13 @@ Sin intervención manual:
 El sistema también recalcula estos estados de madrugada según el calendario.
 En **Reporte Diario** el estado o la vigencia del Excel se muestran tal como vienen de la APO; no pasan por este cálculo.  
 En **Validaciones**, la cola de vencidas usa el estado ya calculado del acreditado; el resto de colas cruzan datos de Ficha, Acreditados y el snapshot del día.  
-En **Export Apo**, el estado del acreditado define quién entra al universo de candidatos; el estado del **curso** (vigente / actualizar / vencido) se aplica según la política elegida al Validar y generar.
+En **Export Apo** no hay universo automático: usted arma las filas. El curso se toma el más reciente del cargo, aunque esté vencido.
 
 ## Control de cambios
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.42 | 2026-11-13 | Feature | Export Apo queda solo la grilla (desaparece Automática). **Cargar en Export Apo** precarga las filas seleccionadas, una por acreditado/cargo. |
 | 1.41 | 2026-10-22 | Corrección | Export Apo Manual: la lista de opciones de Cargo, Género, Código curso y NIT escuela se abre debajo del campo (antes salía sobre el menú de procesos). |
 | 1.40 | 2026-10-22 | Feature | Export Apo Manual: al cambiar el Cargo de una fila se trae el curso de esa cédula para el nuevo cargo (código, NIT escuela y Nro). |
 | 1.39 | 2026-10-20 | Feature | Acreditados: todos los botones del filtro quedan en la segunda fila (botones de texto a la izquierda, iconos a la derecha). |

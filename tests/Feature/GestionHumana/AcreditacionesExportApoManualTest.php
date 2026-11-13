@@ -69,8 +69,8 @@ class AcreditacionesExportApoManualTest extends TestCase
                 'document_numbers' => '111,222',
             ]))
             ->assertOk()
-            ->assertViewHas('initialWorkMode', 'manual')
-            ->assertViewHas('initialManualDocuments', ['111', '222']);
+            ->assertViewHas('initialManualDocuments', ['111', '222'])
+            ->assertViewHas('initialAcreditadoIds', []);
     }
 
     public function test_prefill_from_ficha_when_no_acreditado(): void
@@ -225,16 +225,17 @@ class AcreditacionesExportApoManualTest extends TestCase
             ->assertJsonValidationErrors(['rows']);
     }
 
-    public function test_export_apo_page_exposes_manual_mode(): void
+    public function test_export_apo_page_is_the_editable_grid(): void
     {
         $editor = $this->editorUser();
 
         $this->actingAs($editor)
             ->get(route('gestion-humana.acreditaciones.export-apo'))
             ->assertOk()
-            ->assertSee('Automática', false)
-            ->assertSee('Manual', false)
-            ->assertSee('Export Apo Manual', false);
+            ->assertSee('Export Apo', false)
+            ->assertDontSee('Automática', false)
+            ->assertDontSee('Política vigencia curso', false)
+            ->assertSee('Agregar varias cédulas', false);
     }
 
     public function test_prefill_prefers_acreditado_over_ficha(): void
@@ -296,11 +297,56 @@ class AcreditacionesExportApoManualTest extends TestCase
             ->assertJsonPath('row.nit_escuela', '900333444')
             ->assertJsonPath('avisos', '');
 
-        // Automática: con política VIGENTE el curso vencido no se toma.
+        // Política VIGENTE del resolver: el curso vencido no se toma (la grilla usa CUALQUIERA).
         $resolved = app(AcreditacionExportApoRowResolver::class)
             ->resolve($acreditado, AcreditacionExportApoRowResolver::POLICY_VIGENTE);
         $this->assertSame('', $resolved['codigo_curso']);
         $this->assertContains(AcreditacionExportApoRowResolver::NOVEDAD_CURSO_VENCIDO, $resolved['motivo_codes']);
+    }
+
+    public function test_prefill_by_ids_keeps_one_row_per_acreditado_cargo(): void
+    {
+        $editor = $this->editorUser();
+        $cedula = '8801802808';
+
+        $this->seedCargoCatalog();
+        $this->createProfile($cedula, 'ESCOLTA');
+        $this->curso($cedula, $this->tipoCurso('F.ESCOLTA', '2', '2101'), now()->subMonth()->toDateString(), 'NC-ESC', '900555666');
+        $this->curso($cedula, $this->tipoCurso('F.SUPERVISOR', '4', '4101'), now()->subMonths(2)->toDateString(), 'NC-SUP', '900777888');
+
+        $escolta = AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
+            'cargo_apo' => 'ESCOLTA',
+        ]);
+        $supervisor = AcreditacionAcreditado::factory()->porVencer()->create([
+            'document_number' => $cedula,
+            'cargo' => 'ESCOLTA',
+            'cargo_apo' => 'SUPERVISOR',
+        ]);
+
+        $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.export-apo', [
+                'ids' => [$escolta->id, $supervisor->id],
+            ]))
+            ->assertOk()
+            ->assertViewHas('initialAcreditadoIds', [$escolta->id, $supervisor->id]);
+
+        $json = $this->actingAs($editor)
+            ->postJson(route('gestion-humana.acreditaciones.export-apo.manual.prefill'), [
+                'ids' => [$escolta->id, $supervisor->id],
+            ])
+            ->assertOk()
+            ->json();
+
+        $this->assertTrue($json['ok']);
+        $this->assertCount(2, $json['results']);
+        $cargos = collect($json['results'])->pluck('row.cargo')->all();
+        $this->assertSame(['2', '4'], $cargos);
+        $this->assertSame('2101', $json['results'][0]['row']['codigo_curso']);
+        $this->assertSame('4101', $json['results'][1]['row']['codigo_curso']);
+        $this->assertSame($cedula, $json['results'][0]['row']['document_number']);
+        $this->assertSame($cedula, $json['results'][1]['row']['document_number']);
     }
 
     public function test_manual_prefill_from_ficha_uses_profile_cargo_number_and_ignores_other_cargo_courses(): void

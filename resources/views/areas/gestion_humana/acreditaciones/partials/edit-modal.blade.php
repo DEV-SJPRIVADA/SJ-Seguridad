@@ -1,6 +1,6 @@
 {{-- Variables: $cargoApoOptions, $renovacionOptions — estado Alpine en página padre (editOpen, editForm, lookupName).
      Opcional: $validacionesReturn para volver a Validaciones tras guardar.
-     Opcional: $exportApoReturn=true para volver a Export Apo (usa returnPreviewIds en Alpine). --}}
+     Opcional: $exportApoReturn (legado, ya no se usa en Export Apo). --}}
 @php
     $validacionesReturn = $validacionesReturn ?? null;
     $exportApoReturn = (bool) ($exportApoReturn ?? false);

@@ -48,14 +48,14 @@ final class AcreditacionExportApoRowResolver
     public const POLICY_VIGENTE_ACTUALIZAR = 'VIGENTE_ACTUALIZAR';
 
     /**
-     * Solo Export Apo Manual: curso más reciente de un tipo del cargo sin importar su vigencia
-     * (VIGENTE, ACTUALIZAR o VENCIDO). No se ofrece en Automática.
+     * Export Apo: curso más reciente de un tipo del cargo sin importar su vigencia
+     * (VIGENTE, ACTUALIZAR o VENCIDO).
      */
     public const POLICY_CUALQUIERA = 'CUALQUIERA';
 
     /**
      * Fecha vinc. Export Apo: siempre el día anterior (America/Bogota).
-     * Automática usa d/m/Y; Manual UI usa Y-m-d.
+     * El .xls usa d/m/Y; la grilla UI usa Y-m-d.
      */
     public static function defaultFechaVinculacion(string $format = 'd/m/Y'): string
     {
@@ -261,7 +261,7 @@ final class AcreditacionExportApoRowResolver
 
     /**
      * Curso más reciente de la cédula cuyo tipo (activo) tenga `cargo_acredit` = número de cargo,
-     * filtrado por la política de vigencia. Usado por Automática (vía resolve) y Manual.
+     * filtrado por la política de vigencia. Usado por Export Apo (vía resolve / prefill).
      *
      * @return array{codigo_curso: string, nit_escuela: string, nro: string, tipo_curso: string, estado_curso: string, codes: list<string>}
      */
