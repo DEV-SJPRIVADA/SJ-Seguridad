@@ -169,6 +169,8 @@ Eventos `info` de Indicadores se excluyen de la UI global salvo `show_info=1` vi
 | `user_management` | `password_reset` | admin resetea contrasena | `User` | sin secretos; `metadata.admin_initiated=true` |
 | `notification_config` | `email_attach` | `NotificationConfigService::addEmailToType` | `NotificationType` | modulo, type_slug, type_label, email |
 | `notification_config` | `email_detach` | `NotificationConfigService::removeEmailFromType` | `NotificationType` | idem |
+| `user_signature` | `uploaded` | `ProfileController::updateSignature` | `User` | PNG en disco privado; sin el binario en el log |
+| `user_signature` | `deleted` | `ProfileController::destroySignature` | `User` | Quita `signature_path` |
 
 ### Modulo `requisitions` (`area = gestion_humana`)
 

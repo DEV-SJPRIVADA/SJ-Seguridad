@@ -22,6 +22,7 @@ use App\Services\Access\SeleccionAccessService;
 use App\Services\Access\ServicioClienteAccessService;
 use App\Services\Access\SupplyAccessService;
 use App\Services\Indicadores\IndicatorCaptureAccessService;
+use App\Services\Users\UserSignatureService;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -55,6 +56,7 @@ class User extends Authenticatable
         'last_login_at',
         'created_by',
         'email_verified_at',
+        'signature_path',
     ];
 
     /**
@@ -101,6 +103,15 @@ class User extends Authenticatable
     public function hasAssignedSite(): bool
     {
         return $this->sede_id !== null;
+    }
+
+    /**
+     * Data URI de la firma manuscrita vigente. Las vistas usan
+     * `<x-user-signature :user="$user" />`; el FO-AD-07 usa el snapshot de la OC.
+     */
+    public function signatureDataUri(): ?string
+    {
+        return app(UserSignatureService::class)->dataUri($this);
     }
 
     public function areaLabel(): ?string

@@ -56,6 +56,12 @@
 
             <div class="panel profile-card">
                 <div class="profile-card__inner">
+                    @include('profile.partials.update-signature-form')
+                </div>
+            </div>
+
+            <div class="panel profile-card">
+                <div class="profile-card__inner">
                     @include('profile.partials.update-password-form')
                 </div>
             </div>

@@ -15,6 +15,7 @@ Gestionar usuarios internos del sistema, incluyendo rol principal, permisos dire
 - **Acceso y permisos:** layout maestro–detalle — sidebar con **Solicitar en su area**, **Transversal** y cada area del negocio; panel derecho con subgrupos y toggles de la seleccion
 - La estructura logica sigue en tres bloques (`assigned_area`, `global_groups`, `other_areas`); la UI los navega por area via `sections.navigation`
 - Avisos de coherencia al guardar (soft warnings)
+- La **firma manuscrita** no se carga aquí: cada usuario la sube en **Mi perfil**. Ver [`user-signatures.md`](user-signatures.md)
 
 ## Rutas
 
@@ -62,6 +63,7 @@ Cada permiso del formulario lleva una explicacion visible debajo del titulo:
 
 | Version | Fecha | Descripcion |
 | --- | --- | --- |
+| 1.7 | 2026-11-13 | Firma manuscrita: fuera de Admin; el usuario la carga en Mi perfil ([`user-signatures.md`](user-signatures.md)) |
 | 1.6 | 2026-11-09 | Grupo transversal **Suministros — Seguimiento** (`supply.tab.seguimiento`) |
 | 1.5 | 2026-11-06 | Permisos: explicacion visible debajo de cada permiso (`access.permission_help` + generacion automatica para tableros y areas); buscador incluye la explicacion |
 | 1.4 | 2026-08-20 | Lista de usuarios: scroll al ítem activo tras seleccionar |

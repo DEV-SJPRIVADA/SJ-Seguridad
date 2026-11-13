@@ -34,6 +34,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Modulo | Doc tecnica | Doc usuario |
 | --- | --- | --- |
 | Admin usuarios | [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md) | [`user/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/user/admin-users.md) |
+| Firmas manuscritas | [`modules/user-signatures.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/user-signatures.md) | [`user/user-signatures.md`](c:/laragon/www/SJSEGURIDAD/docs/user/user-signatures.md) |
 | Notificaciones (admin) | [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md) | [`user/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/user/notifications-config.md) |
 | Requisiciones | [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md) | [`user/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/user/requisitions.md) |
 | Ficha empleados | [`modules/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/ficha-empleados.md) | [`user/ficha-empleados.md`](c:/laragon/www/SJSEGURIDAD/docs/user/ficha-empleados.md) |
@@ -80,6 +81,7 @@ Analisis del costo de construir la plataforma desde cero sin inteligencia artifi
 ## Modulos documentados
 
 - [`modules/admin-users.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/admin-users.md)
+- [`modules/user-signatures.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/user-signatures.md)
 - [`modules/notifications-config.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/notifications-config.md)
 - [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md)
 - [`modules/requisitions.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/requisitions.md)

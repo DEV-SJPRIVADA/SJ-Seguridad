@@ -12,9 +12,12 @@ use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\PurchaseRequests\PurchaseOrderApprovalService;
 use App\Services\PurchaseRequests\PurchaseOrderPdfExporter;
 use App\Services\PurchaseRequests\PurchaseOrderService;
+use App\Services\Users\UserSignatureService;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 /**
@@ -283,6 +286,63 @@ class PurchaseOrderApprovalTest extends TestCase
         $this->assertSame($this->director->id, (int) $order->fresh()->aprobacion_aprobador_id);
     }
 
+    public function test_approving_snapshots_signatures_into_the_pdf(): void
+    {
+        Mail::fake();
+        Storage::fake('local');
+
+        $gerente = User::factory()->create([
+            'name' => 'Gerente Empresa',
+            'email' => 'gerencia@sjsp.com.co',
+            'must_change_password' => false,
+        ]);
+
+        $this->storeSignature($this->compras);
+        $this->storeSignature($this->director);
+        $this->storeSignature($this->admin);
+        $this->storeSignature($gerente);
+
+        [, $order] = $this->purchaseWithOrder();
+        $service = app(PurchaseOrderApprovalService::class);
+        $service->request($order, $this->compras, $this->admin->id, null);
+        $service->resolve($order->fresh(), $this->admin->id, true, null);
+
+        $order->refresh();
+        $snapshots = $order->signature_snapshots;
+        $this->assertIsArray($snapshots);
+        $this->assertNotNull($snapshots['elaborado']['path']);
+        $this->assertNotNull($snapshots['revisor']['path']);
+        $this->assertNotNull($snapshots['aprobado']['path']);
+        $this->assertNotNull($snapshots['gerente']['path']);
+        $this->assertSame($gerente->id, $snapshots['gerente']['user_id']);
+
+        $html = app(PurchaseOrderPdfExporter::class)->html($order);
+        $this->assertSame(4, substr_count($html, 'class="user-signature"'));
+        $this->assertStringContainsString('Gerente Empresa', $html);
+
+        app(UserSignatureService::class)->delete($this->compras);
+        app(UserSignatureService::class)->delete($gerente);
+
+        $htmlAfter = app(PurchaseOrderPdfExporter::class)->html($order->fresh());
+        $this->assertSame(4, substr_count($htmlAfter, 'class="user-signature"'));
+        $this->assertStringContainsString('Gerente Empresa', $htmlAfter);
+    }
+
+    public function test_pdf_leaves_signature_boxes_blank_when_nobody_uploaded(): void
+    {
+        Mail::fake();
+        Storage::fake('local');
+
+        [, $order] = $this->purchaseWithOrder();
+        $service = app(PurchaseOrderApprovalService::class);
+        $service->request($order, $this->compras, $this->admin->id, null);
+        $service->resolve($order->fresh(), $this->admin->id, true, null);
+
+        $html = app(PurchaseOrderPdfExporter::class)->html($order->fresh());
+        $this->assertStringNotContainsString('class="user-signature"', $html);
+        $this->assertStringContainsString('Administrador Prueba', $html);
+    }
+
     public function test_request_rejects_users_who_are_not_director_or_administrator(): void
     {
         Mail::fake();
@@ -336,5 +396,13 @@ class PurchaseOrderApprovalTest extends TestCase
         app(PurchaseFlowStateService::class)->sync($purchase->fresh(), $this->compras);
 
         return [$purchase->fresh(), $order->fresh()];
+    }
+
+    private function storeSignature(User $user): void
+    {
+        app(UserSignatureService::class)->store(
+            $user,
+            UploadedFile::fake()->image('firma.png', 120, 40),
+        );
     }
 }

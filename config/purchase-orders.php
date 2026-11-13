@@ -50,6 +50,9 @@ TXT),
     // Vigencia del enlace firmado para aprobar la orden por correo.
     'approval_link_days' => (int) env('PURCHASE_ORDER_APPROVAL_LINK_DAYS', 7),
 
+    // Casilla «Gerente (cuando aplique)» del FO-AD-07: usuario con este correo.
+    'gerente_email' => env('PURCHASE_ORDER_GERENTE_EMAIL', 'gerencia@sjsp.com.co'),
+
     'aprobacion_estados' => [
         'pendiente' => 'Aprobación pendiente',
         'aprobada' => 'Aprobada',

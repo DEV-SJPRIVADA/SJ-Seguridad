@@ -68,6 +68,7 @@ Lenguaje no tecnico en la seccion Desarrollo. Sin nombres de rutas, permisos Spa
 | Modulo | Doc tecnica | Doc usuario | Area / tipo |
 | --- | --- | --- | --- |
 | Admin usuarios | [`modules/admin-users.md`](modules/admin-users.md) | [`user/admin-users.md`](user/admin-users.md) | Admin |
+| Firmas manuscritas | [`modules/user-signatures.md`](modules/user-signatures.md) | [`user/user-signatures.md`](user/user-signatures.md) | Transversal (perfil) |
 | Requisiciones | [`modules/requisitions.md`](modules/requisitions.md) | [`user/requisitions.md`](user/requisitions.md) | Compartido |
 | Suministros | [`modules/suministros.md`](modules/suministros.md) | [`user/suministros.md`](user/suministros.md) | Compartido |
 | Solicitudes de compra | [`modules/purchase-requests.md`](modules/purchase-requests.md) | [`user/purchase-requests.md`](user/purchase-requests.md) | Compartido |

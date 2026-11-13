@@ -31,6 +31,7 @@ class PurchaseOrderApprovalService
         private readonly PurchaseFlowStateService $flowState,
         private readonly PurchaseRequestAuditLogService $audit,
         private readonly PurchaseAccessService $access,
+        private readonly PurchaseOrderSignatureSnapshotService $signatures,
     ) {}
 
     public function request(PurchaseOrder $order, User $actor, int $approverId, ?string $nota): PurchaseOrder
@@ -110,6 +111,10 @@ class PurchaseOrderApprovalService
                 // Rechazada: la orden queda Anulada para emitir una nueva corregida.
                 'estado' => $approve ? PurchaseOrder::ESTADO_EMITIDA : PurchaseOrder::ESTADO_ANULADA,
             ]);
+
+            if ($approve) {
+                $this->signatures->capture($order);
+            }
 
             $decision = $approve ? 'AUTORIZADA' : 'RECHAZADA (ORDEN ANULADA)';
             $body = 'OC N.º '.$order->numeroOc.' '.$decision.' POR '.UppercaseFormText::uppercaseString((string) $approver->name)

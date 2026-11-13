@@ -144,6 +144,47 @@
     justify-content: flex-end;
 }
 
+.profile-signature {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.profile-signature__preview {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 6rem;
+    padding: 0.75rem 1rem;
+    border: 1px dashed var(--color-border);
+    border-radius: 12px;
+    background: #fff;
+}
+
+.profile-signature__preview img {
+    max-height: 5rem;
+    max-width: 100%;
+}
+
+.profile-signature__empty {
+    margin: 0;
+    color: var(--color-text-soft);
+    font-size: 0.88rem;
+}
+
+.profile-signature__hint {
+    margin: 0.35rem 0 0;
+    color: var(--color-text-soft);
+    font-size: 0.82rem;
+}
+
+.profile-signature__delete {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+}
+
 /* Usuarios admin: base amigable para portatil; en monitor alto llena hasta 0.5rem del fondo */
 .admin-users-page {
     box-sizing: border-box;

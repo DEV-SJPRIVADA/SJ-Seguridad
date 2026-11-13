@@ -7,6 +7,10 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class PurchaseOrderPdfExporter
 {
+    public function __construct(
+        private readonly PurchaseOrderSignatureSnapshotService $signatures,
+    ) {}
+
     /**
      * @return array<string, mixed>
      */
@@ -31,6 +35,8 @@ class PurchaseOrderPdfExporter
             'itemCellPadding' => $density['pad'],
             'signatureHeight' => $density['sign'],
             'obsHeight' => $density['obs'],
+            'signatureUris' => $this->signatures->dataUris($order),
+            'gerenteNombre' => $this->signatures->gerenteNombre(),
         ];
     }
 

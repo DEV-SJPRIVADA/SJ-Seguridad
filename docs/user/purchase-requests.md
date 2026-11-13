@@ -218,7 +218,7 @@ Cada **grupo de cotizaciones** representa una **orden de compra futura**. Compra
 8. El **número de la orden** es automático y aparece en el encabezado del PDF y del Excel. No es el folio SC- ni SU-.
 9. La orden impresa es una sola hoja: título **ORDEN DE COMPRA O SERVICIO**, código **FO-AD-07**, periodo **Enero de 2025**, versión 04, logo de la empresa, datos del proveedor, las casillas Proyecto nuevo, Reinversión, Comodato y Activo, el detalle con el total, las observaciones, las firmas y las condiciones legales al pie. Esas condiciones salen tal cual el formato oficial. Si vinculó una cotización ganadora, el PDF agrega **Grupo / OC futura**, **Cotización aprobada** y **Aprobada por**.
 10. En una solicitud **Cliente**, Comodato y Activo se imprimen Sí o No. En una solicitud interna, en un suministro y en una orden emitida antes de este cambio, esas casillas salen **en blanco** (no dicen No).
-11. Las firmas traen el nombre de quien elaboró la orden (Analista de Compras) y el del director del área, o de quien revisó en Calidad si el origen es un insumo. Director administrativo y financiero, y Gerente, quedan en blanco para firma manuscrita.
+11. Las firmas traen el nombre de quien elaboró la orden (Analista de Compras), el del director del área (o quien revisó en Calidad si es un insumo), el de quien autorizó la orden y el del gerente (`gerencia@sjsp.com.co`). Si esas personas subieron su firma PNG en **Mi perfil**, el PDF la imprime **después de autorizar** la orden. Si alguien no la ha subido, esa casilla queda en blanco. Cambiar la firma después no altera las órdenes ya autorizadas.
 12. La **evaluación del proveedor no sale** en el PDF ni en el Excel.
 13. Si más tarde edita el catálogo de proveedores, la orden ya emitida **no cambia**. Al volver a imprimirla se usa el formato nuevo; lo que no se había guardado en su momento sigue en blanco y el número de la orden es el mismo.
 
@@ -282,6 +282,7 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.62 | 2026-11-13 | Compras | Orden impresa: si el analista, el director, quien autoriza y el gerente subieron su firma en Mi perfil, el PDF las muestra al autorizar la orden. Sin archivo, la casilla queda en blanco. |
 | 1.61 | 2026-11-12 | Compras | **Autorizaciones compras → Órdenes de Compra:** junto a la **Cotización aprobada** aparece un botón de ojo que abre el archivo en otra pestaña, para revisarlo antes de decidir. También está en la pantalla de revisión de la orden. |
 | 1.60 | 2026-11-12 | Compras | **Autorizaciones compras → Órdenes de Compra:** el aprobador ve la **cotización aprobada** vinculada a la orden (columna nueva en la lista y datos en la pantalla de revisión y en el correo). |
 | 1.59 | 2026-11-12 | Compras | **Órdenes:** nueva columna **Recibido** después de Estado. Muestra **No recibido** o la fecha en que se recibió la orden (dd/mm/aa). |

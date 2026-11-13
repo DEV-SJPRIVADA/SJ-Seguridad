@@ -112,6 +112,8 @@
 
         .sign-head { font-weight: bold; text-align: center; background: #003366; color: #fff; font-size: 7px; }
         .sign-space { height: {{ $signatureHeight }}; vertical-align: bottom; text-align: center; font-size: 7.5px; background: #fff; }
+        .sign-space img { max-height: 42px; max-width: 95%; display: block; margin: 0 auto 1px; }
+        .sign-name { display: block; }
         .sign-role { text-align: center; font-size: 6.5px; font-weight: bold; background: #e8eef6; color: #003366; }
 
         .flag-asume,
@@ -290,17 +292,33 @@
     </table>
 
     <table style="margin-top: 3px;">
+        @php
+            $signatureUris = $signatureUris ?? [];
+            $gerenteNombre = $gerenteNombre ?? '';
+        @endphp
         <tr>
             <td class="sign-head">Elaborado por:</td>
             <td class="sign-head">Revisado y aprobado por:</td>
             <td class="sign-head" colspan="2">Aprobado 2 por:</td>
         </tr>
         <tr>
-            <td class="sign-space">{{ $order->elaboradoNombre() }}</td>
-            <td class="sign-space">{{ $order->revisorNombre() }}</td>
-            {{-- Aprobado 2: quien aprobó la OC en la plataforma (aprobación opcional). --}}
-            <td class="sign-space">{{ $order->aprobadoPorNombre() }}</td>
-            <td class="sign-space"></td>
+            {{-- Imagen solo del snapshot al autorizar; si no hay PNG, la casilla queda en blanco con el nombre. --}}
+            <td class="sign-space">
+                <x-user-signature :src="$signatureUris['elaborado'] ?? null" height="42" alt="" />
+                <span class="sign-name">{{ $order->elaboradoNombre() }}</span>
+            </td>
+            <td class="sign-space">
+                <x-user-signature :src="$signatureUris['revisor'] ?? null" height="42" alt="" />
+                <span class="sign-name">{{ $order->revisorNombre() }}</span>
+            </td>
+            <td class="sign-space">
+                <x-user-signature :src="$signatureUris['aprobado'] ?? null" height="42" alt="" />
+                <span class="sign-name">{{ $order->aprobadoPorNombre() }}</span>
+            </td>
+            <td class="sign-space">
+                <x-user-signature :src="$signatureUris['gerente'] ?? null" height="42" alt="" />
+                <span class="sign-name">{{ $gerenteNombre }}</span>
+            </td>
         </tr>
         <tr>
             <td class="sign-role">Analista de Compras</td>

@@ -37,7 +37,7 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 | Rol / perfil | Responsabilidad en este modulo |
 | --- | --- |
 | Super-admin / Administrador con `manage.users` | Crear, editar y desactivar usuarios; asignar permisos y roles. |
-| Usuario estandar | No accede a este modulo; solo usa las funciones que le hayan sido asignadas. |
+| Usuario estandar | No accede a este modulo; solo usa las funciones que le hayan sido asignadas. Su firma manuscrita la sube en **Mi perfil**, no desde aquí. |
 | Soporte / capacitacion | Usar esta guia para orientar a administradores en altas y cambios de acceso. |
 
 ## Desarrollo
@@ -94,6 +94,7 @@ Queda fuera de alcance de este modulo la gestion de contenido de otros tableros 
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.9 | 2026-11-13 | Agent | Cada usuario sube su firma manuscrita en Mi perfil; Admin no la carga por él. |
 | 1.8 | 2026-11-06 | Agent | Acceso y permisos: cada permiso muestra debajo una explicacion de lo que permite hacer; el buscador tambien filtra por esa explicacion. |
 | 1.7 | 2026-10-08 | Agent | Editar usuario: acciones Volver/Guardar/Cancelar/Sedes/Copiar acceso como iconos. |
 | 1.6 | 2026-10-08 | Agent | KPIs (total/activos/bloqueados) encima de Lista de usuarios; sin cabecera soft. |

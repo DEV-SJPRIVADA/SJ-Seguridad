@@ -111,6 +111,7 @@ class PurchaseOrder extends Model
         'aprobacion_solicitada_at',
         'aprobacion_comentario',
         'aprobacion_resuelta_at',
+        'signature_snapshots',
     ];
 
     protected $casts = [
@@ -121,6 +122,7 @@ class PurchaseOrder extends Model
         'anulacion_resuelta_at' => 'datetime',
         'aprobacion_solicitada_at' => 'datetime',
         'aprobacion_resuelta_at' => 'datetime',
+        'signature_snapshots' => 'array',
     ];
 
     public function aprobacionAprobador(): BelongsTo
@@ -318,7 +320,7 @@ class PurchaseOrder extends Model
      */
     public function loadDocumentRelations(): self
     {
-        $this->loadMissing(['items', 'createdBy', 'source', 'purchaseQuotation.aprobador']);
+        $this->loadMissing(['items', 'createdBy', 'aprobacionAprobador', 'source', 'purchaseQuotation.aprobador']);
 
         $source = $this->source;
 

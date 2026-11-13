@@ -3,7 +3,10 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Services\Users\UserSignatureService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -27,6 +30,8 @@ class ProfileTest extends TestCase
         $response->assertDontSee('Eliminar cuenta', false);
         $response->assertSee('title="Guardar cambios"', false);
         $response->assertSee('title="Actualizar contraseña"', false);
+        $response->assertSee('Firma manuscrita', false);
+        $response->assertSee('Aún no has subido una firma.', false);
     }
 
     public function test_delete_account_section_is_never_shown_on_profile(): void
@@ -93,5 +98,70 @@ class ProfileTest extends TestCase
             ->assertRedirect('/profile');
 
         $this->assertNotNull($user->refresh()->email_verified_at);
+    }
+
+    public function test_user_can_upload_png_signature_and_it_is_shown(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+        $file = UploadedFile::fake()->image('mi-firma.png', 160, 60);
+
+        $this->actingAs($user)
+            ->post(route('profile.signature.update'), ['signature' => $file])
+            ->assertSessionHasNoErrors()
+            ->assertRedirect('/profile')
+            ->assertSessionHas('status', 'signature-updated');
+
+        $user->refresh();
+        $this->assertNotNull($user->signature_path);
+        Storage::disk('local')->assertExists($user->signature_path);
+
+        $this->actingAs($user)
+            ->get('/profile')
+            ->assertOk()
+            ->assertSee('data:image/png;base64,', false)
+            ->assertSee('title="Quitar firma"', false);
+
+        $this->assertDatabaseHas('audit_logs', [
+            'event_type' => 'user_signature',
+            'action' => 'uploaded',
+            'auditable_id' => $user->id,
+        ]);
+    }
+
+    public function test_signature_upload_rejects_non_png(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+
+        $this->actingAs($user)
+            ->from('/profile')
+            ->post(route('profile.signature.update'), [
+                'signature' => UploadedFile::fake()->image('firma.jpg', 80, 40),
+            ])
+            ->assertSessionHasErrors('signature');
+
+        $this->assertNull($user->fresh()->signature_path);
+    }
+
+    public function test_user_can_delete_own_signature(): void
+    {
+        Storage::fake('local');
+        $user = User::factory()->create();
+        app(UserSignatureService::class)->store($user, UploadedFile::fake()->image('firma.png', 80, 40));
+        $path = $user->fresh()->signature_path;
+
+        $this->actingAs($user)
+            ->delete(route('profile.signature.destroy'))
+            ->assertRedirect('/profile')
+            ->assertSessionHas('status', 'signature-deleted');
+
+        $this->assertNull($user->fresh()->signature_path);
+        Storage::disk('local')->assertMissing($path);
+        $this->assertDatabaseHas('audit_logs', [
+            'event_type' => 'user_signature',
+            'action' => 'deleted',
+            'auditable_id' => $user->id,
+        ]);
     }
 }
