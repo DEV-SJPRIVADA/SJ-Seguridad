@@ -14,9 +14,10 @@
                                 class="module-tab {{ $vista === $tabKey ? 'module-tab--active' : '' }}"
                                 @if ($vista === $tabKey) aria-current="page" @endif
                             >
-                                {{ $tab['label'] }}
+                                <span class="module-tab__label">{{ $tab['label'] }}</span>
+                                {{-- Pendientes por autorizar de cada subpestaña. --}}
                                 @if (($tab['count'] ?? 0) > 0)
-                                    ({{ $tab['count'] }})
+                                    <span class="module-tab__count">{{ $tab['count'] }}</span>
                                 @endif
                             </a>
                         @endforeach
@@ -430,82 +431,4 @@
             @endif
         </div>
     </div>
-
-    @push('styles')
-        <style>
-            .req-manage-filters--approval {
-                padding: 0.45rem 0.75rem;
-                margin-bottom: 0.75rem;
-            }
-
-            .req-manage-filters__toolbar--approval {
-                display: flex;
-                flex-direction: row;
-                flex-wrap: wrap;
-                align-items: center;
-                justify-content: flex-end;
-                gap: 2rem;
-            }
-
-            .req-manage-filters__field--approval {
-                display: inline-flex;
-                flex-direction: row;
-                align-items: center;
-                gap: 0.45rem;
-                flex: 0 0 auto;
-                min-width: 0;
-                width: auto;
-            }
-
-            .req-manage-filters__label--inline {
-                margin: 0;
-                white-space: nowrap;
-                line-height: 1;
-            }
-
-            /* Filtro "Vista" (searchable-select): ancho compacto y control a la altura del chrome. */
-            .req-manage-filters__select--inline {
-                width: auto;
-                min-width: 12.5rem;
-                max-width: 100%;
-            }
-
-            .req-manage-filters__select--inline .searchable-select__trigger {
-                min-height: var(--control-height-chrome, 34px);
-                height: var(--control-height-chrome, 34px);
-                font-size: 0.8125rem;
-            }
-
-            .req-manage-filters__meta--approval {
-                margin: 0;
-                flex: 0 0 auto;
-                text-align: right;
-                font-size: 0.8125rem;
-                color: #64748b;
-                line-height: 1.2;
-                white-space: nowrap;
-            }
-
-            @media (max-width: 640px) {
-                .req-manage-filters__toolbar--approval {
-                    justify-content: flex-start;
-                    gap: 1rem;
-                }
-
-                .req-manage-filters__field--approval {
-                    width: 100%;
-                }
-
-                .req-manage-filters__select--inline {
-                    flex: 1 1 auto;
-                    min-width: 0;
-                }
-
-                .req-manage-filters__meta--approval {
-                    white-space: normal;
-                    text-align: left;
-                }
-            }
-        </style>
-    @endpush
 </x-app-layout>

@@ -90,6 +90,25 @@ class UserSignatureService
         return $this->dataUri($user) !== null;
     }
 
+    public function gerenteUser(): ?User
+    {
+        $email = strtolower(trim((string) config(
+            'user-signatures.gerente_email',
+            config('purchase-orders.gerente_email', ''),
+        )));
+
+        if ($email === '') {
+            return null;
+        }
+
+        return User::query()->where('email', $email)->first();
+    }
+
+    public function gerenteNombre(): string
+    {
+        return trim((string) ($this->gerenteUser()?->name ?? ''));
+    }
+
     private function deleteFile(?string $path): void
     {
         if (! filled($path)) {

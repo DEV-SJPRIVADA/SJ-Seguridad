@@ -11,6 +11,7 @@ Permitir que cada persona suba la imagen de su firma para que, cuando un documen
 - Subir, reemplazar o quitar **su** firma desde **Mi perfil**
 - Formato: archivo **PNG** (se recomienda fondo transparente)
 - En la orden de compra la firma se imprime **solo después de autorizar** la orden
+- En la requisición impresa (FO-GH-22): líder = quien solicitó; Dirección de Gestión Humana = quien la gestiona en GH; Gerencia = el usuario `gerencia@sjsp.com.co` cuando ya autorizó un cargo nuevo
 
 Queda fuera de esta entrega: que un administrador suba la firma de otra persona, y el uso en Excel u otros formatos distintos del PDF de la orden de compra.
 
@@ -45,6 +46,18 @@ Queda fuera de esta entrega: que un administrador suba la firma de otra persona,
 
 ### Cómo aparece en la orden de compra
 
+### Cómo aparece en la requisición impresa
+
+Al imprimir desde **Gestión** (FO-GH-22):
+
+1. **Firma autorización Líder:** quien creó la solicitud (si subió PNG).
+2. **Aprobación Gerencia:** el usuario con correo `gerencia@sjsp.com.co`, **solo** si gerencia ya autorizó un cargo nuevo. En otros motivos la casilla queda en blanco.
+3. **Dirección de Gestión Humana Recibió:** quien guarda o pasa la requisición a En gestión en GH. Si nadie de GH la ha tomado, queda en blanco.
+
+La plantilla vacía no lleva firmas.
+
+### Cómo aparece en la orden de compra
+
 Cuando el director administrativo autoriza la orden, el PDF FO-AD-07 pinta (si hay PNG) las firmas de:
 
 1. Quien elaboró la orden (Analista de Compras)
@@ -58,4 +71,6 @@ Si alguien no ha subido su PNG, esa casilla queda en blanco y solo se ve el nomb
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.2 | 2026-11-13 | Compras / Requisiciones | Firmas un poco más grandes en el PDF de la orden y en la impresión FO-GH-22 |
+| 1.1 | 2026-11-13 | Requisiciones | FO-GH-22: firmas de solicitante, GH y gerencia (`gerencia@sjsp.com.co`) |
 | 1.0 | 2026-11-13 | Compras / Perfil | Alta: firma PNG en Mi perfil y snapshot en el PDF de la orden de compra al autorizar |

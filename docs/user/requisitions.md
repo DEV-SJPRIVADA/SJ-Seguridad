@@ -401,7 +401,12 @@ permisos para modificar Catálogos
 30. Imprima la ficha de una requisición existente (icono de impresora en
     la fila) si necesita el documento con los datos ya cargados. La
     **fecha y hora de recepción en Gestión Humana** se toma del momento
-    en que la solicitud quedó en estado Solicitada.
+    en que la solicitud quedó en estado Solicitada. Las firmas del pie
+    salen si cada persona subió su PNG en **Mi perfil**: **Líder** es
+    quien solicitó; **Dirección de Gestión Humana Recibió** es quien la
+    gestiona en GH; **Aprobación Gerencia** es el usuario
+    `gerencia@sjsp.com.co` cuando gerencia ya autorizó un cargo nuevo
+    (si no aplica o aún no autorizó, la casilla queda en blanco).
 
 ### Administrar parámetros
 
@@ -461,6 +466,8 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.16        | 2026-11-13                 | Impresión FO-GH-22: firmas del pie un poco más grandes |
+| 1.15        | 2026-11-13                 | Impresión FO-GH-22: firmas de líder (solicitante), GH y gerencia si hay PNG en Mi perfil |
 | 1.14        | 2026-10-20                 | Duración del contrato: con tipo Fijo se elige 6 o 12 meses; con otros tipos se prellena con el nombre del tipo (editable) |
 | 1.13        | 2026-10-16                 | Gestión/editar: Imprimir RQ al lado de Guardar; datos de persona contratada solo si el estado es Contratado |
 | 1.12        | 2026-10-16                 | Gestión/editar Contratado: Género (Masculino/Femenino) de la persona contratada; es el que va a ficha/APO |

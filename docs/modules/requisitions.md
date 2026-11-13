@@ -58,7 +58,7 @@ Middleware comun: `auth`, `active`, `password.changed`.
 | GET | `/requisitions/{module}/gestion/exportar` | `requisitions.export` | `gestion` |
 | GET | `/requisitions/{module}/gestion/imprimir-plantilla` | `requisitions.print-template` | `gestion` — FO-GH-22 vacío |
 | GET | `/requisitions/{module}/gestion/{requisition}/editar` | `requisitions.edit` | `gestion` |
-| GET | `/requisitions/{module}/gestion/{requisition}/imprimir` | `requisitions.print` | `gestion` |
+| GET | `/requisitions/{module}/gestion/{requisition}/imprimir` | `requisitions.print` | `gestion` — FO-GH-22 con firmas PNG (líder = solicitante; GH = `managed_by`; gerencia = `gerencia@sjsp.com.co` si ya autorizó) |
 | PATCH | `/requisitions/{module}/gestion/{requisition}` | `requisitions.update` | `gestion` |
 | GET | `/requisitions/{module}/autorizacion-gerencia` | `requisitions.management-approval.index` | `autorizacion_gerencia` |
 | GET | `/requisitions/{module}/autorizacion-gerencia/{requisition}` | `requisitions.management-approval.show` | `autorizacion_gerencia` |
@@ -254,6 +254,8 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-11-13 | Impresión FO-GH-22: PNG de firma a 50px (casilla 74px) |
+| 2026-11-13 | Impresión FO-GH-22: firmas manuscritas — Líder = `requested_by`; Dirección GH Recibió = `managed_by` (o log a `en_gestion`); Aprobación Gerencia = usuario `gerencia@sjsp.com.co` solo si hay autorización de cargo nuevo. Plantilla vacía sin firmas. Ver [`user-signatures.md`](user-signatures.md) |
 | 2026-10-20 | Duracion del contrato: tipo Fijo (`RequisitionContractType::isFixedTerm()`, nombre «Fijo») → `<x-searchable-select>` 6/12 meses (guarda `6`/`12`, `FIXED_TERM_DURATIONS`); otros tipos → texto prellenado con el nombre del tipo (editable, MAYÚSCULAS al guardar). Alpine `requisitionContractDuration` en `partials/form-fields` (hidden `contract_duration`). Validacion `Concerns\ValidatesContractDuration` (Store/Update): obligatoria si hay tipo; Fijo solo 6/12. Datos legados no se migran. |
 | 2026-10-16 | Gestion/editar: Imprimir RQ junto a Guardar; sección contratado oculta si el estado no es Contratado (`#js-hired-group[hidden]`) |
 | 2026-09-29 | Impresión FO-GH-22: fila TIPO DE PROGRAMACION + CCOS CR (`cost_center`) en la misma línea |

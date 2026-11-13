@@ -80,6 +80,54 @@ class PurchaseOrderApprovalTest extends TestCase
         Mail::assertSent(PurchaseOrderApprovalRequestedMail::class, fn ($mail) => $mail->hasTo($this->admin->email));
     }
 
+    public function test_approval_tabs_show_the_pending_count_for_each_subtab(): void
+    {
+        Mail::fake();
+        [, $order] = $this->purchaseWithOrder();
+        app(PurchaseOrderApprovalService::class)->request($order, $this->compras, $this->director->id, null);
+
+        // Solicitud pendiente asignada al mismo director.
+        PurchaseRequest::query()->create([
+            'numero_solicitud' => 7799,
+            'user_id' => User::factory()->create(['area_key' => 'operaciones'])->id,
+            'area_key' => 'operaciones',
+            'fecha_solicitud' => now()->toDateString(),
+            'cantidad' => 1,
+            'solicitud_para' => 'Interno',
+            'aprobador_id' => $this->director->id,
+            'estado' => PurchaseRequest::ESTADO_PENDIENTE,
+        ]);
+
+        $html = $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras']))
+            ->assertOk()
+            ->getContent();
+
+        // Barra "Vista" rediseñada: selector compacto a la izquierda y contador a la derecha.
+        $this->assertStringContainsString('pur-approval-bar__view', $html);
+        $this->assertStringContainsString('pur-approval-bar__count', $html);
+        $this->assertMatchesRegularExpression(
+            '/pur-approval-bar__count-value">1</',
+            $html,
+        );
+
+        // Las cuatro subpestañas muestran su contador de pendientes junto a la etiqueta.
+        $this->assertMatchesRegularExpression(
+            '/Solicitudes de Compra<\/span>\s*<span class="module-tab__count">1<\/span>/',
+            $html,
+        );
+        $this->assertMatchesRegularExpression(
+            '/Órdenes de Compra<\/span>\s*<span class="module-tab__count">1<\/span>/',
+            $html,
+        );
+        $this->assertStringContainsString('module-tab__count', $html);
+        // Cotizaciones y anulaciones no tienen pendientes: no se imprime el contador.
+        $this->assertMatchesRegularExpression(
+            '/Cotizaciones<\/span>\s*(?!<span class="module-tab__count")/',
+            $html,
+        );
+    }
+
     public function test_pending_order_cannot_be_printed_nor_evaluated(): void
     {
         Mail::fake();

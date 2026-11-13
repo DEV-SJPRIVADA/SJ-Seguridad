@@ -69,12 +69,19 @@
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
         }
+        {{-- Casilla de firma FO-GH-22: PNG un poco más alto que el nombre de la línea. --}}
         .signature-box {
-            height: 45px;
+            height: 74px;
             vertical-align: bottom;
             text-align: center;
             padding-bottom: 2px;
             font-size: 6.5pt;
+        }
+        .signature-box img {
+            max-height: 50px;
+            max-width: 90%;
+            display: block;
+            margin: 0 auto 2px;
         }
         .important-section {
             font-size: 6.2pt;
@@ -373,16 +380,22 @@
             <span style="color: blue; text-decoration: underline;">4. Una vez se tenga el formato de requisición de personal debidamente diligenciado, si la requisición es de personal administrativo u operativo de la ciudad de Cali o área metropolitana se procederá con la entrega física a Coordinación o Dirección de Gestión Humana, si es operativa a nivel nacional debe enviarse al Coordinador de Programación al correo: coordinador.programacion@sjsp.com.co</span>
         </div>
 
-        {{-- SIGNATURES --}}
+        {{-- Firmas PNG: líder = solicitante; gerencia = gerencia@sjsp.com.co si ya autorizó; GH = quien gestiona. --}}
+        @php
+            $signatureUris = $signatureUris ?? [];
+        @endphp
         <table>
             <tr>
                 <td class="signature-box" style="width: 33%;">
+                    <x-user-signature :src="$signatureUris['lider'] ?? null" height="50" alt="" />
                     <div style="border-top: 1px solid #000; width: 85%; margin: 0 auto;">Firma autorización Líder</div>
                 </td>
                 <td class="signature-box" style="width: 33%;">
+                    <x-user-signature :src="$signatureUris['gerencia'] ?? null" height="50" alt="" />
                     <div style="border-top: 1px solid #000; width: 85%; margin: 0 auto;">Aprobación Gerencia (No se requiere en cambios de cargos OP sin afectación de salario)</div>
                 </td>
                 <td class="signature-box" style="width: 33%;">
+                    <x-user-signature :src="$signatureUris['gh'] ?? null" height="50" alt="" />
                     <div style="border-top: 1px solid #000; width: 85%; margin: 0 auto;">Dirección de Gestión Humana Recibió</div>
                 </td>
             </tr>

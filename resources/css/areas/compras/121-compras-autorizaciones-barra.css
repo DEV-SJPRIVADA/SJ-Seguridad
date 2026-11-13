@@ -1,0 +1,124 @@
+/* Compras — capa 121
+   Autorizaciones compras: barra "Vista" de las cuatro subpestañas
+   (Solicitudes de Compra, Cotizaciones, Órdenes de Compra y Anulaciones de órdenes).
+
+   Reemplaza el layout genérico de filtros (columna, control full-width y contador
+   suelto al pie) por una franja horizontal: selector compacto a la izquierda y
+   contador alineado a la derecha.
+*/
+
+.pur-approval-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1.25rem;
+    margin-bottom: 1rem;
+    padding: 0.6rem 0.85rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--control-radius, 12px);
+    background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* Grupo etiqueta + selector: se mantiene unido al reducir el ancho. */
+.pur-approval-bar__view {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    min-width: 0;
+    flex: 1 1 18rem;
+}
+
+.pur-approval-bar__label {
+    flex: 0 0 auto;
+    margin: 0;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+/* El selector no se estira: ancho acotado al contenido de las opciones. */
+.pur-approval-bar__select {
+    width: auto;
+    min-width: 14rem;
+    max-width: 21rem;
+    flex: 0 1 auto;
+}
+
+.pur-approval-bar__select .searchable-select__trigger {
+    min-height: 2.15rem;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border-radius: 999px;
+    border-color: var(--color-border-strong, #cbd5e1);
+    color: var(--color-primary);
+}
+
+.pur-approval-bar__select .searchable-select__trigger:hover {
+    border-color: var(--brand-blue);
+    background: var(--brand-blue-pale);
+}
+
+/* Contador de la vista activa: pill con el número destacado. */
+.pur-approval-bar__count {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex: 0 0 auto;
+    margin: 0 0 0 auto;
+    padding: 0.3rem 0.75rem;
+    border: 1px solid var(--brand-blue-soft);
+    border-radius: 999px;
+    background: var(--brand-blue-pale);
+    color: var(--color-primary);
+    font-size: 0.78rem;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+
+.pur-approval-bar__count-value {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--brand-blue);
+}
+
+.pur-approval-bar__count-text {
+    font-weight: 600;
+}
+
+/* Sin registros: el contador baja el énfasis para no competir con el estado vacío de la tabla. */
+.pur-approval-bar__count--empty {
+    border-color: var(--color-border);
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.pur-approval-bar__count--empty .pur-approval-bar__count-value {
+    color: #64748b;
+}
+
+/* Móvil: contador a todo el ancho debajo del selector, sin desbordes. */
+@media (max-width: 640px) {
+    .pur-approval-bar {
+        align-items: stretch;
+    }
+
+    .pur-approval-bar__view {
+        flex: 1 1 100%;
+    }
+
+    .pur-approval-bar__select {
+        min-width: 0;
+        max-width: none;
+        flex: 1 1 auto;
+    }
+
+    .pur-approval-bar__count {
+        margin-left: 0;
+        justify-content: center;
+        white-space: normal;
+        text-align: center;
+    }
+}

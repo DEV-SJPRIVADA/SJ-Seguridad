@@ -1,40 +1,41 @@
 {{--
-    Filtro "Vista" de una subpestaña de Autorizaciones compras: por defecto pendientes;
-    las demás opciones consultan el historial. Se envía solo al elegir una opción.
+    Barra "Vista" de las subpestañas de Autorizaciones compras.
+    Selector compacto a la izquierda y contador de registros a la derecha; se envía al elegir una opción.
     Parámetros: $module, $vista, $currentEstado, $options (valor => etiqueta), $count, $singular, $plural, $metaLabels.
 --}}
 <div class="req-manage-shell__filters">
-    <div class="req-manage-filters req-manage-filters--approval">
-        <form
-            method="GET"
-            action="{{ route('purchase-requests.approval.index', ['module' => $module]) }}"
-            class="req-manage-filters__toolbar req-manage-filters__toolbar--approval"
-            x-data
-            x-on:change="$el.submit()"
-        >
-            @if ($vista !== 'solicitudes')
-                <input type="hidden" name="vista" value="{{ $vista }}">
-            @endif
+    <form
+        method="GET"
+        action="{{ route('purchase-requests.approval.index', ['module' => $module]) }}"
+        class="pur-approval-bar"
+        x-data
+        x-on:change="$el.submit()"
+    >
+        @if ($vista !== 'solicitudes')
+            <input type="hidden" name="vista" value="{{ $vista }}">
+        @endif
 
-            <div class="req-manage-filters__field req-manage-filters__field--approval">
-                <label class="req-manage-filters__label req-manage-filters__label--inline" for="approval-filter-estado">Vista</label>
-                <x-searchable-select
-                    id="approval-filter-estado"
-                    name="estado"
-                    class="req-manage-filters__select--inline"
-                    :options="$options"
-                    :value="$currentEstado"
-                    :allow-clear="false"
-                    :required="true"
-                    search-placeholder="Buscar vista…"
-                />
-            </div>
+        <div class="pur-approval-bar__view">
+            <label class="pur-approval-bar__label" for="approval-filter-estado">Vista</label>
+            <x-searchable-select
+                id="approval-filter-estado"
+                name="estado"
+                class="pur-approval-bar__select"
+                :options="$options"
+                :value="$currentEstado"
+                :allow-clear="false"
+                :required="true"
+                search-placeholder="Buscar vista…"
+            />
+        </div>
 
-            <p class="req-manage-filters__meta req-manage-filters__meta--approval">
-                <strong>{{ number_format($count) }}</strong>
+        {{-- Contador de la vista activa: siempre el total de la lista filtrada. --}}
+        <p class="pur-approval-bar__count {{ $count === 0 ? 'pur-approval-bar__count--empty' : '' }}">
+            <span class="pur-approval-bar__count-value">{{ number_format($count) }}</span>
+            <span class="pur-approval-bar__count-text">
                 {{ $count === 1 ? $singular : $plural }}
                 {{ $metaLabels[$currentEstado] ?? '' }}
-            </p>
-        </form>
-    </div>
+            </span>
+        </p>
+    </form>
 </div>

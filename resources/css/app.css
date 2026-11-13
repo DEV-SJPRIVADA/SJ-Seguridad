@@ -246,3 +246,5 @@
 @import './areas/compras/119-compras-aprobacion-oc.css';
 /* 120 Chrome compartido: guía lateral de formularios (x-form-aside-guide) */
 @import './base/120-base.css';
+/* 121 Compras / Autorizaciones compras — barra Vista de las 4 subpestañas */
+@import './areas/compras/121-compras-autorizaciones-barra.css';

@@ -245,6 +245,28 @@ a {
 .module-tab {
     display: inline-flex;
     align-items: center;
+    gap: 0.4rem;
+}
+
+/* Contador de pendientes junto a la etiqueta de una pestaña (p. ej. Autorizaciones compras). */
+.module-tab__count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    padding: 0.05rem 0.35rem;
+    border-radius: 999px;
+    background: var(--color-border);
+    color: var(--color-text-soft);
+    font-size: 0.68rem;
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+/* Sobre la pestaña activa el contador se invierte para mantener el contraste. */
+.module-tab--active .module-tab__count {
+    background: rgba(255, 255, 255, 0.9);
+    color: var(--color-primary);
 }
 
 /* <button class="module-tab">: hereda fuente del layout; size/weight vienen de .module-tab. */

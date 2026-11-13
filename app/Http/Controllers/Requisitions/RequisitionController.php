@@ -31,6 +31,7 @@ use App\Services\Requisitions\PersonalRequisitionFichaSync;
 use App\Services\Requisitions\PersonalRequisitionFilterBag;
 use App\Services\Requisitions\RequisitionAdditionalNotificationRecipients;
 use App\Services\Requisitions\RequisitionAuditLogService;
+use App\Services\Requisitions\RequisitionPrintSignatureService;
 use App\Services\Requisitions\RequisitionRequestReasonCatalog;
 use App\Services\Requisitions\RequisitionSelectionOfficerAccessService;
 use App\Traits\HasRequisitionTabs;
@@ -60,6 +61,7 @@ class RequisitionController extends Controller
         private readonly PersonalRequisitionFichaSync $fichaSync,
         private readonly RequisitionAuditLogService $auditLogService,
         private readonly RequisitionAdditionalNotificationRecipients $additionalNotificationRecipients,
+        private readonly RequisitionPrintSignatureService $printSignatures,
     ) {}
 
     /**
@@ -574,11 +576,26 @@ class RequisitionController extends Controller
         $this->abortIfUnknownModule($module);
         abort_unless($this->requisitionAccess->canAccessRequisitionRecord(auth()->user(), $module, $requisition->requesting_area_key), 404);
 
+        $requisition->load([
+            'client',
+            'city',
+            'clientType',
+            'position',
+            'programmingType',
+            'requestReason',
+            'requester',
+            'manager',
+            'contractType',
+            'uniform',
+            'statusLogs.author',
+        ]);
+
         return view('modules.requisitions.print', [
             'blank' => false,
-            'requisition' => $requisition->load(['client', 'city', 'clientType', 'position', 'programmingType', 'requestReason', 'requester', 'contractType', 'uniform', 'statusLogs']),
+            'requisition' => $requisition,
             'statusLabels' => PersonalRequisition::statuses(),
             'moduleLabel' => config("access.areas.{$requisition->requesting_area_key}"),
+            'signatureUris' => $this->printSignatures->dataUris($requisition),
         ]);
     }
 
@@ -591,6 +608,7 @@ class RequisitionController extends Controller
             'requisition' => new PersonalRequisition,
             'statusLabels' => PersonalRequisition::statuses(),
             'moduleLabel' => '',
+            'signatureUris' => $this->printSignatures->dataUris(null, true),
         ]);
     }
 

@@ -104,6 +104,10 @@ class PurchaseApprovalController extends Controller
         }
 
         // Contadores de las subpestañas: siempre lo pendiente, sin importar el filtro activo.
+        $pendingPurchaseRequestApprovalsCount = PurchaseRequest::query()
+            ->where('aprobador_id', $userId)
+            ->where('estado', PurchaseRequest::ESTADO_PENDIENTE)
+            ->count();
         $pendingOrderApprovalsCount = PurchaseOrder::query()
             ->where('aprobacion_estado', PurchaseOrder::APROBACION_PENDIENTE)
             ->where('aprobacion_aprobador_id', $userId)
@@ -124,6 +128,7 @@ class PurchaseApprovalController extends Controller
                 'solicitudes' => [
                     'label' => 'Solicitudes de Compra',
                     'url' => route('purchase-requests.approval.index', ['module' => $module]),
+                    'count' => $pendingPurchaseRequestApprovalsCount,
                 ],
                 'cotizaciones' => [
                     'label' => 'Cotizaciones',

@@ -84,18 +84,12 @@ class PurchaseOrderSignatureSnapshotService
 
     public function gerenteUser(): ?User
     {
-        $email = strtolower(trim((string) config('purchase-orders.gerente_email', '')));
-
-        if ($email === '') {
-            return null;
-        }
-
-        return User::query()->where('email', $email)->first();
+        return $this->signatures->gerenteUser();
     }
 
     public function gerenteNombre(): string
     {
-        return trim((string) ($this->gerenteUser()?->name ?? ''));
+        return $this->signatures->gerenteNombre();
     }
 
     private function revisorUser(PurchaseOrder $order): ?User

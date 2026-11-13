@@ -22,12 +22,15 @@ use App\Models\RequisitionRequestReason;
 use App\Models\RequisitionUniform;
 use App\Models\User;
 use App\Services\Requisitions\CommercialClientBridge;
+use App\Services\Users\UserSignatureService;
 use App\Support\DisplayDate;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -1137,6 +1140,112 @@ class RequisitionModuleTest extends TestCase
         $response->assertSee('FO-GH-22', false);
         $response->assertSee('IMPRIMIR PLANTILLA VACÍA', false);
         $response->assertSee('Plantilla FO-GH-22', false);
+        $response->assertDontSee('class="user-signature"', false);
+    }
+
+    public function test_print_shows_requester_gh_and_gerencia_signatures(): void
+    {
+        Storage::fake('local');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $gerente = User::factory()->create([
+            'name' => 'Gerente Empresa',
+            'email' => 'gerencia@sjsp.com.co',
+            'must_change_password' => false,
+        ]);
+
+        $this->storeUserSignature($requester);
+        $this->storeUserSignature($manager);
+        $this->storeUserSignature($gerente);
+
+        $requisition = PersonalRequisition::create(array_merge(
+            $this->requisitionAttributes($requester, 'REQ-2026-0113', 'gestion_humana', 'Perfil firmas print'),
+            [
+                'managed_by' => $manager->id,
+                'status' => PersonalRequisition::STATUS_SOLICITADA,
+            ]
+        ));
+        $requisition->statusLogs()->create([
+            'from_status' => PersonalRequisition::STATUS_PENDIENTE_AUTORIZACION_GERENCIA,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $gerente->id,
+        ]);
+
+        $html = $this->actingAs($manager)
+            ->get(route('requisitions.print', [
+                'module' => 'gestion_humana',
+                'requisition' => $requisition,
+            ]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(3, substr_count($html, 'class="user-signature"'));
+    }
+
+    public function test_print_leaves_gh_and_gerencia_blank_until_received_and_approved(): void
+    {
+        Storage::fake('local');
+
+        $requester = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $requester->assignRole('usuario');
+
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $gerente = User::factory()->create([
+            'email' => 'gerencia@sjsp.com.co',
+            'must_change_password' => false,
+        ]);
+
+        $this->storeUserSignature($requester);
+        $this->storeUserSignature($gerente);
+
+        $requisition = PersonalRequisition::create($this->requisitionAttributes(
+            $requester,
+            'REQ-2026-0114',
+            'gestion_humana',
+            'Perfil firmas sin gh',
+        ));
+        $requisition->statusLogs()->create([
+            'from_status' => null,
+            'to_status' => PersonalRequisition::STATUS_SOLICITADA,
+            'changed_by' => $requester->id,
+        ]);
+
+        $html = $this->actingAs($manager)
+            ->get(route('requisitions.print', [
+                'module' => 'gestion_humana',
+                'requisition' => $requisition,
+            ]))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertSame(1, substr_count($html, 'class="user-signature"'));
     }
 
     public function test_requester_with_seguimiento_cannot_open_blank_print_template(): void
@@ -2646,6 +2755,14 @@ class RequisitionModuleTest extends TestCase
             'status' => PersonalRequisition::STATUS_SOLICITADA,
             'status_changed_at' => now(),
         ];
+    }
+
+    private function storeUserSignature(User $user): void
+    {
+        app(UserSignatureService::class)->store(
+            $user,
+            UploadedFile::fake()->image('firma.png', 120, 40),
+        );
     }
 
     private function emailManagementApprovalShowUrl(PersonalRequisition $requisition): string

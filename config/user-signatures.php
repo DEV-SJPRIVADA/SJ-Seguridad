@@ -9,4 +9,6 @@ return [
     'directory' => 'user-signatures',
     'snapshot_directory' => 'purchase-order-signatures',
     'max_kilobytes' => (int) env('USER_SIGNATURE_MAX_KB', 2048),
+    // Casilla Gerente / Aprobación Gerencia en documentos (OC y FO-GH-22).
+    'gerente_email' => env('USER_SIGNATURE_GERENTE_EMAIL', env('PURCHASE_ORDER_GERENTE_EMAIL', 'gerencia@sjsp.com.co')),
 ];
