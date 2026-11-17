@@ -20,8 +20,8 @@
                             route="{{ route('supplies.export', ['module' => $module]) }}"
                             label=""
                             class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                            title="Exportar Excel"
-                            aria-label="Exportar Excel"
+                            title="Exportar Excel (productos y valores de las órdenes autorizadas)"
+                            aria-label="Exportar Excel de mis solicitudes de insumos"
                         />
                         <a
                             href="{{ route('supplies.create', ['module' => $module]) }}"
@@ -40,9 +40,11 @@
                     <div class="pur-req-list__header-row">
                         <div>
                             <h3 class="panel-title">Listado</h3>
+                            {{-- Conteo y suma de OC autorizadas del usuario en el área actual. --}}
                             <p class="panel-text panel-text--compact">
                                 {{ $requests->count() }}
                                 {{ $requests->count() === 1 ? 'solicitud' : 'solicitudes' }}
+                                · Total OC: {{ \App\Support\ColombianCurrency::format($ordersTotal) }}
                             </p>
                         </div>
                     </div>
@@ -62,6 +64,8 @@
                                     <th>Fecha</th>
                                     <th>Estado</th>
                                     <th>Items</th>
+                                    <th>Órdenes</th>
+                                    <th>Total OC</th>
                                     <th class="purchase-request-actions-col">Acciones</th>
                                 </tr>
                             </thead>
@@ -76,6 +80,8 @@
                                             <x-pedido-etapa :etapa="$request->etapa()" />
                                         </td>
                                         <td class="text-center">{{ $request->items->count() }}</td>
+                                        <td class="text-center">{{ $request->ocAutorizadasCount() }}</td>
+                                        <td class="text-right">{{ \App\Support\ColombianCurrency::format($request->totalOcAutorizadas()) }}</td>
                                         <td class="text-center purchase-request-actions-col">
                                             <div class="purchase-request-row-actions">
                                                 <a
@@ -101,7 +107,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="5" class="text-muted">No tienes solicitudes de insumos registradas.</td>
+                                        <td colspan="7" class="text-muted">No tienes solicitudes de insumos registradas.</td>
                                     </tr>
                                 @endforelse
                             </tbody>

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PedidoEtapa;
+use App\Models\Concerns\AggregatesAuthorizedPurchaseOrders;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class SupplyRequest extends Model
 {
+    use AggregatesAuthorizedPurchaseOrders;
     use HasFactory;
 
     protected $fillable = [

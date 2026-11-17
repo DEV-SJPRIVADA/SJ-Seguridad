@@ -93,7 +93,8 @@ a.req-dashboard-kpi:focus-visible {
 }
 
 .req-dashboard-kpi--solicitada {
-    --req-kpi-accent: #0284c7;
+    /* Azul corporativo: mismo tono de tablas, tendencia y charts de ciudad/cliente. */
+    --req-kpi-accent: #003366;
 }
 
 .req-dashboard-kpi--en-gestion {

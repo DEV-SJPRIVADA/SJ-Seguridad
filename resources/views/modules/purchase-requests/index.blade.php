@@ -18,11 +18,20 @@
                     <div class="pur-req-list__header-row">
                         <div>
                             <h3 class="panel-title">Listado</h3>
+                            {{-- Conteo y suma de OC autorizadas del filtro GET (no incluye pendientes ni anuladas). --}}
                             <p class="panel-text panel-text--compact">
                                 {{ $purchaseRequests->count() }}
                                 {{ $purchaseRequests->count() === 1 ? 'solicitud' : 'solicitudes' }}
+                                · Total OC: {{ \App\Support\ColombianCurrency::format($ordersTotal) }}
                             </p>
                         </div>
+                        <x-export-excel
+                            route="{{ $exportUrl }}"
+                            label=""
+                            class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                            title="Exportar Excel de lo filtrado (productos y valores de las órdenes autorizadas)"
+                            aria-label="Exportar Excel de las solicitudes filtradas"
+                        />
                     </div>
                 </div>
 
@@ -131,6 +140,8 @@
                                     <th>Director aprobador</th>
                                     <th>Fecha de aprobación</th>
                                     <th>Productos</th>
+                                    <th>Órdenes</th>
+                                    <th>Total OC</th>
                                     <th>Estado</th>
                                     <th class="purchase-request-actions-col">Acciones</th>
                                 </tr>
@@ -153,6 +164,8 @@
                                             @endif
                                         </td>
                                         <td class="text-center">{{ $purchaseRequest->items->count() }}</td>
+                                        <td class="text-center">{{ $purchaseRequest->ocAutorizadasCount() }}</td>
+                                        <td class="text-right">{{ \App\Support\ColombianCurrency::format($purchaseRequest->totalOcAutorizadas()) }}</td>
                                         <td class="text-center">
                                             {{-- Etapa común: decisión del director y avance de Compras en una sola pastilla. --}}
                                             <div class="pur-req-list__pills">
@@ -183,7 +196,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="9" class="text-muted">
+                                        <td colspan="11" class="text-muted">
                                             @if ($hasActiveFilters)
                                                 No hay solicitudes con los filtros seleccionados.
                                             @else

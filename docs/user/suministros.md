@@ -63,6 +63,12 @@ Según su perfil puede:
 4. Indique inventario actual si se solicita.
 5. Envíe la solicitud. Queda **Por autorizar** hasta que Calidad la revise. El folio se lee **SU-**.
 
+### Consultar mis solicitudes
+
+1. Abra **Mis solicitudes**. El listado es solo de sus pedidos en esa área.
+2. Cada fila muestra el estado, cuántos productos pidió, cuántas **órdenes autorizadas** hay y el **Total OC** (lo comprado). Encima de la tabla ve el total de esas órdenes.
+3. El icono de **Excel** descarga los productos de las órdenes autorizadas, con cantidades y valores. No incluye órdenes pendientes de autorización ni anuladas. Si todavía no hay una orden autorizada, el total queda en cero.
+
 ### Si Calidad o Compras devuelven el pedido
 
 Compras también puede devolverlo si llegó mal diligenciado (solo antes de emitir una orden). En ambos casos recibe un correo y el motivo queda en el detalle.
@@ -116,6 +122,7 @@ Quien tenga el permiso **Suministros: Seguimiento** entra por **Compras → Sumi
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.19 | 2026-11-17 | Compras | **Mis solicitudes:** cada fila muestra cuántas órdenes autorizadas tiene y el **Total OC**. Encima de la tabla aparece ese total. El Excel descarga los productos de esas órdenes, con valores. No incluye órdenes pendientes de autorización ni anuladas. |
 | 1.18 | 2026-11-17 | Compras | El **costo total** del suministro y el total de las OC pendientes de autorización se ven en formato de moneda colombiana (`$ 1.250,00`). |
 | 1.17 | 2026-11-09 | Compras | La columna Valor en Órdenes y Gasto se muestra como moneda ($ 0.000,00). |
 | 1.16 | 2026-11-09 | Compras | Órdenes: filtro por mes y totales de cantidad y valor al pie de la tabla. |

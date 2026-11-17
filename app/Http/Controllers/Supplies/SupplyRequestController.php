@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Supplies;
 
 use App\Enums\PedidoEtapa;
 use App\Exports\BaseExport;
+use App\Exports\MyRequestsOrderLinesExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Supplies\ResolveSupplyQualityRequest;
 use App\Http\Requests\Supplies\StoreSupplyRequestCommentRequest;
@@ -15,6 +16,7 @@ use App\Models\SupplyRequest;
 use App\Models\SupplyRequestComment;
 use App\Models\User;
 use App\Services\Notifications\NotificationConfigService;
+use App\Services\PurchaseRequests\MyRequestsOrdersService;
 use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\PurchaseRequests\PurchaseOrderPdfExporter;
 use App\Services\PurchaseRequests\PurchaseOrderService;
@@ -46,10 +48,11 @@ class SupplyRequestController extends Controller
         private readonly SupplyAuditLogService $auditLogService,
     ) {}
 
-    public function index(string $module)
+    public function index(string $module, MyRequestsOrdersService $orders)
     {
         $requests = SupplyRequest::where('user_id', auth()->id())
             ->where('area_key', $module)
+            ->withAuthorizedOrderTotals()
             ->latest()
             ->with(['items.product'])
             ->get();
@@ -57,36 +60,33 @@ class SupplyRequestController extends Controller
         return view('modules.supplies.index', [
             'module' => $module,
             'requests' => $requests,
+            'ordersTotal' => $orders->totalFrom($requests),
             'subTabs' => $this->getSupplySubTabs($module),
         ]);
     }
 
-    public function exportExcel(string $module): StreamedResponse
+    /**
+     * Excel de las OC autorizadas del solicitante en el área actual, una fila por producto.
+     */
+    public function exportExcel(string $module, MyRequestsOrdersService $orders): StreamedResponse
     {
-        $requests = SupplyRequest::where('user_id', auth()->id())
-            ->where('area_key', $module)
-            ->latest()
-            ->with(['items.product'])
-            ->get();
-
-        $columns = [
-            ['key' => 'id', 'label' => 'ID'],
-            ['key' => fn ($r) => DisplayDate::date($r->created_at), 'label' => 'Fecha'],
-            ['key' => fn ($r) => $r->statusLabel(), 'label' => 'Estado'],
-            ['key' => fn ($r) => $r->items->count().' productos', 'label' => 'Items'],
-        ];
+        $authorizedOrders = $orders->authorizedOrdersForSupplies((int) auth()->id(), $module);
 
         $this->auditLogService->logEvent(
             eventType: 'export',
-            action: 'my_requests_excel',
+            action: 'my_requests_orders_excel',
             metadata: [
-                'row_count' => $requests->count(),
+                'orders_count' => $authorizedOrders->count(),
                 'area_key' => $module,
             ],
             area: $module,
         );
 
-        return (new BaseExport($requests, $columns, 'mis_solicitudes_'.now()->format('Y-m-d').'.xlsx', 'Mis Solicitudes de Insumos'))->download();
+        return (new MyRequestsOrderLinesExport(
+            $authorizedOrders,
+            'mis_solicitudes_insumos_'.now()->format('Y-m-d').'.xlsx',
+            'Mis solicitudes de insumos — productos',
+        ))->download();
     }
 
     public function show(string $module, SupplyRequest $supplyRequest)

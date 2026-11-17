@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\PurchaseOrderFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -172,6 +173,22 @@ class PurchaseOrder extends Model
         }
 
         return $this->isAprobada();
+    }
+
+    /**
+     * OC que cuenta como comprada en Mis solicitudes: autorizada (o legado sin firma) y no anulada.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeAutorizada(Builder $query): Builder
+    {
+        return $query
+            ->where('estado', '!=', self::ESTADO_ANULADA)
+            ->where(function (Builder $inner): void {
+                $inner->where('aprobacion_requerida', false)
+                    ->orWhere('aprobacion_estado', self::APROBACION_APROBADA);
+            });
     }
 
     /**

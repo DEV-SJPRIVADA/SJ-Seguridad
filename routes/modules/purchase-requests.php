@@ -22,6 +22,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('purchase-requ
 
     Route::middleware(['purchase.tab:my_requests'])->group(function (): void {
         Route::get('/mis-solicitudes', [PurchaseRequestController::class, 'index'])->name('index');
+        Route::get('/mis-solicitudes/exportar', [PurchaseRequestController::class, 'exportMyRequests'])->name('export');
         Route::get('/mis-solicitudes/{purchase_request}/editar', [PurchaseRequestController::class, 'edit'])->name('edit');
         Route::patch('/mis-solicitudes/{purchase_request}', [PurchaseRequestController::class, 'update'])->name('update');
     });

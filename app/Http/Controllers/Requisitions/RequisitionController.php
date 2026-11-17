@@ -187,7 +187,7 @@ class RequisitionController extends Controller
                     'data' => collect(PersonalRequisition::statuses())->keys()->map(fn ($k) => $statsByStatus->get($k, 0)),
                     'colors' => collect(PersonalRequisition::statuses())->keys()->map(
                         fn (string $key): string => match ($key) {
-                            PersonalRequisition::STATUS_SOLICITADA => '#0284c7',
+                            PersonalRequisition::STATUS_SOLICITADA => '#003366',
                             PersonalRequisition::STATUS_EN_GESTION => '#b45309',
                             PersonalRequisition::STATUS_CONTRATADO => '#15803d',
                             PersonalRequisition::STATUS_CANCELADA => '#be123c',

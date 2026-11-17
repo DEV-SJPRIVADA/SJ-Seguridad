@@ -1,18 +1,19 @@
 import ApexCharts from 'apexcharts';
 import {
-    BRAND_BLUE,
-    BRAND_NAVY,
     STATUS_DONUT_COLORS,
     STATUS_NEUTRAL,
     sharedChart,
 } from './charts/apex-defaults';
+
+/** Azul corporativo (mismo de encabezados de tabla y chrome institucional). */
+const CORPORATE_BLUE = '#003366';
 
 /** @type {ApexCharts[]} */
 const chartInstances = [];
 
 /** Colores KPI del dashboard (fallback por clave de estado). */
 const STATUS_KPI_COLORS = {
-    solicitada: '#0284c7',
+    solicitada: CORPORATE_BLUE,
     en_gestion: '#b45309',
     contratado: '#15803d',
     cancelada: '#be123c',
@@ -122,7 +123,7 @@ function renderTrend(data) {
             },
         },
         series: [{ name: 'Solicitudes', data: series }],
-        colors: [BRAND_BLUE],
+        colors: [CORPORATE_BLUE],
         fill: {
             type: 'solid',
             opacity: 0.15,
@@ -254,7 +255,7 @@ function renderCities(data) {
             ...numericDataLabels(hasValues),
             offsetX: 6,
         },
-        colors: [BRAND_NAVY],
+        colors: [CORPORATE_BLUE],
         xaxis: {
             categories: labels,
             labels: { style: { fontSize: '11px' } },
@@ -321,7 +322,7 @@ function renderClients(data) {
                 colors: ['#0f172a'],
             },
         },
-        colors: [BRAND_BLUE],
+        colors: [CORPORATE_BLUE],
         xaxis: {
             categories: labels,
             labels: {

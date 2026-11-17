@@ -107,7 +107,8 @@ Prefijo `supplies/{module}`:
 - `GET /solicitud/{supply_request}/pdf` (`supplies.export.pdf`) — FO-AD-44, layout igual que PDF solicitud compra
 - `GET /solicitud/{supply_request}/excel` (`supplies.export.excel`) — FO-AD-44 Excel
 - `GET|POST /solicitar` (`supplies.create` / `supplies.store`) — UI catalogo + carrito con layout `pur-req-form-layout` (secciones + aside) e iconos chrome; quitar linea con `.cursos-catalogo-page__icon-btn--danger`.
-- `GET /mis-solicitudes` (`supplies.index`) — listado `purchase-requests-page--list` con toolbar Excel/Nueva y Ver detalle icon-only.
+- `GET /mis-solicitudes` (`supplies.index`) — listado `purchase-requests-page--list` con toolbar Excel/Nueva, columnas **Órdenes** / **Total OC** (solo OC autorizadas) y Ver detalle icon-only.
+- `GET /mis-solicitudes/exportar` (`supplies.export`) — Excel de productos de las OC autorizadas del solicitante en el área (`MyRequestsOrderLinesExport`). Ya no exporta solo folio/estado/ítems.
 - `GET /aprobacion-insumos` (`supplies.approval.index`) — listado `purchase-requests-page--list` + Revisar icon-only
 - `GET /aprobacion-insumos/{supply_request}/editar` (`supplies.approval.edit`)
 - `PATCH /aprobacion-insumos/{supply_request}` (`supplies.approval.update`) — Form Request `ResolveSupplyQualityRequest` (`action` approve/reject, `quality_observations` máx. 5000 en MAYÚSCULAS, `approved_quantity` entero ≥ 0 al aprobar; sin tope frente a lo solicitado)
@@ -231,6 +232,7 @@ Consulta transversal. Servicio `SupplySeguimientoService`, controlador `SupplySe
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-11-17 | **Mis solicitudes:** columnas **Órdenes** y **Total OC** (OC autorizadas, sin pendientes ni anuladas), total del área en la toolbar y Excel `supplies.export` a una fila por producto con valores (`MyRequestsOrderLinesExport`). Mismo criterio que solicitudes de compra. Sin permiso nuevo |
 | 2026-11-17 | Detalle `supplies.show`: el **costo total** se muestra con `App\Support\ColombianCurrency::format()` (`$ 1.250,00`) en lugar de `$1,250.00`. La tabla de OC pendientes de autorización (`supplies.approval.index`) muestra el total con el mismo formato |
 | 2026-11-09 | Columna Valor en Órdenes y Gasto con formato de moneda (`$ 0.000,00`) |
 | 2026-11-09 | Órdenes: filtro por mes (fecha de la OC) y totales de cantidad y valor |

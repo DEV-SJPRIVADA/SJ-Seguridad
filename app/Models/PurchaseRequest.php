@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PedidoEtapa;
+use App\Models\Concerns\AggregatesAuthorizedPurchaseOrders;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,6 +12,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class PurchaseRequest extends Model
 {
+    use AggregatesAuthorizedPurchaseOrders;
+
     public const ESTADO_PENDIENTE = 'pendiente';
 
     public const ESTADO_APROBADO = 'aprobado';

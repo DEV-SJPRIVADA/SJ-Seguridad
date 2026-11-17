@@ -72,6 +72,19 @@ final class PurchaseMyRequestsFilterBag
     }
 
     /**
+     * Query string de los filtros activos, para el Excel del listado.
+     *
+     * @return array<string, string>
+     */
+    public function queryParameters(): array
+    {
+        return array_filter(
+            $this->toViewArray(),
+            fn (mixed $value): bool => $value !== null && $value !== '',
+        );
+    }
+
+    /**
      * @param  Builder<PurchaseRequest>  $query
      */
     public function apply(Builder $query): void

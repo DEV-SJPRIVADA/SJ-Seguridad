@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\PurchaseRequests;
 
 use App\Enums\PedidoEtapa;
+use App\Exports\MyRequestsOrderLinesExport;
 use App\Exports\PurchaseRequestItemsImportTemplateExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PurchaseRequests\ImportPurchaseRequestItemsRequest;
@@ -15,6 +16,7 @@ use App\Models\PurchaseRequestAttachment;
 use App\Models\PurchaseRequestComment;
 use App\Models\PurchaseRequestItem;
 use App\Services\Access\PurchaseAccessService;
+use App\Services\PurchaseRequests\MyRequestsOrdersService;
 use App\Services\PurchaseRequests\PurchaseMyRequestsFilterBag;
 use App\Services\PurchaseRequests\PurchaseOrderPdfExporter;
 use App\Services\PurchaseRequests\PurchaseOrderService;
@@ -40,25 +42,61 @@ class PurchaseRequestController extends Controller
 {
     use HasPurchaseTabs;
 
-    public function index(string $module, Request $request): View
+    public function index(string $module, Request $request, MyRequestsOrdersService $orders): View
     {
         $filters = PurchaseMyRequestsFilterBag::fromRequest($request);
 
         $query = PurchaseRequest::query()
             ->with(['user', 'aprobador', 'items'])
+            ->withAuthorizedOrderTotals()
             ->where('user_id', auth()->id());
 
         $filters->apply($query);
 
+        $purchaseRequests = $query->latest()->get();
+
         return view('modules.purchase-requests.index', [
             'module' => $module,
             'subTabs' => $this->getPurchaseSubTabs($module),
-            'purchaseRequests' => $query->latest()->get(),
+            'purchaseRequests' => $purchaseRequests,
+            'ordersTotal' => $orders->totalFrom($purchaseRequests),
+            'exportUrl' => route('purchase-requests.export', array_merge(
+                ['module' => $module],
+                $filters->queryParameters(),
+            )),
             'filters' => $filters->toViewArray(),
             'hasActiveFilters' => $filters->hasActiveFilters(),
             'areas' => config('access.areas', []),
             'etapas' => PedidoEtapa::options(),
         ]);
+    }
+
+    /**
+     * Excel de las OC autorizadas del solicitante, con los mismos filtros del listado.
+     */
+    public function exportMyRequests(
+        string $module,
+        Request $request,
+        MyRequestsOrdersService $orders,
+        PurchaseRequestAuditLogService $auditLogService,
+    ): StreamedResponse {
+        $filters = PurchaseMyRequestsFilterBag::fromRequest($request);
+        $authorizedOrders = $orders->authorizedOrdersForPurchases((int) auth()->id(), $filters);
+
+        $auditLogService->logEvent(
+            eventType: 'export',
+            action: 'my_requests_orders_excel',
+            metadata: [
+                'filters' => $filters->toViewArray(),
+                'orders_count' => $authorizedOrders->count(),
+            ],
+        );
+
+        return (new MyRequestsOrderLinesExport(
+            $authorizedOrders,
+            'mis_solicitudes_compras_'.now()->format('Y-m-d').'.xlsx',
+            'Mis solicitudes de compra — productos',
+        ))->download();
     }
 
     public function create(string $module, PurchaseAccessService $accessService): View
