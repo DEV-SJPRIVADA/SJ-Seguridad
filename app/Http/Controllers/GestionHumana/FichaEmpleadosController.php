@@ -4,7 +4,6 @@ namespace App\Http\Controllers\GestionHumana;
 
 use App\Exports\EmployeeFichaArchiveTemplateExport;
 use App\Exports\EmployeeFichaImportTemplateExport;
-use App\Exports\PersonalRequisitionFichaEntryExport;
 use App\Exports\PlantillaMasivosExport;
 use App\Http\Controllers\Concerns\HandlesImportFailureReports;
 use App\Http\Controllers\Controller;
@@ -32,6 +31,7 @@ use App\Services\GestionHumana\EmployeeFichaProfileCatalogSync;
 use App\Services\GestionHumana\EmployeeFichaProfilePrefill;
 use App\Services\GestionHumana\EmployeeTerminationFollowupService;
 use App\Services\GestionHumana\FichaLetterGenerateTypesBuilder;
+use App\Services\GestionHumana\PendingEmployeeFichaImportRowMapper;
 use App\Services\GestionHumana\TerminationNovedadesConflictService;
 use App\Traits\HasFichaEmpleadosTabs;
 use Illuminate\Contracts\View\View;
@@ -70,6 +70,7 @@ class FichaEmpleadosController extends Controller
         private readonly EmployeeFichaEntryDatatableService $entryDatatableService,
         private readonly EmployeeTerminationFollowupService $terminationFollowupService,
         private readonly TerminationNovedadesConflictService $novedadesConflictService,
+        private readonly PendingEmployeeFichaImportRowMapper $pendingImportRowMapper,
         private readonly EmployeeCursoDocumentService $cursoDocumentService,
         private readonly EmployeeCursoPendingService $cursoPendingService,
         private readonly EmployeeAcreditacionPendingService $acreditacionPendingService,
@@ -212,7 +213,7 @@ class FichaEmpleadosController extends Controller
             $fechaDesde,
             $fechaHasta,
         )
-            ->with(PersonalRequisitionFichaEntryExport::relationNames())
+            ->with(['requisition.position', 'profile'])
             ->orderByDesc('created_at')
             ->get();
 
@@ -235,6 +236,7 @@ class FichaEmpleadosController extends Controller
             action: 'pendientes_excel',
             metadata: [
                 'row_count' => $entries->count(),
+                'format' => 'nompr07',
                 'q' => $q !== '' ? $q : null,
                 'cargo' => $cargo !== '' ? $cargo : null,
                 'cliente' => $cliente !== '' ? $cliente : null,
@@ -244,9 +246,11 @@ class FichaEmpleadosController extends Controller
             ],
         );
 
-        return PersonalRequisitionFichaEntryExport::downloadPendientes(
+        // Plantilla reimportable (nompr07): perfil guardado + lo que falte desde la requisición.
+        return $this->importTemplateExport->downloadWithData(
             $entries,
             'ficha_empleados_pendientes_'.now()->format('Y-m-d').'.xlsx',
+            fn (PersonalRequisitionFichaEntry $entry): array => $this->pendingImportRowMapper->mapRow($entry),
         );
     }
 

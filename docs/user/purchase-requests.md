@@ -225,7 +225,7 @@ Cada **grupo de cotizaciones** representa una **orden de compra futura**. Compra
 ### Ver las órdenes de compra emitidas
 
 1. Entre a **Compras → Órdenes**. Ahí están las órdenes emitidas, con su número, fecha, proveedor, origen (folio SC- o SU-), ciudad de entrega, número de líneas, total, estado y la columna **Recibido**, que dice **No recibido** o la fecha en que se recibió (dd/mm/aa).
-2. Use el **buscador** de la tabla para filtrar por proveedor, identificación, observaciones o número de OC.
+2. Use el **buscador** de la tabla para filtrar por número de OC, proveedor, identificación, ciudad, estado, total o el consecutivo de origen (`SC-0045` o `SU-0012`). Puede escribir varias palabras: deben cumplirse todas.
 3. El panel **Filtros** permite acotar por **Estado** (Todas / Emitidas / Borrador), **Origen** (Solicitud de compra / Solicitud de suministro), **Proveedor** y rango de **fechas**. El botón de **Aplicar** y el de **Limpiar** quedan uno al lado del otro.
 4. En la fila, el icono de **ojo** abre el detalle de la OC y el de **documento** descarga el PDF FO-AD-07.
 
@@ -282,6 +282,7 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.65 | 2026-11-17 | Compras | **Órdenes:** la columna **Origen** muestra solo el consecutivo (`SC-0045` o `SU-0012`). El buscador de la tabla encuentra ese número, el de la OC, el proveedor, la identificación, la ciudad, el estado y el total. |
 | 1.64 | 2026-11-13 | Compras | **Autorizaciones compras:** la barra **Vista** de las cuatro subpestañas se ve más compacta y ordenada. El selector queda a la izquierda y el total de la vista activa a la derecha, como etiqueta destacada; en pantallas pequeñas el total pasa debajo. |
 | 1.64 | 2026-11-13 | Compras | Orden impresa: las firmas del pie salen un poco más grandes. |
 | 1.63 | 2026-11-13 | Compras | **Autorizaciones compras:** las cuatro subpestañas (**Solicitudes de Compra**, **Cotizaciones**, **Órdenes de Compra** y **Anulaciones de órdenes**) muestran junto a su nombre un contador con lo que tiene pendiente por autorizar. El contador cuenta siempre lo pendiente, aunque esté viendo el historial, y desaparece cuando no hay nada por decidir. |

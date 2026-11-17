@@ -4,6 +4,8 @@ namespace App\Services\PurchaseRequests;
 
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseProvider;
+use App\Models\PurchaseRequest;
+use App\Models\SupplyRequest;
 use App\Support\DisplayDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -190,7 +192,9 @@ final class PurchaseOrderDatatableService
     }
 
     /**
-     * Búsqueda del listado (proveedor, identificación, observaciones, ciudad o N.º OC). También la usa el export (`q`).
+     * Búsqueda del listado sobre lo que se ve en la tabla: N.º OC, proveedor,
+     * identificación, ciudad, estado, total y consecutivo de origen (SC- / SU-).
+     * Varias palabras deben cumplirse todas. También la usa el export (`q`).
      *
      * @param  Builder<PurchaseOrder>  $query
      */
@@ -202,19 +206,151 @@ final class PurchaseOrderDatatableService
             return;
         }
 
-        $term = '%'.str_replace(['%', '_'], ['\\%', '\\_'], $search).'%';
-        $isNumeric = ctype_digit($search);
+        $words = preg_split('/\s+/u', $search, -1, PREG_SPLIT_NO_EMPTY) ?: [];
 
-        $query->where(function (Builder $inner) use ($term, $isNumeric, $search): void {
-            $inner->where('provider_nombre', 'like', $term)
-                ->orWhere('provider_identificacion', 'like', $term)
-                ->orWhere('observaciones', 'like', $term)
-                ->orWhere('ciudad', 'like', $term);
-
-            if ($isNumeric) {
-                $inner->orWhere('id', (int) $search);
+        $query->where(function (Builder $outer) use ($words): void {
+            foreach ($words as $word) {
+                $outer->where(function (Builder $inner) use ($word): void {
+                    $this->matchSearchWord($inner, $word);
+                });
             }
         });
+    }
+
+    /**
+     * Una palabra del buscador: coincide si aparece en cualquier columna visible.
+     *
+     * @param  Builder<PurchaseOrder>  $inner
+     */
+    private function matchSearchWord(Builder $inner, string $word): void
+    {
+        $term = '%'.$this->escapeLike($word).'%';
+
+        $inner->where('provider_nombre', 'like', $term)
+            ->orWhere('provider_identificacion', 'like', $term)
+            ->orWhere('observaciones', 'like', $term)
+            ->orWhere('ciudad', 'like', $term)
+            ->orWhere('estado', 'like', $term)
+            ->orWhereRaw('CAST(id AS CHAR) like ?', [$term]);
+
+        $amount = str_replace([',', ' '], '', $word);
+
+        if ($amount !== '' && preg_match('/^\d+(\.\d+)?$/', $amount) === 1) {
+            $inner->orWhere('total', 'like', '%'.$this->escapeLike($amount).'%');
+        }
+
+        foreach ($this->estadoCodesMatching($word) as $code) {
+            $inner->orWhere('estado', $code);
+        }
+
+        $this->matchOriginWord($inner, $word);
+    }
+
+    /**
+     * Consecutivo de origen: SC-0045, SU-0012, 0045 o 45 (sin ceros).
+     *
+     * @param  Builder<PurchaseOrder>  $inner
+     */
+    private function matchOriginWord(Builder $inner, string $word): void
+    {
+        $upper = mb_strtoupper($word);
+        $prefix = null;
+        $digits = null;
+
+        if (preg_match('/^(SC|SU)[\s\-]*(\d+)$/u', $upper, $matches) === 1) {
+            $prefix = $matches[1];
+            $digits = $matches[2];
+        } elseif (ctype_digit($word)) {
+            $digits = $word;
+        }
+
+        if ($digits === null || (int) $digits <= 0) {
+            return;
+        }
+
+        if ($prefix !== 'SU') {
+            $this->orWhereSourceFolio($inner, PurchaseOrderService::SOURCE_PURCHASE, PurchaseRequest::query(), 'numero_solicitud', $digits);
+        }
+
+        if ($prefix !== 'SC') {
+            $this->orWhereSourceFolio($inner, PurchaseOrderService::SOURCE_SUPPLY, SupplyRequest::query(), 'id', $digits);
+        }
+    }
+
+    /**
+     * @param  Builder<PurchaseOrder>  $inner
+     * @param  Builder<PurchaseRequest>|Builder<SupplyRequest>  $sources
+     */
+    private function orWhereSourceFolio(Builder $inner, string $sourceType, Builder $sources, string $column, string $digits): void
+    {
+        $pad = $this->paddedFolioSql($column);
+        $asInt = (int) $digits;
+
+        $ids = $sources->select('id')->where(function (Builder $query) use ($column, $pad, $digits, $asInt): void {
+            if (str_starts_with($digits, '0') || strlen($digits) >= 4) {
+                $query->whereRaw($pad.' like ?', [$digits.'%']);
+
+                return;
+            }
+
+            $query->where($column, $asInt);
+        });
+
+        $inner->orWhere(function (Builder $origin) use ($sourceType, $ids): void {
+            $origin->where('source_type', $sourceType)
+                ->whereIn('source_id', $ids);
+        });
+    }
+
+    /**
+     * Mismo relleno que folioVisible(): 4 dígitos, sin recortar si el número es más largo.
+     */
+    private function paddedFolioSql(string $column): string
+    {
+        $driver = PurchaseOrder::query()->getConnection()->getDriverName();
+
+        return $driver === 'sqlite'
+            ? "printf('%04d', {$column})"
+            : "LPAD({$column}, 4, '0')";
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function estadoCodesMatching(string $word): array
+    {
+        $needle = $this->fold($word);
+
+        if (mb_strlen($needle) < 3) {
+            return [];
+        }
+
+        $codes = [];
+
+        foreach ((array) config('purchase-orders.estados', []) as $code => $label) {
+            $foldedLabel = $this->fold((string) $label);
+            $foldedCode = $this->fold((string) $code);
+
+            if (str_contains($foldedLabel, $needle) || str_contains($foldedCode, $needle)) {
+                $codes[] = (string) $code;
+            }
+        }
+
+        return $codes;
+    }
+
+    private function fold(string $value): string
+    {
+        $value = mb_strtolower($value);
+
+        return strtr($value, [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
+        ]);
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return str_replace(['%', '_'], ['\\%', '\\_'], $value);
     }
 
     /**
@@ -266,17 +402,12 @@ final class PurchaseOrderDatatableService
         );
     }
 
+    /**
+     * Columna Origen: solo el consecutivo visible (SC-0001 / SU-0001).
+     */
     private function originLabel(PurchaseOrder $order): string
     {
-        $source = $order->source;
-
-        if ($source === null) {
-            return $order->sourceLabel().' N.º '.$order->source_id;
-        }
-
-        $folio = method_exists($source, 'folioVisible') ? $source->folioVisible() : $source->getKey();
-
-        return $order->sourceLabel().' N.º '.$folio;
+        return $order->sourceFolio();
     }
 
     private function estadoPill(PurchaseOrder $order): string

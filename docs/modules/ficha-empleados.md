@@ -131,7 +131,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
   - Con `ficha_entry_id`: revalida `pending()` (`findOrFail`, 404/422 si ya fue movida por otro proceso — proteccion doble envio), actualiza `hired_document`/`hired_full_name`/`moved_to_ficha_at`/`moved_to_ficha_by` en la fila **existente** (no crea duplicado), crea o actualiza su `EmployeeFichaProfile`, aplica los tres flags `requires_courses`/`requires_acreditacion`/`requires_psicofisicos` si vienen en el request (solo `ficha_empleados.manage`), y redirige a `employees.index` (estado por defecto `en_ficha`).
   - Sin `ficha_entry_id` (alta manual): crea fila nueva (`personal_requisition_id = null`) + perfil (incluye flags de requisitos si se enviaron), redirige a `.../{id}/ficha`.
 - `exportExcel(Request $request): StreamedResponse|RedirectResponse` — export **Plantilla masivos** solo registros **En ficha**; sin rango de fechas exporta solo **activos**; con `fecha_desde`/`fecha_hasta` filtra por fecha de ingreso.
-- `exportPendientes(Request $request): StreamedResponse|RedirectResponse` — export Excel del listado **Pendientes** (`PersonalRequisitionFichaEntryExport::downloadPendientes`); respeta `q`, `cargo`, `cliente`, `ciudad` y rango `fecha_desde`/`fecha_hasta`; vacío → redirect con error.
+- `exportPendientes(Request $request): StreamedResponse|RedirectResponse` — export Excel del listado **Pendientes** con la **plantilla de actualización reimportable** (`EmployeeFichaImportTemplateExport` + `PendingEmployeeFichaImportRowMapper`); respeta `q`, `cargo`, `cliente`, `ciudad` y rango `fecha_desde`/`fecha_hasta`; vacío → redirect con error.
 - `importTemplate(): StreamedResponse` — plantilla vacía importación SJ (`ficha_empleados.manage`).
 - `exportImportTemplate(Request $request): StreamedResponse|RedirectResponse` — exporta empleados en ficha con datos actuales en **mismo formato** que la plantilla de import (round-trip editar → reimportar); mismos filtros que export masivos: sin fechas solo activos; con `fecha_desde`/`fecha_hasta` filtra por ingreso; respeta `q`.
 - `import(ImportEmployeeFichaRequest): RedirectResponse` — carga masiva xlsx.
@@ -357,6 +357,13 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 - **Con `fecha_desde` + `fecha_hasta`:** filtra por `hire_date` del perfil.
 - Archivo: `plantilla_masivos_{Y-m-d}.xlsx`.
 
+### Export Excel — Pendientes (plantilla de actualización)
+
+- Ruta `export-pendientes`; usa `EmployeeFichaImportTemplateExport::downloadWithData($entries, $fileName, $mapRow)` con mapper alterno (misma plantilla reimportable del modal "Exportar datos para actualizar": fila 1 = clave, fila 2 = etiqueta, datos desde fila 3).
+- Mapper: `App\Services\GestionHumana\PendingEmployeeFichaImportRowMapper` — base `EmployeeFichaImportRowMapper` (perfil guardado por carta rápida / Gestionar empleado) y **completa desde la requisición solo celdas vacías**: `fecha_nac` (`hired_birth_date`), `fecha_ingreso` (`hiring_date`), `salario` (`base_salary`), `sexo` (`requisition.sex` normalizado), `cargo` (`RequisitionPositionPayrollMap`) y `nombre_cargo`.
+- Incluye **todos los pendientes** del filtro activo (búsqueda, cargo, cliente, ciudad, rango de ingreso); quienes no tienen perfil salen solo con cédula/nombre y lo completado de la requisición.
+- Archivo: `ficha_empleados_pendientes_{Y-m-d}.xlsx`. La clase legada `PersonalRequisitionFichaEntryExport` (listado de 10 columnas) fue retirada.
+
 ## Importación masiva SJ
 
 - Plantilla: `EmployeeFichaImportTemplateExport` / ruta `import-template`.
@@ -375,9 +382,9 @@ Campos avanzados de plantilla (centro trabajo, CCF, jornada, retención, sucursa
 - Columna `linkage_type` (`tipo_vinculacion` en import): `VARCHAR(100)` — valores de nómina como `Contrato Laboral(Dependiente Asociado)` superaban el limite anterior de 30 caracteres.
 - **Archivo (2026-08-06):** campos `archive_shelf` / `archive_box` en perfil; ver [`docs/modules/archivo.md`](archivo.md). No forman parte del import masivo.
 
-## Export listado simple (legacy)
+## Export listado simple (retirado)
 
-- Clase: `App\Exports\PersonalRequisitionFichaEntryExport` — listado Pendientes vía `downloadPendientes()` / ruta `export-pendientes`; columnas: código RQ, cédula, nombre, cargo, cliente, ciudad, fechas, tipo (Nuevo/Reingreso), estado.
+- `App\Exports\PersonalRequisitionFichaEntryExport` (código RQ, cédula, nombre, cargo, cliente, ciudad, fechas, tipo, estado) se **eliminó**: el export de Pendientes ahora entrega la plantilla **nompr07** con los datos ya ingresados en contrato/perfil (ver "Export Excel — Pendientes").
 
 ## Navegacion
 
@@ -418,6 +425,7 @@ Cobertura general:
 - Relaciones/accessors del modelo `PersonalRequisitionFichaEntry`; scopes `pending`/`inFicha`.
 - `FichaEmpleadosAccessService`: bypass admin, sin permisos, solo view, manage implica view, board sin tab, independencia de `requisitions.tab.gestion`.
 - Controlador: 403 sin `ficha_empleados.view`; listado pendientes por defecto; filtro `en_ficha`; export responde `xlsx` respetando el filtro activo y exige `ficha_empleados.view`.
+- Export Pendientes (2026-11-17): el xlsx sale con la **plantilla de actualización** (mismas columnas de `import_columns`, reimportable); incluye los datos guardados por la carta rápida (dirección, teléfono, correo, salario del perfil con prioridad sobre la requisición) y completa fecha de nacimiento / ingreso / cargo / salario / sexo desde la requisición cuando el perfil aún no los tiene. Tests `test_ficha_empleados_export_pendientes_includes_data_saved_from_quick_letter` y `test_ficha_empleados_export_pendientes_completes_from_requisition_when_profile_is_empty`.
 - **FEAT-022 (modo `desde`):** `create()` precarga desde un pendiente sin persistir perfil; reutiliza el perfil existente si ya habia uno; 404 si el `id` no existe o ya esta en ficha; `store()` con `ficha_entry_id` actualiza la fila existente (no duplica), mueve a ficha, no propaga a la requisicion, respeta cedula duplicada (`unique->ignore`) y revalida `pending()` ante doble envio; vista de pendientes muestra el enlace **Gestionar Empleado** correcto; regresion de alta manual sin `desde` sigue en verde. Tests de `promote` eliminados (ruta retirada).
 - Navegacion: tablero visible/oculto segun `view.board.gestion_humana.ficha_empleados`.
 

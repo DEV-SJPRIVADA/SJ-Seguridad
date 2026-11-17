@@ -246,8 +246,8 @@
                                         route="{{ route('gestion-humana.ficha-empleados.employees.export-pendientes', request()->query()) }}"
                                         label=""
                                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                        title="Exportar pendientes a Excel"
-                                        aria-label="Exportar pendientes a Excel"
+                                        title="Exportar pendientes a Excel (plantilla de actualización)"
+                                        aria-label="Exportar pendientes a Excel (plantilla de actualización)"
                                     />
                                 @endif
 

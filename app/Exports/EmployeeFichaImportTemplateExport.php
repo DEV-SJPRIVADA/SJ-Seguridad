@@ -28,8 +28,9 @@ class EmployeeFichaImportTemplateExport
 
     /**
      * @param  Collection<int, PersonalRequisitionFichaEntry>  $entries
+     * @param  (callable(PersonalRequisitionFichaEntry): array<string, mixed>)|null  $mapRow  Mapper alterno (p. ej. export de Pendientes)
      */
-    public function downloadWithData(Collection $entries, string $fileName): StreamedResponse
+    public function downloadWithData(Collection $entries, string $fileName, ?callable $mapRow = null): StreamedResponse
     {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
@@ -37,7 +38,7 @@ class EmployeeFichaImportTemplateExport
         $row = 3;
 
         foreach ($entries as $entry) {
-            $values = $this->rowMapper->mapRow($entry);
+            $values = $mapRow !== null ? $mapRow($entry) : $this->rowMapper->mapRow($entry);
             $colIndex = 1;
 
             foreach (array_keys($columns) as $key) {

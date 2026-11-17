@@ -9,7 +9,7 @@ Permitir a Gestion Humana revisar la lista de espera de personas contratadas (ca
 Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion Humana**, pestaña **Empleados**. Segun su perfil, el usuario puede:
 
 - Ver la lista de espera (**Pendientes**) y los registros ya movidos (**En ficha**), con busqueda por cedula, nombre o codigo de requisicion.
-- Exportar a Excel el listado con el filtro activo.
+- Exportar a Excel el listado con el filtro activo (pendientes en formato nompr07 con los datos ya guardados en contrato/perfil).
 - Ejecutar **Gestionar Empleado** (solo con permiso de edicion): abre el formulario de ficha precargado con los datos de la requisicion, permite revisar/corregir antes de guardar, y solo al presionar **Crear empleado** el registro se mueve de Pendientes a En ficha.
 - Generar **Carta de contratación** desde Pendientes (mismo permiso de edición): formulario corto solo con los datos de la carta; el empleado **sigue en Pendientes** hasta que complete la ficha.
 
@@ -55,7 +55,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 3. Use el buscador (cédula, nombre o código de requisición) para filtrar.
 4. En la misma fila puede filtrar por **cargo**, **cliente**, **ciudad** y un **rango de fecha de ingreso** (desde/hasta). Los iconos **Filtrar** y **Limpiar filtros** están entre «Ingreso hasta» y el icono de volver a empleados en ficha. Filtrar aplica la búsqueda y los filtros; limpiar deja solo la vista Pendientes.
 5. Revise las columnas: cédula, nombre, cargo, cliente, ciudad y fecha de ingreso.
-6. Para descargar el listado a Excel, use el icono de Excel en la barra de acciones (respeta búsqueda y filtros activos).
+6. Para descargar el listado a Excel, use el icono de Excel en la barra de acciones (respeta búsqueda y filtros activos). El archivo sale con la **plantilla de actualización** (las mismas columnas de "Exportar datos para actualizar", reimportable) y trae lo ya diligenciado en la **carta de contratación** o en **Gestionar Empleado** (dirección, teléfono, correo, salario, cargo, etc.); lo que aún no tenga dato se completa con la requisición (fecha de nacimiento, fecha de ingreso, cargo, salario y sexo) y el resto queda vacío.
 
 ### Gestionar Empleado (mover un pendiente a ficha)
 
@@ -169,6 +169,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.48 | 2026-11-17 | Agent | Export Pendientes: el Excel ahora sale con la **plantilla de actualización** (reimportable) y trae los datos ya ingresados en la carta de contratación / Gestionar Empleado; completa desde la requisición solo lo faltante (nacimiento, ingreso, cargo, salario, sexo). |
 | 1.47 | 2026-11-09 | Agent | Carga masiva: columnas opcionales al final de la plantilla para los datos del formulario que el extracto nompr07 no trae (lugar de nacimiento, teléfono 2, códigos de caja, ARP y centro de trabajo, nómina avanzada). Una celda vacía no borra el valor ya guardado. |
 | 1.46 | 2026-11-06 | Agent | Pendientes: búsqueda, cargo, cliente, ciudad e ingreso en una sola fila. Filtrar y limpiar quedan entre «Ingreso hasta» y el icono de volver a empleados en ficha. |
 | 1.45 | 2026-10-28 | Agent | Gestionar empleado: si antes se generó la carta rápida de contratación (que abre el vínculo), al guardar la ficha se reutiliza ese vínculo y el registro pasa a **En ficha** sin el error «vínculo laboral activo». |

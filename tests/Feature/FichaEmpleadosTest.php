@@ -22,6 +22,9 @@ use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Testing\TestResponse;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Tests\Support\EmployeeFichaMasivosPayload;
 use Tests\TestCase;
 
@@ -774,7 +777,7 @@ class FichaEmpleadosTest extends TestCase
         $index = $this->actingAs($viewer)
             ->get(route('gestion-humana.ficha-empleados.employees.index', ['estado' => 'pendientes']));
         $index->assertOk();
-        $index->assertSee('Exportar pendientes a Excel', false);
+        $index->assertSee('Exportar pendientes a Excel (plantilla de actualización)', false);
         $index->assertSee(route('gestion-humana.ficha-empleados.employees.export-pendientes', [
             'estado' => 'pendientes',
         ]), false);
@@ -792,6 +795,87 @@ class FichaEmpleadosTest extends TestCase
         $this->assertStringContainsString(
             'ficha_empleados_pendientes_',
             $response->headers->get('content-disposition')
+        );
+    }
+
+    public function test_ficha_empleados_export_pendientes_includes_data_saved_from_quick_letter(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $requisition = $this->createRequisition('REQ-FICHA-PEND-PERFIL', [
+            'base_salary' => 1900000,
+            'hiring_date' => '2026-03-01',
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '987654321',
+            'hired_full_name' => 'Pendiente Con Carta',
+        ]);
+
+        // Datos guardados por la carta de contratación rápida (perfil del pendiente).
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '987654321',
+            'full_name' => 'Pendiente Con Carta',
+            'document_type' => 'C',
+            'address' => 'CALLE 10 # 20-30',
+            'phone' => '3001112233',
+            'email' => 'pendiente.carta@example.com',
+            'salary' => 2500000,
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.export-pendientes', [
+            'estado' => 'pendientes',
+        ]));
+
+        $response->assertOk();
+
+        $sheet = $this->exportSheet($response);
+
+        $this->assertSame('987654321', (string) $sheet->getCell($this->importColumn('cedula').'3')->getValue());
+        $this->assertSame('CALLE 10 # 20-30', (string) $sheet->getCell($this->importColumn('direccion').'3')->getValue());
+        $this->assertSame('3001112233', (string) $sheet->getCell($this->importColumn('telefono').'3')->getValue());
+        $this->assertSame('pendiente.carta@example.com', (string) $sheet->getCell($this->importColumn('email').'3')->getValue());
+        // El perfil manda: el salario de la requisición no pisa el ya capturado.
+        $this->assertSame(2500000.0, (float) $sheet->getCell($this->importColumn('salario').'3')->getValue());
+    }
+
+    public function test_ficha_empleados_export_pendientes_completes_from_requisition_when_profile_is_empty(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $requisition = $this->createRequisition('REQ-FICHA-PEND-SINPERFIL', [
+            'base_salary' => 1750000,
+            'hiring_date' => '2026-02-15',
+        ]);
+
+        PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '147258369',
+            'hired_full_name' => 'Pendiente Sin Perfil',
+        ]);
+
+        $response = $this->actingAs($viewer)->get(route('gestion-humana.ficha-empleados.employees.export-pendientes', [
+            'estado' => 'pendientes',
+        ]));
+
+        $response->assertOk();
+
+        $sheet = $this->exportSheet($response);
+
+        $this->assertSame('147258369', (string) $sheet->getCell($this->importColumn('cedula').'3')->getValue());
+        $this->assertSame(1750000.0, (float) $sheet->getCell($this->importColumn('salario').'3')->getValue());
+        // Fecha de ingreso completada desde la requisición cuando el perfil no la tiene.
+        $this->assertSame('2026-02-15', (string) $sheet->getCell($this->importColumn('fecha_ingreso').'3')->getValue());
+        $this->assertSame(
+            $requisition->position->name,
+            (string) $sheet->getCell($this->importColumn('nombre_cargo').'3')->getValue(),
         );
     }
 
@@ -1473,6 +1557,33 @@ class FichaEmpleadosTest extends TestCase
             ->assertRedirect(route('gestion-humana.ficha-empleados.catalogs.index', ['catalog' => 'eps']));
 
         $this->assertDatabaseMissing('payroll_catalog_items', ['id' => $item->id]);
+    }
+
+    /**
+     * Letra de la columna de una clave de `config('employee_ficha.import_columns')`.
+     */
+    private function importColumn(string $key): string
+    {
+        $index = array_search($key, array_keys(config('employee_ficha.import_columns', [])), true);
+
+        $this->assertIsInt($index, "La columna «{$key}» no existe en import_columns.");
+
+        return Coordinate::stringFromColumnIndex($index + 1);
+    }
+
+    /**
+     * Carga el xlsx descargado (stream) en una hoja para inspeccionar celdas.
+     */
+    private function exportSheet(TestResponse $response): Worksheet
+    {
+        $temp = tempnam(sys_get_temp_dir(), 'ficha_pend').'.xlsx';
+        file_put_contents($temp, $response->streamedContent());
+
+        try {
+            return IOFactory::load($temp)->getActiveSheet();
+        } finally {
+            @unlink($temp);
+        }
     }
 
     /**

@@ -569,6 +569,70 @@ class PurchaseOrderEmissionTest extends TestCase
             ->assertJsonPath('recordsFiltered', 0);
     }
 
+    public function test_orders_datatable_shows_only_the_origin_folio_and_search_matches_it(): void
+    {
+        $request = $this->approvedPurchaseRequest(10);
+        $request->update(['numero_solicitud' => 45]);
+        $provider = PurchaseProvider::factory()->create([
+            'nombre' => 'PROVEEDOR ORIGEN',
+            'identificacion' => '900111222',
+        ]);
+
+        $this->actingAs($this->compras)->post(route('purchase-requests.orders.purchase.store', [
+            'module' => 'compras',
+            'purchase_request' => $request->getKey(),
+        ]), $this->payload($provider, 10))->assertRedirect();
+
+        $other = $this->approvedPurchaseRequest(4);
+        $other->update(['numero_solicitud' => 88]);
+        $this->actingAs($this->compras)->post(route('purchase-requests.orders.purchase.store', [
+            'module' => 'compras',
+            'purchase_request' => $other->getKey(),
+        ]), $this->payload($provider, 4))->assertRedirect();
+
+        $supply = $this->approvedSupplyRequest();
+        $this->actingAs($this->compras)->post(route('purchase-requests.orders.supply.store', [
+            'module' => 'compras',
+            'supply_request' => $supply->getKey(),
+        ]), [
+            'provider_id' => $provider->getKey(),
+            'fecha' => now()->toDateString(),
+            'observaciones' => 'SUMINISTRO BUSQUEDA',
+            'items' => [
+                ['cantidad' => 4, 'articulo' => 'REF-SUM', 'descripcion' => 'PAPELERIA', 'valor_unidad' => 25, 'iva' => 0],
+            ],
+        ])->assertRedirect();
+
+        $this->actingAs($this->compras)
+            ->getJson($this->ordersDatatableUrl(['search' => ['value' => 'SC-0045']]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.4', 'SC-0045')
+            ->assertJsonPath('data.0.2', 'PROVEEDOR ORIGEN');
+
+        $this->actingAs($this->compras)
+            ->getJson($this->ordersDatatableUrl(['search' => ['value' => '45']]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.4', 'SC-0045');
+
+        $this->actingAs($this->compras)
+            ->getJson($this->ordersDatatableUrl(['search' => ['value' => $supply->folioVisible()]]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1)
+            ->assertJsonPath('data.0.4', $supply->folioVisible());
+
+        $this->actingAs($this->compras)
+            ->getJson($this->ordersDatatableUrl(['search' => ['value' => 'PROVEEDOR ORIGEN']]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 3);
+
+        $this->actingAs($this->compras)
+            ->getJson($this->ordersDatatableUrl(['search' => ['value' => 'autorización']]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 3);
+    }
+
     public function test_the_request_detail_links_to_the_order_form_for_compras(): void
     {
         $request = $this->approvedPurchaseRequest();
@@ -601,6 +665,14 @@ class PurchaseOrderEmissionTest extends TestCase
     /**
      * @return array<string, mixed>
      */
+    /**
+     * @param  array<string, mixed>  $query
+     */
+    private function ordersDatatableUrl(array $query = []): string
+    {
+        return route('purchase-requests.orders.datatable', array_merge(['module' => 'compras'], $query));
+    }
+
     private function payload(PurchaseProvider $provider, float $cantidad): array
     {
         return [

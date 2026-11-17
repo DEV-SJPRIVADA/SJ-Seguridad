@@ -185,6 +185,33 @@
     flex: 0 0 auto;
 }
 
+/* Buscador del DataTable: sin float, queda encima de la tabla y se puede escribir. */
+.purchase-orders-page .req-manage-dt-top {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    background: #fff;
+    padding: 0.15rem 0 0.45rem;
+}
+
+.purchase-orders-page .req-manage-dt-top .dataTables_length,
+.purchase-orders-page .req-manage-dt-top .dataTables_filter {
+    float: none !important;
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.purchase-orders-page .dataTables_wrapper .req-manage-dt-top .dataTables_filter input {
+    position: relative;
+    z-index: 5;
+    min-width: 12rem !important;
+    max-width: 18rem;
+}
+
 /* En portátil/escritorio los iconos de filtros van al final de la misma fila de selectores. */
 @media (min-width: 1101px) {
     .purchase-orders-page__filter-grid {

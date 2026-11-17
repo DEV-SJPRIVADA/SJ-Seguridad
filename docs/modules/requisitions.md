@@ -212,7 +212,7 @@ Cantidad visible solo para motivos *Cargo nuevo* y *Servicio nuevo* (demas envia
 ## Export Excel
 
 - Gestion y Seguimiento: `App\Exports\PersonalRequisitionFullExport` (sobre `BaseExport`); filtros = vista (`q`, estado, `date_from`/`date_to` sobre `request_date`, `recruiter_id`, etc.).
-- No incluye `hired_*` como columnas propias; eso va en export de Ficha empleados (`PersonalRequisitionFichaEntryExport`).
+- No incluye `hired_*` como columnas propias; eso va en el export de Ficha empleados (plantilla nompr07 de pendientes / en ficha).
 
 ## Modelos y tablas
 
