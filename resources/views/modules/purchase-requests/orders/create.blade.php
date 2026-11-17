@@ -255,16 +255,21 @@
                                                 aria-label="Descripción de la línea {{ $index + 1 }}"
                                             >
                                         </td>
+                                        {{-- Valor unidad en formato moneda Colombia (COP); el campo oculto envía el número limpio. --}}
                                         <td>
                                             <input
-                                                type="number"
-                                                name="items[{{ $index }}][valor_unidad]"
+                                                type="text"
+                                                inputmode="decimal"
                                                 class="form-input js-line-unit"
-                                                step="0.01"
-                                                min="0"
                                                 value="{{ old('items.'.$index.'.valor_unidad', $line['valor_unidad']) }}"
                                                 required
                                                 aria-label="Valor unidad de la línea {{ $index + 1 }}"
+                                            >
+                                            <input
+                                                type="hidden"
+                                                name="items[{{ $index }}][valor_unidad]"
+                                                class="js-line-unit-raw"
+                                                value="{{ old('items.'.$index.'.valor_unidad', $line['valor_unidad']) }}"
                                             >
                                         </td>
                                         {{-- Tasa de IVA del catálogo; el valor del IVA se calcula (pantalla y servidor). --}}
@@ -281,23 +286,23 @@
                                             />
                                             <x-input-error :messages="$errors->get('items.'.$index.'.iva_porcentaje')" />
                                         </td>
-                                        <td class="text-right js-line-iva-value">0.00</td>
-                                        <td class="text-right js-line-total">0.00</td>
+                                        <td class="text-right js-line-iva-value">$ 0,00</td>
+                                        <td class="text-right js-line-total">$ 0,00</td>
                                     </tr>
                                 @endforeach
                             </tbody>
                             <tfoot>
                                 <tr>
                                     <th colspan="9" class="text-right">Subtotal</th>
-                                    <th class="text-right" id="purchase-order-subtotal">0.00</th>
+                                    <th class="text-right" id="purchase-order-subtotal">$ 0,00</th>
                                 </tr>
                                 <tr>
                                     <th colspan="9" class="text-right">IVA</th>
-                                    <th class="text-right" id="purchase-order-iva">0.00</th>
+                                    <th class="text-right" id="purchase-order-iva">$ 0,00</th>
                                 </tr>
                                 <tr>
                                     <th colspan="9" class="text-right">TOTAL</th>
-                                    <th class="text-right" id="purchase-order-total">0.00</th>
+                                    <th class="text-right" id="purchase-order-total">$ 0,00</th>
                                 </tr>
                             </tfoot>
                         </table>
@@ -386,8 +391,49 @@
             // Si la página se recarga con un proveedor ya elegido, completa el contacto.
             syncProviderContact(false);
 
-            const format = function (value) {
-                return (Math.round((value + Number.EPSILON) * 100) / 100).toFixed(2);
+            const copFormatter = new Intl.NumberFormat('es-CO', {
+                style: 'currency',
+                currency: 'COP',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+            });
+
+            // Acepta "1250.5", "1.250,50" y "$ 1.250,50" (formato Colombia).
+            const parseAmount = function (value) {
+                let raw = String(value === null || value === undefined ? '' : value).replace(/[^0-9.,-]+/g, '');
+
+                if (raw === '' || raw === '-' || raw === '.' || raw === ',') {
+                    return 0;
+                }
+
+                const lastComma = raw.lastIndexOf(',');
+                const lastDot = raw.lastIndexOf('.');
+
+                if (lastComma !== -1 && lastDot !== -1) {
+                    // El último separador escrito es el decimal.
+                    raw = lastComma > lastDot
+                        ? raw.replace(/\./g, '').replace(',', '.')
+                        : raw.replace(/,/g, '');
+                } else if (lastComma !== -1) {
+                    raw = raw.replace(/,/g, '.');
+                } else if (lastDot !== -1) {
+                    // "1.250" y "1.250.000" se leen como miles; "1250.5" como decimal.
+                    const dotCount = raw.split('.').length - 1;
+                    const decimals = raw.length - lastDot - 1;
+                    if (dotCount > 1 || (decimals === 3 && lastDot <= 3)) {
+                        raw = raw.replace(/\./g, '');
+                    }
+                }
+
+                const parsed = parseFloat(raw);
+
+                return Number.isFinite(parsed) ? parsed : 0;
+            };
+
+            const formatCop = function (value) {
+                const numeric = Number.isFinite(value) ? value : 0;
+
+                return copFormatter.format(Math.round((numeric + Number.EPSILON) * 100) / 100);
             };
 
             // IVA de línea = (cantidad × valor unidad) × tasa / 100, redondeado a 2 decimales (igual que el servidor).
@@ -397,7 +443,7 @@
 
                 document.querySelectorAll('[data-order-line]').forEach(function (row) {
                     const quantity = parseFloat(row.querySelector('.js-line-qty')?.value || '0') || 0;
-                    const unit = parseFloat(row.querySelector('.js-line-unit')?.value || '0') || 0;
+                    const unit = parseFloat(row.querySelector('.js-line-unit-raw')?.value || '0') || 0;
                     const rate = parseFloat(row.querySelector('.js-line-iva-rate input[type="hidden"]')?.value || '0') || 0;
                     const base = quantity * unit;
                     const iva = Math.round(((base * rate / 100) + Number.EPSILON) * 100) / 100;
@@ -408,19 +454,19 @@
 
                     const ivaCell = row.querySelector('.js-line-iva-value');
                     if (ivaCell) {
-                        ivaCell.textContent = format(iva);
+                        ivaCell.textContent = formatCop(iva);
                     }
 
                     const cell = row.querySelector('.js-line-total');
                     if (cell) {
-                        cell.textContent = format(lineTotal);
+                        cell.textContent = formatCop(lineTotal);
                     }
                 });
 
                 const setText = function (id, value) {
                     const el = document.getElementById(id);
                     if (el) {
-                        el.textContent = format(value);
+                        el.textContent = formatCop(value);
                     }
                 };
 
@@ -429,7 +475,40 @@
                 setText('purchase-order-total', subtotal + ivaTotal);
             };
 
-            document.querySelectorAll('.js-line-qty, .js-line-unit').forEach(function (input) {
+            // Valor unidad en moneda Colombia: al enfocar se edita el número limpio, al salir se formatea.
+            document.querySelectorAll('[data-order-line]').forEach(function (row) {
+                const unitInput = row.querySelector('.js-line-unit');
+                const unitRaw = row.querySelector('.js-line-unit-raw');
+
+                if (!unitInput || !unitRaw) {
+                    return;
+                }
+
+                const syncUnit = function () {
+                    const parsed = parseAmount(unitInput.value);
+                    unitRaw.value = parsed;
+
+                    return parsed;
+                };
+
+                unitInput.addEventListener('focus', function () {
+                    unitInput.value = unitRaw.value;
+                });
+
+                unitInput.addEventListener('input', function () {
+                    syncUnit();
+                    recalc();
+                });
+
+                unitInput.addEventListener('blur', function () {
+                    unitInput.value = formatCop(syncUnit());
+                    recalc();
+                });
+
+                unitInput.value = formatCop(parseAmount(unitRaw.value));
+            });
+
+            document.querySelectorAll('.js-line-qty').forEach(function (input) {
                 input.addEventListener('input', recalc);
             });
 

@@ -21,8 +21,14 @@
     <p class="pur-review-outcome__message">
         @if ($approved)
             La orden N.º {{ $order->numeroOc }} quedó aprobada por
-            <strong>{{ $order->aprobacionAprobador?->name ?? 'el aprobador' }}</strong>.
+            <strong>{{ $order->aprobacionAprobador?->name ?? 'el Director Admon.' }}</strong>.
             Compras ya cuenta con esta autorización.
+        @elseif ($order->tieneAprobacionPendiente() && $order->pasoAreaAprobado())
+            El área ya dio el visto bueno. Falta la autorización de
+            <strong>{{ $order->aprobacionAprobador?->name ?? 'el Director Admon.' }}</strong>.
+        @elseif ($order->tieneAprobacionPendiente())
+            Esperando el visto bueno de
+            <strong>{{ $order->aprobacionAreaAprobador?->name ?? 'quien autorizó la solicitud' }}</strong>.
         @else
             La orden N.º {{ $order->numeroOc }} fue rechazada y quedó
             <strong>{{ $order->estadoLabel() }}</strong>; su cantidad volvió al saldo del pedido.

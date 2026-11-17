@@ -423,10 +423,22 @@ class SupplyRequestController extends Controller
     public function approvalIndex(Request $request, string $module)
     {
         $areaFilter = $this->approvalAreaFilter($request);
+        $userId = (int) $request->user()->id;
+
+        // OC de suministro que esperan el visto bueno de esta persona de Calidad (paso 1).
+        $pendingOrderApprovals = PurchaseOrder::query()
+            ->with(['source'])
+            ->where('source_type', PurchaseOrderService::SOURCE_SUPPLY)
+            ->where('aprobacion_area_aprobador_id', $userId)
+            ->where('aprobacion_area_estado', PurchaseOrder::APROBACION_PENDIENTE)
+            ->where('estado', PurchaseOrder::ESTADO_PENDIENTE_APROBACION)
+            ->orderByDesc('aprobacion_solicitada_at')
+            ->get();
 
         return view('modules.supplies.approval.index', [
             'module' => $module,
             'requests' => $this->approvalQueue($areaFilter),
+            'pendingOrderApprovals' => $pendingOrderApprovals,
             'subTabs' => $this->getSupplySubTabs($module),
             'areas' => config('access.areas', []),
             'areaFilter' => $areaFilter,

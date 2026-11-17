@@ -27,6 +27,49 @@
                 </div>
             </div>
 
+            @if (($pendingOrderApprovals ?? collect())->isNotEmpty())
+                {{-- OC de suministro que Compras ya envió: Calidad da el visto bueno (paso 1) antes del Director Admon. --}}
+                <div class="panel purchase-requests-page__panel">
+                    <div class="panel__header panel__header--compact">
+                        <h3 class="panel-title">Órdenes de compra por autorizar</h3>
+                        <p class="panel-text panel-text--compact">
+                            Compras pide su visto bueno en estas órdenes de suministro. El Director Admon. no puede autorizar hasta que usted decida.
+                        </p>
+                    </div>
+                    <div class="panel__body req-manage-shell">
+                        <div class="data-table-wrap req-manage-shell__table">
+                            <table class="supply-table" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th>OC</th>
+                                        <th>Origen</th>
+                                        <th>Proveedor</th>
+                                        <th>Total</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach ($pendingOrderApprovals as $order)
+                                        <tr>
+                                            <td class="text-center">{{ $order->numeroOc }}</td>
+                                            <td>{{ $order->sourceFolio() }}</td>
+                                            <td>{{ $order->provider_nombre }}</td>
+                                            <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
+                                            <td class="table-actions">
+                                                <a
+                                                    href="{{ route('supplies.approval.order-approval.show', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"
+                                                    class="btn btn--primary btn--sm"
+                                                >Revisar orden</a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
             <div class="panel purchase-requests-page__panel">
                 <div class="panel__header panel__header--compact">
                     <div class="pur-req-list__header-row">

@@ -11,7 +11,10 @@
         <p><strong>Cotización aprobada por:</strong> {{ $order->purchaseQuotation->aprobador?->name ?? '—' }}</p>
     @endif
     <p><strong>Solicitada por:</strong> {{ $order->aprobacionSolicitadaPor?->name ?? '—' }}</p>
-    <p><strong>Aprobador:</strong> {{ $order->aprobacionAprobador?->name ?? '—' }}</p>
+    @if ($order->tieneAprobacionDosPasos())
+        <p><strong>Paso 1 (solicitud):</strong> {{ $order->aprobacionAreaAprobador?->name ?? '—' }}</p>
+    @endif
+    <p><strong>Paso 2 (Director Admon.):</strong> {{ $order->aprobacionAprobador?->name ?? '—' }}</p>
     @if ($order->aprobacion_nota)
         <p><strong>Nota de Compras:</strong> {{ $order->aprobacion_nota }}</p>
     @endif

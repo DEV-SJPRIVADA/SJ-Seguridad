@@ -34,7 +34,7 @@ El director puede autorizar desde el **correo** (enlace personal firmado, sin lo
 | Solicitud de compra | Pedido formal de bienes o servicios con lineas de detalle (cantidad, descripcion, referencia, etc.). |
 | Folio | Número visible de la solicitud. Empieza por **SC-** (por ejemplo SC-0042). El número de adentro no cambia. |
 | Director aprobador | Persona con rol de director o de administrador elegida al crear la solicitud; es quien puede autorizarla. |
-| Aprobación de orden | Paso **obligatorio**: el director administrativo (o su reemplazo) autoriza la orden emitida por Compras. Mientras no firme, la orden reserva saldo pero no se imprime ni se evalúa. Si la rechaza, la orden queda Anulada y el saldo vuelve al pedido. |
+| Aprobación de orden | Paso **obligatorio** en dos momentos: primero quien ya autorizó la solicitud (director o Calidad) y después el Director Admon. que elija Compras. Mientras falte alguno, la orden reserva saldo pero no se imprime ni se evalúa. Si alguno rechaza, la orden queda Anulada y el saldo vuelve al pedido. |
 | Estado | Una sola etapa para compras y suministros, con el mismo nombre y color: Por autorizar, Devuelta, Por comprar, Con orden o Cerrado. |
 | Por autorizar | Esperando la decisión del director (o de Calidad, si es un insumo). |
 | Devuelta | El director no autorizó. El solicitante puede corregirla y enviarla de nuevo. |
@@ -180,16 +180,20 @@ El sistema no envía las órdenes al proveedor; si ya se la había entregado, av
 
 ### Autorizar una orden de compra (obligatorio)
 
-**Toda orden nace pendiente de autorización.** La firma la da el **director administrativo** o quien haga sus veces, no el director de área que autorizó la solicitud. Mientras no esté autorizada, la orden **no se puede imprimir, ni enviar al proveedor, ni evaluar**, aunque sí reserva el saldo del pedido para que nadie emita otra orden sobre las mismas cantidades.
+**Toda orden nace pendiente de autorización.** Hay **dos pasos**, en este orden:
 
-1. **Compras:** al guardar la orden en **Emitir orden de compra**, el sistema abre el detalle con el modal **Autorización de la orden**: elija en **Aprobador** a la persona de la dirección administrativa (o su reemplazo) y, si quiere, deje una nota. Pulse **Enviar a autorización**.
-2. La orden queda en estado **Pendiente de autorización**. En el detalle verá el bloque **Pendiente de autorización** con el nombre de quien debe decidir, la fecha de envío y la nota. Los iconos de PDF y Excel muestran un candado hasta que se autorice.
-3. Si se equivocó de persona, o el elegido está de vacaciones, use el icono **Cambiar aprobador** (el mismo que **Asignar aprobador** cuando aún no tiene) y elija a otra persona. La orden sigue pendiente, el saldo sigue reservado y la nueva persona recibe el correo.
-4. **Aprobador:** recibe un correo con el botón para revisar la orden (no pide iniciar sesión) y además la ve en **Solicitudes de compra → Autorizaciones compras**, subpestaña **Órdenes de Compra** (muestra un contador al lado del nombre con las que tiene pendientes). Solo la persona asignada puede decidir. Si la orden se emitió con una cotización aprobada, la lista muestra su **Cotización aprobada** (descripción, grupo / OC futura y quién la aprobó) y el detalle de la revisión y el correo repiten esos datos. Al abrir **Revisar orden** verá el resumen, el detalle de líneas y montos, y a la derecha el panel con **Aprobar orden** y **Rechazar**.
-5. Al **aprobar**, la orden pasa a **Emitida**: recién ahí se habilita el PDF y el Excel, y en ellos aparece su nombre en **Aprobado 2 por**.
-6. Al **rechazar**, debe escribir el motivo y la orden queda **Anulada**: su cantidad vuelve al saldo del pedido y Compras puede emitir una corregida. Para cancelar una orden que aún está pendiente de autorización, este es el camino: rechazarla.
-7. Quien emitió la orden recibe un correo con la decisión. Cada paso queda en los comentarios del pedido.
-8. Lo ya decidido sale de la lista de pendientes pero no se pierde: en **Órdenes de Compra** (y también en **Anulaciones de órdenes**) cambie **Vista** a **Historial completo**, **Aprobadas** o **Rechazadas**, y use **Ver detalle** para consultar la decisión y el comentario.
+1. Quien **ya autorizó la solicitud** (el director de la solicitud de compra, o Calidad si es un suministro).
+2. El **Director Admon. y Financiero** que elija el analista de Compras.
+
+El segundo no puede decidir hasta que el primero dé el visto bueno. Si es la misma persona, igual debe autorizar **dos veces**. Mientras no estén los dos, la orden **no se imprime, no se envía al proveedor ni se evalúa**, aunque sí reserva el saldo del pedido.
+
+1. **Compras:** al guardar la orden, el detalle abre el modal **Autorización de la orden**: elija al **Director Admon.** y, si quiere, deje una nota. Pulse **Enviar a autorización**. El sistema avisa por correo a **ambas** personas.
+2. La orden queda **Pendiente de autorización**. En el detalle verá quién debe dar el visto bueno del área y quién autoriza después. Los iconos de PDF y Excel muestran un candado.
+3. Si se equivocó de Director Admon., o está de vacaciones, use **Cambiar aprobador**. Eso no cambia a quien autorizó la solicitud: ese paso queda fijo. El visto bueno del área, si ya se dio, se conserva.
+4. **Paso 1:** esa persona recibe un correo (no pide iniciar sesión). El director de una solicitud de compra también la ve en **Autorizaciones compras → Órdenes de Compra**. Calidad, en un suministro, la ve en **Por aprobar**. Al **aprobar**, la orden sigue pendiente: falta el Director Admon. Al **rechazar**, debe escribir el motivo y la orden queda **Anulada**.
+5. **Paso 2 — Director Admon.:** recibe correo al enviarse la orden y otro cuando el área ya dio el visto bueno. Hasta entonces puede ver la orden pero no decidir. Al **aprobar**, la orden pasa a **Emitida**: recién ahí salen el PDF y el Excel. En el PDF, **Director(a) área solicitante** es quien dio el visto bueno en el paso 1 y **Director Admon. y Financiero** es quien autorizó en el paso 2. Al **rechazar**, escribe el motivo y la orden queda **Anulada**.
+6. Quien emitió la orden recibe un correo cuando la orden queda autorizada o anulada. Cada paso queda en los comentarios del pedido.
+7. Lo ya decidido sale de pendientes: en **Órdenes de Compra** cambie **Vista** a **Historial completo**, **Aprobadas** o **Rechazadas**.
 
 ### Cargar y aprobar cotizaciones por grupo (Compras y director)
 
@@ -211,7 +215,7 @@ Cada **grupo de cotizaciones** representa una **orden de compra futura**. Compra
 1. En **Pedidos**, cada fila tiene un icono (**Emitir orden de compra**). También está en **Procesar** y, en el detalle de la solicitud, en **Productos solicitados**. No aparece si el pedido ya está Cerrado. Si una pantalla vieja o un enlace directo intenta emitir sobre una solicitud **cerrada**, el sistema vuelve a la bandeja con el aviso **«No se puede emitir la orden de compra: la solicitud ya está cerrada.»** (antes mostraba un error 403).
 2. Se abre el formulario con los datos del origen. Las líneas ya vienen con la cantidad y la descripción. En un suministro la cantidad es la autorizada. El **precio se escribe aquí**: valor unidad e IVA. Si el insumo ya tenía un costo, el valor unidad viene precargado.
 3. Elija el **proveedor** (solo activos; use el buscador por nombre o identificación). Al elegirlo, si el proveedor tiene ciudad, esta se completa en **Ciudad de entrega**, y el campo **Contacto** se llena con el contacto guardado de ese proveedor. El contacto se puede **editar**: al emitir, se imprime en la orden (PDF/Excel) y además queda actualizado en el catálogo del proveedor.
-4. Complete por línea el **valor unidad** y el **IVA** (el IVA es un valor, no un porcentaje). El **valor total** de la línea y el **TOTAL** de la orden se calculan solos: `cantidad × valor unidad + IVA`. La columna **Pendiente** indica cuánto falta por pedir de esa línea (si ya se emitieron otras OC de la misma solicitud).
+4. Complete por línea el **valor unidad** (se muestra en formato de moneda colombiana, `$ 1.250,00`: escriba `1250` o `1250,50` y al salir del campo se formatea) y elija la **tasa de IVA** del catálogo; el **valor IVA** se calcula solo. El **valor total** de la línea y los totales **Subtotal / IVA / TOTAL** del pie también se ven en ese formato: `cantidad × valor unidad + IVA`. La columna **Pendiente** indica cuánto falta por pedir de esa línea (si ya se emitieron otras OC de la misma solicitud).
 5. Si la solicitud tiene cotizaciones **ganadoras aprobadas** y todavía sin usar, aparece **Cotización aprobada (opcional)**: cada opción muestra la referencia del grupo, la cotización y quién la aprobó. Elija una para dejar la referencia en la OC o déjela vacía. Una cotización ya vinculada a otra orden no vuelve a aparecer.
 6. Complete la **fecha**, la **ciudad de entrega** y las **observaciones**: las observaciones son **obligatorias** (el formulario no deja emitir sin ellas). Los textos se guardan en **MAYÚSCULAS**.
 7. Pulse el icono azul de **check** para emitir. La orden queda registrada como **Emitida** y se abre su detalle.
@@ -282,6 +286,8 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.67 | 2026-11-17 | Compras | **Emitir orden:** el **valor unidad**, el **valor IVA**, el **valor total** de cada línea y los totales del pie (Subtotal, IVA y TOTAL) se ven en formato de moneda colombiana (`$ 1.250,00`). Puede escribir el precio como `1250`, `1250,50` o `$ 1.250,50`: al salir del campo se muestra con formato y se guarda el número exacto. |
+| 1.66 | 2026-11-17 | Compras | **Autorizar una orden:** primero quien ya autorizó la solicitud (director o Calidad) y después el Director Admon. que elija Compras. Ambos reciben correo. El segundo no puede decidir hasta que el primero dé el visto bueno. |
 | 1.65 | 2026-11-17 | Compras | **Órdenes:** la columna **Origen** muestra solo el consecutivo (`SC-0045` o `SU-0012`). El buscador de la tabla encuentra ese número, el de la OC, el proveedor, la identificación, la ciudad, el estado y el total. |
 | 1.64 | 2026-11-13 | Compras | **Autorizaciones compras:** la barra **Vista** de las cuatro subpestañas se ve más compacta y ordenada. El selector queda a la izquierda y el total de la vista activa a la derecha, como etiqueta destacada; en pantallas pequeñas el total pasa debajo. |
 | 1.64 | 2026-11-13 | Compras | Orden impresa: las firmas del pie salen un poco más grandes. |

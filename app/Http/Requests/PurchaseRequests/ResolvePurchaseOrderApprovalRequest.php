@@ -27,14 +27,22 @@ class ResolvePurchaseOrderApprovalRequest extends FormRequest
 
             return $this->hasValidSignature()
                 && $directorId > 0
-                && (int) $order->aprobacion_aprobador_id === $directorId;
+                && $order->esAprobadorAsignado($directorId);
         }
 
         $user = $this->user();
 
-        return $user !== null
-            && $user->can('purchase.tab.approval')
-            && (int) $order->aprobacion_aprobador_id === (int) $user->id;
+        if ($user === null || ! $order->esAprobadorAsignado((int) $user->id)) {
+            return false;
+        }
+
+        if ($user->can('purchase.tab.approval')) {
+            return true;
+        }
+
+        return $this->routeIs('supplies.approval.order-approval.*')
+            && $order->esAprobadorDeSolicitud((int) $user->id)
+            && $user->can('supply.tab.quality');
     }
 
     /**

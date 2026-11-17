@@ -25,13 +25,14 @@ class PurchaseOrderSignatureSnapshotService
         private readonly UserSignatureService $signatures,
     ) {}
 
+    /**
+     * Congela las casillas que aún no tienen snapshot (paso 2 / autorización final).
+     * Conserva el PNG del revisor si ya se tomó en el paso 1.
+     */
     public function capture(PurchaseOrder $order): void
     {
         $order->loadDocumentRelations();
-        $order->loadMissing('aprobacionAprobador');
-
-        $directory = trim((string) config('user-signatures.snapshot_directory', 'purchase-order-signatures'), '/')
-            .'/'.$order->getKey();
+        $order->loadMissing(['aprobacionAprobador', 'aprobacionAreaAprobador']);
 
         $slots = [
             self::SLOT_ELABORADO => $order->createdBy,
@@ -40,18 +41,33 @@ class PurchaseOrderSignatureSnapshotService
             self::SLOT_GERENTE => $this->gerenteUser(),
         ];
 
-        $snapshots = [];
-
         foreach ($slots as $slot => $user) {
-            $path = $user !== null
-                ? $this->signatures->copyFromUser($user, $directory.'/'.$slot.'.png')
-                : null;
-
-            $snapshots[$slot] = [
-                'user_id' => $user?->id,
-                'path' => $path,
-            ];
+            $this->captureSlot($order, $slot, $user, overwrite: false);
         }
+    }
+
+    /**
+     * Congela una casilla. En el paso 1 se usa para el director de área / Calidad.
+     */
+    public function captureSlot(PurchaseOrder $order, string $slot, ?User $user, bool $overwrite = true): void
+    {
+        $snapshots = is_array($order->signature_snapshots) ? $order->signature_snapshots : [];
+
+        if (! $overwrite && filled($snapshots[$slot]['path'] ?? null)) {
+            return;
+        }
+
+        $directory = trim((string) config('user-signatures.snapshot_directory', 'purchase-order-signatures'), '/')
+            .'/'.$order->getKey();
+
+        $path = $user !== null
+            ? $this->signatures->copyFromUser($user, $directory.'/'.$slot.'.png')
+            : null;
+
+        $snapshots[$slot] = [
+            'user_id' => $user?->id,
+            'path' => $path,
+        ];
 
         $order->forceFill(['signature_snapshots' => $snapshots])->save();
     }
@@ -94,6 +110,12 @@ class PurchaseOrderSignatureSnapshotService
 
     private function revisorUser(PurchaseOrder $order): ?User
     {
+        $order->loadMissing('aprobacionAreaAprobador');
+
+        if ($order->aprobacionAreaAprobador !== null) {
+            return $order->aprobacionAreaAprobador;
+        }
+
         $source = $order->source;
 
         if ($source instanceof PurchaseRequest) {

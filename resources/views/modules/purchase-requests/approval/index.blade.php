@@ -70,7 +70,7 @@
                 <div class="panel">
                     <div class="panel__header panel__header--compact">
                         <h3 class="panel-title">Órdenes de compra</h3>
-                        <p class="panel-text panel-text--compact">Compras solicitó su aprobación para estas órdenes. Si rechaza, la orden queda anulada. Por defecto se muestran solo las pendientes; cambie la vista para consultar el historial.</p>
+                        <p class="panel-text panel-text--compact">Compras solicitó su aprobación para estas órdenes. Primero decide quien autorizó la solicitud; después el Director Admon. Si alguno rechaza, la orden queda anulada. Por defecto se muestran solo las pendientes; cambie la vista para consultar el historial.</p>
                     </div>
                     <div class="panel__body req-manage-shell">
                         @include('modules.purchase-requests.approval.partials.status-filter', [
@@ -149,10 +149,14 @@
                                                 @endif
                                             </td>
                                             <td class="table-actions">
+                                                @php
+                                                    $userId = (int) auth()->id();
+                                                    $puedeDecidir = $order->puedeDecidirAprobacion($userId);
+                                                @endphp
                                                 <a
                                                     href="{{ route('purchase-requests.approval.order-approval.show', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"
-                                                    class="btn btn--{{ $order->tieneAprobacionPendiente() ? 'primary' : 'secondary' }} btn--sm"
-                                                >{{ $order->tieneAprobacionPendiente() ? 'Revisar orden' : 'Ver detalle' }}</a>
+                                                    class="btn btn--{{ $puedeDecidir ? 'primary' : 'secondary' }} btn--sm"
+                                                >{{ $puedeDecidir ? 'Revisar orden' : 'Ver detalle' }}</a>
                                             </td>
                                         </tr>
                                     @empty

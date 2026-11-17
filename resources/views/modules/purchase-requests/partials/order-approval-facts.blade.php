@@ -34,8 +34,17 @@
             <dt>Solicitada por</dt>
             <dd>{{ $order->aprobacionSolicitadaPor?->name ?? '—' }}</dd>
         </div>
+        @if ($order->tieneAprobacionDosPasos())
+            <div class="pur-review-facts__item">
+                <dt>Paso 1 (solicitud)</dt>
+                <dd>
+                    {{ $order->aprobacionAreaAprobador?->name ?? '—' }}
+                    <span class="pur-review-facts__hint">{{ $order->pasoAreaAprobado() ? 'Visto bueno' : ($order->aprobacion_area_estado === \App\Models\PurchaseOrder::APROBACION_RECHAZADA ? 'Rechazó' : 'Pendiente') }}</span>
+                </dd>
+            </div>
+        @endif
         <div class="pur-review-facts__item">
-            <dt>Aprobador</dt>
+            <dt>Paso 2 (Director Admon.)</dt>
             <dd>{{ $order->aprobacionAprobador?->name ?? '—' }}</dd>
         </div>
         {{-- Cotización aprobada que Compras vinculó al emitir la OC (opcional), con su archivo. --}}

@@ -58,10 +58,10 @@ La plantilla vacía no lleva firmas.
 
 ### Cómo aparece en la orden de compra
 
-Cuando el director administrativo autoriza la orden, el PDF FO-AD-07 pinta (si hay PNG) las firmas de:
+Cuando la orden queda autorizada (visto bueno de quien autorizó la solicitud y luego el Director Admon.), el PDF FO-AD-07 pinta (si hay PNG) las firmas de:
 
 1. Quien elaboró la orden (Analista de Compras)
-2. El director del área que autorizó la solicitud (o quien revisó en Calidad, en un suministro)
+2. Quien dio el visto bueno del área en esta orden (el director de la solicitud o Calidad, en un suministro)
 3. Quien autorizó la orden (Director Admon. y Financiero)
 4. El gerente de la empresa (usuario con correo `gerencia@sjsp.com.co`)
 
@@ -71,6 +71,7 @@ Si alguien no ha subido su PNG, esa casilla queda en blanco y solo se ve el nomb
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.3 | 2026-11-17 | Compras | En la orden, la firma del área o de Calidad se toma cuando esa persona da el visto bueno de **esta orden**, no cuando autorizó el pedido. La del Director Admon. se toma al autorizar después. |
 | 1.2 | 2026-11-13 | Compras / Requisiciones | Firmas un poco más grandes en el PDF de la orden y en la impresión FO-GH-22 |
 | 1.1 | 2026-11-13 | Requisiciones | FO-GH-22: firmas de solicitante, GH y gerencia (`gerencia@sjsp.com.co`) |
 | 1.0 | 2026-11-13 | Compras / Perfil | Alta: firma PNG en Mi perfil y snapshot en el PDF de la orden de compra al autorizar |

@@ -16,7 +16,11 @@ class PurchaseOrderApprovalResolvedMail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(public PurchaseOrder $order, public bool $approved) {}
+    public function __construct(
+        public PurchaseOrder $order,
+        public bool $approved,
+        public ?string $deciderName = null,
+    ) {}
 
     public function envelope(): Envelope
     {

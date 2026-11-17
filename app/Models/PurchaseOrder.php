@@ -106,6 +106,10 @@ class PurchaseOrder extends Model
         'anulacion_resultado',
         'aprobacion_estado',
         'aprobacion_aprobador_id',
+        'aprobacion_area_aprobador_id',
+        'aprobacion_area_estado',
+        'aprobacion_area_comentario',
+        'aprobacion_area_resuelta_at',
         'aprobacion_solicitada_por',
         'aprobacion_nota',
         'aprobacion_solicitada_at',
@@ -122,12 +126,21 @@ class PurchaseOrder extends Model
         'anulacion_resuelta_at' => 'datetime',
         'aprobacion_solicitada_at' => 'datetime',
         'aprobacion_resuelta_at' => 'datetime',
+        'aprobacion_area_resuelta_at' => 'datetime',
         'signature_snapshots' => 'array',
     ];
 
     public function aprobacionAprobador(): BelongsTo
     {
         return $this->belongsTo(User::class, 'aprobacion_aprobador_id');
+    }
+
+    /**
+     * Quien autorizó la solicitud de origen (paso 1 de la OC).
+     */
+    public function aprobacionAreaAprobador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'aprobacion_area_aprobador_id');
     }
 
     public function aprobacionSolicitadaPor(): BelongsTo
@@ -164,6 +177,7 @@ class PurchaseOrder extends Model
     /**
      * Compras puede elegir o cambiar al director administrativo mientras la OC
      * siga pendiente de autorización (vacaciones, ausencias o error en el elegido).
+     * El paso 1 (quien autorizó la solicitud) no se reasigna.
      */
     public function puedeReasignarAprobador(): bool
     {
@@ -171,10 +185,99 @@ class PurchaseOrder extends Model
             && $this->estado === self::ESTADO_PENDIENTE_APROBACION;
     }
 
+    public function tieneAprobacionDosPasos(): bool
+    {
+        return $this->aprobacion_area_aprobador_id !== null;
+    }
+
+    public function pasoAreaPendiente(): bool
+    {
+        return $this->tieneAprobacionDosPasos()
+            && $this->aprobacion_area_estado === self::APROBACION_PENDIENTE;
+    }
+
+    public function pasoAreaAprobado(): bool
+    {
+        return $this->aprobacion_area_estado === self::APROBACION_APROBADA;
+    }
+
+    /**
+     * Id de quien autorizó la solicitud de origen (director SC o Calidad SU).
+     */
+    public function sourceRequestApproverId(): ?int
+    {
+        $this->loadMissing('source');
+        $source = $this->source;
+
+        if ($source instanceof PurchaseRequest && $source->aprobador_id) {
+            return (int) $source->aprobador_id;
+        }
+
+        if ($source instanceof SupplyRequest && $source->quality_reviewer_id) {
+            return (int) $source->quality_reviewer_id;
+        }
+
+        return null;
+    }
+
+    public function esAprobadorDeSolicitud(int $userId): bool
+    {
+        return $this->tieneAprobacionDosPasos()
+            && (int) $this->aprobacion_area_aprobador_id === $userId;
+    }
+
+    public function esAprobadorAdmon(int $userId): bool
+    {
+        return $this->aprobacion_aprobador_id !== null
+            && (int) $this->aprobacion_aprobador_id === $userId;
+    }
+
+    public function esAprobadorAsignado(int $userId): bool
+    {
+        return $this->esAprobadorDeSolicitud($userId) || $this->esAprobadorAdmon($userId);
+    }
+
+    /**
+     * El usuario puede decidir ahora: paso 1 si aún no ha visto la OC, o paso 2 si el área ya dio el sí.
+     */
+    public function puedeDecidirAprobacion(int $userId): bool
+    {
+        if (! $this->tieneAprobacionPendiente()) {
+            return false;
+        }
+
+        if ($this->esAprobadorDeSolicitud($userId) && $this->pasoAreaPendiente()) {
+            return true;
+        }
+
+        if (! $this->esAprobadorAdmon($userId)) {
+            return false;
+        }
+
+        return ! $this->tieneAprobacionDosPasos() || $this->pasoAreaAprobado();
+    }
+
+    /**
+     * El Director Admon. ya está asignado pero espera el visto bueno del área.
+     */
+    public function esperaPasoArea(int $userId): bool
+    {
+        return $this->tieneAprobacionPendiente()
+            && $this->esAprobadorAdmon($userId)
+            && $this->pasoAreaPendiente()
+            && ! $this->esAprobadorDeSolicitud($userId);
+    }
+
     public function aprobacionLabel(): string
     {
+        if ($this->aprobacion_area_estado === self::APROBACION_RECHAZADA) {
+            return 'Rechazada';
+        }
+
         return match ($this->aprobacion_estado) {
-            self::APROBACION_PENDIENTE => 'Pendiente de autorización',
+            self::APROBACION_PENDIENTE => $this->pasoAreaPendiente()
+                ? 'Espera autorización del área'
+                : 'Pendiente de autorización',
             self::APROBACION_APROBADA => 'Autorizada',
             self::APROBACION_RECHAZADA => 'Rechazada',
             default => 'Sin solicitar',

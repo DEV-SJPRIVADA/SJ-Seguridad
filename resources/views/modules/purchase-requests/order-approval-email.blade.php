@@ -13,6 +13,10 @@
                     <div class="alert alert--info">
                         Esta solicitud ya no está pendiente. Aprobación: <strong>{{ $order->aprobacionLabel() }}</strong> · Orden: <strong>{{ $order->estadoLabel() }}</strong>.
                     </div>
+                @elseif ($waitingForArea ?? false)
+                    <div class="alert alert--info">
+                        Debe esperar el visto bueno de <strong>{{ $order->aprobacionAreaAprobador?->name ?? 'quien autorizó la solicitud' }}</strong> antes de autorizar.
+                    </div>
                 @else
                     <p class="req-approval-letter__lead">
                         Compras solicita su <strong>aprobación</strong> para esta orden de compra.

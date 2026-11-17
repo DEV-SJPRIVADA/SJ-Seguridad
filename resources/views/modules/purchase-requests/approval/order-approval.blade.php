@@ -1,10 +1,14 @@
 <x-app-layout>
     <x-slot name="header">
-        @include('modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
+        @include($navPartial ?? 'modules.purchase-requests.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
     @php
         $pending = $order->tieneAprobacionPendiente();
+        $canDecide = $canDecide ?? false;
+        $waitingForArea = $waitingForArea ?? false;
+        $alreadyGaveAreaOk = $alreadyGaveAreaOk ?? false;
+        $backTitle = $backTitle ?? 'Volver a Órdenes de Compra';
         $estadoPill = match ($order->estado) {
             \App\Models\PurchaseOrder::ESTADO_ANULADA => 'status-pill--danger',
             \App\Models\PurchaseOrder::ESTADO_ANULACION_PENDIENTE => 'status-pill--warning',
@@ -12,7 +16,7 @@
         };
     @endphp
 
-    {{-- Revisión de la aprobación de una OC por el aprobador elegido (plataforma). --}}
+    {{-- Revisión de la aprobación de una OC (paso 1 área/Calidad o paso 2 Director Admon.). --}}
     <div class="page-section purchase-requests-page purchase-requests-page--detail">
         <div class="app-container">
             @if (session('status'))
@@ -24,8 +28,8 @@
                     <a
                         href="{{ $backUrl }}"
                         class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                        title="Volver a Órdenes de Compra"
-                        aria-label="Volver a Órdenes de Compra"
+                        title="{{ $backTitle }}"
+                        aria-label="{{ $backTitle }}"
                     >
                         <x-lucide-arrow-left width="18" height="18" aria-hidden="true" />
                     </a>
@@ -46,10 +50,18 @@
                 </div>
             </div>
 
-            @if ($pending)
+            @if ($canDecide)
                 <div class="alert alert--warning pur-review-page__notice" role="status">
                     <p><strong>Compras solicita su aprobación.</strong> Revise las líneas y los montos de la orden.
                         Su decisión se registra en la orden y Compras recibe el resultado por correo.</p>
+                </div>
+            @elseif ($waitingForArea)
+                <div class="alert alert--info pur-review-page__notice" role="status">
+                    <p>Debe esperar el visto bueno de <strong>{{ $order->aprobacionAreaAprobador?->name ?? 'quien autorizó la solicitud' }}</strong> antes de autorizar esta orden.</p>
+                </div>
+            @elseif ($alreadyGaveAreaOk)
+                <div class="alert alert--info pur-review-page__notice" role="status">
+                    <p>Usted ya dio el visto bueno. Falta la autorización de <strong>{{ $order->aprobacionAprobador?->name ?? 'el Director Admon.' }}</strong>.</p>
                 </div>
             @else
                 <div class="alert alert--info pur-review-page__notice" role="status">
@@ -66,7 +78,7 @@
                 </div>
 
                 <aside class="pur-review-page__aside">
-                    @if ($pending)
+                    @if ($canDecide)
                         @include('modules.purchase-requests.partials.order-approval-decision', [
                             'decideUrl' => $decideUrl,
                             'method' => 'PATCH',

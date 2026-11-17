@@ -7,6 +7,9 @@ use App\Mail\PurchaseOrderApprovalResolvedMail;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseProvider;
 use App\Models\PurchaseRequest;
+use App\Models\SupplyProduct;
+use App\Models\SupplyRequest;
+use App\Models\SupplySite;
 use App\Models\User;
 use App\Services\PurchaseRequests\PurchaseFlowStateService;
 use App\Services\PurchaseRequests\PurchaseOrderApprovalService;
@@ -77,7 +80,10 @@ class PurchaseOrderApprovalTest extends TestCase
         $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->estado);
         $this->assertSame('URGENTE PARA EL LUNES', $order->aprobacion_nota);
         $this->assertFalse($order->puedeSolicitarAnulacion());
+        $this->assertSame($this->director->id, (int) $order->aprobacion_area_aprobador_id);
+        $this->assertSame(PurchaseOrder::APROBACION_PENDIENTE, $order->aprobacion_area_estado);
         Mail::assertSent(PurchaseOrderApprovalRequestedMail::class, fn ($mail) => $mail->hasTo($this->admin->email));
+        Mail::assertSent(PurchaseOrderApprovalRequestedMail::class, fn ($mail) => $mail->hasTo($this->director->email));
     }
 
     public function test_approval_tabs_show_the_pending_count_for_each_subtab(): void
@@ -193,19 +199,42 @@ class PurchaseOrderApprovalTest extends TestCase
             ->assertSee('Solicitudes de Compra')
             ->assertSee('Órdenes de Compra')
             ->assertSee('Anulaciones de órdenes')
-            ->assertSee('Revisar orden');
+            ->assertSee('Ver detalle');
 
-        $this->actingAs($this->director)
-            ->get(route('purchase-requests.approval.order-approval.show', ['module' => 'compras', 'purchase_order' => $order->id]))
-            ->assertForbidden();
-
-        // El aprobador elegido ve la orden con su resumen, líneas y el panel de decisión.
+        // El Director Admon. ve la orden pero no decide hasta el visto bueno del área.
         $this->actingAs($this->admin)
             ->get(route('purchase-requests.approval.order-approval.show', ['module' => 'compras', 'purchase_order' => $order->id]))
             ->assertOk()
             ->assertSee('Aprobación de orden de compra')
             ->assertSee('Resumen de la orden')
             ->assertSee('Productos de la orden')
+            ->assertDontSee('Aprobar orden');
+
+        $this->actingAs($this->admin)
+            ->patch(route('purchase-requests.approval.order-approval.update', ['module' => 'compras', 'purchase_order' => $order->id]), [
+                'decision' => 'aprobar',
+            ])
+            ->assertSessionHasErrors('comentario_aprobacion');
+
+        // Paso 1: quien autorizó la solicitud.
+        $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.order-approval.show', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertOk()
+            ->assertSee('Aprobar orden');
+
+        $this->actingAs($this->director)
+            ->patch(route('purchase-requests.approval.order-approval.update', ['module' => 'compras', 'purchase_order' => $order->id]), [
+                'decision' => 'aprobar',
+            ])
+            ->assertRedirect(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'ordenes']));
+
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->fresh()->estado);
+        $this->assertTrue($order->fresh()->pasoAreaAprobado());
+
+        // Paso 2: el Director Admon. ya puede autorizar.
+        $this->actingAs($this->admin)
+            ->get(route('purchase-requests.approval.order-approval.show', ['module' => 'compras', 'purchase_order' => $order->id]))
+            ->assertOk()
             ->assertSee('Aprobar orden');
 
         $this->actingAs($this->admin)
@@ -256,8 +285,16 @@ class PurchaseOrderApprovalTest extends TestCase
             ->assertOk()
             ->assertSee('No hay órdenes de compra con la vista seleccionada.');
 
-        // Otro aprobador no ve el historial ajeno.
+        // Quien dio el visto bueno del área también ve el historial.
         $this->actingAs($this->director)
+            ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'ordenes', 'estado' => 'todos']))
+            ->assertOk()
+            ->assertSee('Ver detalle');
+
+        // Un tercero no ve el historial ajeno.
+        $other = User::factory()->create(['must_change_password' => false]);
+        $other->assignRole('director');
+        $this->actingAs($other)
             ->get(route('purchase-requests.approval.index', ['module' => 'compras', 'vista' => 'ordenes', 'estado' => 'todos']))
             ->assertOk()
             ->assertSee('No hay órdenes de compra con la vista seleccionada.');
@@ -304,11 +341,18 @@ class PurchaseOrderApprovalTest extends TestCase
         $service = app(PurchaseOrderApprovalService::class);
         $service->request($order, $this->compras, $this->director->id, null);
 
-        $this->get($service->emailShowUrl($order->fresh()))
+        $this->get($service->emailShowUrl($order->fresh(), $this->director->id))
             ->assertOk()
             ->assertSee('Aprobar orden');
 
-        $this->post($service->emailUpdateUrl($order->fresh()), ['decision' => 'aprobar'])
+        $this->post($service->emailUpdateUrl($order->fresh(), $this->director->id), ['decision' => 'aprobar'])
+            ->assertOk()
+            ->assertSee('visto bueno del área');
+
+        $this->assertFalse($order->fresh()->isAprobada());
+        $this->assertTrue($order->fresh()->pasoAreaAprobado());
+
+        $this->post($service->emailUpdateUrl($order->fresh(), $this->director->id), ['decision' => 'aprobar'])
             ->assertOk()
             ->assertSee('aprobada');
 
@@ -323,7 +367,7 @@ class PurchaseOrderApprovalTest extends TestCase
         [, $order] = $this->purchaseWithOrder();
         $service = app(PurchaseOrderApprovalService::class);
         $service->request($order, $this->compras, $this->director->id, null);
-        $service->resolve($order->fresh(), $this->director->id, true, null);
+        $this->completeTwoStepApproval($order, $this->director->id);
 
         $this->actingAs($this->compras)
             ->post(route('purchase-requests.orders.approval.request', ['module' => 'compras', 'purchase_order' => $order->id]), [
@@ -353,7 +397,7 @@ class PurchaseOrderApprovalTest extends TestCase
         [, $order] = $this->purchaseWithOrder();
         $service = app(PurchaseOrderApprovalService::class);
         $service->request($order, $this->compras, $this->admin->id, null);
-        $service->resolve($order->fresh(), $this->admin->id, true, null);
+        $this->completeTwoStepApproval($order, $this->admin->id);
 
         $order->refresh();
         $snapshots = $order->signature_snapshots;
@@ -384,7 +428,7 @@ class PurchaseOrderApprovalTest extends TestCase
         [, $order] = $this->purchaseWithOrder();
         $service = app(PurchaseOrderApprovalService::class);
         $service->request($order, $this->compras, $this->admin->id, null);
-        $service->resolve($order->fresh(), $this->admin->id, true, null);
+        $this->completeTwoStepApproval($order, $this->admin->id);
 
         $html = app(PurchaseOrderPdfExporter::class)->html($order->fresh());
         $this->assertStringNotContainsString('class="user-signature"', $html);
@@ -406,6 +450,95 @@ class PurchaseOrderApprovalTest extends TestCase
         // Sigue pendiente, sin aprobador asignado.
         $this->assertNull($order->fresh()->aprobacion_aprobador_id);
         $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->fresh()->estado);
+    }
+
+    public function test_quality_reviewer_must_approve_a_supply_order_before_admon(): void
+    {
+        Mail::fake();
+        $quality = User::factory()->create([
+            'name' => 'Calidad Prueba',
+            'email' => 'calidad.oc@test.local',
+            'area_key' => 'calidad',
+            'must_change_password' => false,
+        ]);
+        $quality->assignRole('usuario');
+        $quality->givePermissionTo(['supply.tab.quality', 'view.board.calidad.suministros']);
+
+        $site = SupplySite::query()->where('name', 'cali_central')->firstOrFail();
+        $product = SupplyProduct::query()->firstOrFail();
+        $requester = User::factory()->create(['area_key' => 'operaciones', 'sede_id' => $site->getKey()]);
+
+        $supply = SupplyRequest::query()->create([
+            'user_id' => $requester->getKey(),
+            'area_key' => 'operaciones',
+            'sede_id' => $site->getKey(),
+            'site_utilization' => $site->utilization,
+            'site_city' => $site->city,
+            'status' => 'en_compras',
+            'quality_reviewer_id' => $quality->id,
+        ]);
+        $supply->items()->create([
+            'supply_product_id' => $product->getKey(),
+            'requested_quantity' => 4,
+            'approved_quantity' => 4,
+            'is_not_in_catalog' => false,
+        ]);
+
+        $order = app(PurchaseOrderService::class)->createFromSupply($supply->fresh('items'), [
+            'provider_id' => PurchaseProvider::factory()->create()->id,
+            'fecha' => now()->toDateString(),
+            'observaciones' => 'SUMINISTRO PARA AUTORIZAR',
+            'items' => [['cantidad' => 4, 'descripcion' => 'INSUMO', 'valor_unidad' => 10, 'iva' => 0]],
+        ], $this->compras);
+
+        app(PurchaseOrderApprovalService::class)->request($order, $this->compras, $this->admin->id, null);
+
+        $this->assertSame($quality->id, (int) $order->fresh()->aprobacion_area_aprobador_id);
+        Mail::assertSent(PurchaseOrderApprovalRequestedMail::class, fn ($mail) => $mail->hasTo($quality->email));
+        Mail::assertSent(PurchaseOrderApprovalRequestedMail::class, fn ($mail) => $mail->hasTo($this->admin->email));
+
+        $this->actingAs($quality)
+            ->get(route('supplies.approval.index', ['module' => 'calidad']))
+            ->assertOk()
+            ->assertSee('Órdenes de compra por autorizar')
+            ->assertSee('Revisar orden');
+
+        $this->actingAs($this->admin)
+            ->patch(route('purchase-requests.approval.order-approval.update', ['module' => 'compras', 'purchase_order' => $order->id]), [
+                'decision' => 'aprobar',
+            ])
+            ->assertSessionHasErrors('comentario_aprobacion');
+
+        $this->actingAs($quality)
+            ->patch(route('supplies.approval.order-approval.update', ['module' => 'calidad', 'purchase_order' => $order->id]), [
+                'decision' => 'aprobar',
+            ])
+            ->assertRedirect(route('supplies.approval.index', ['module' => 'calidad']));
+
+        $this->assertTrue($order->fresh()->pasoAreaAprobado());
+        $this->assertSame(PurchaseOrder::ESTADO_PENDIENTE_APROBACION, $order->fresh()->estado);
+
+        $this->actingAs($this->admin)
+            ->patch(route('purchase-requests.approval.order-approval.update', ['module' => 'compras', 'purchase_order' => $order->id]), [
+                'decision' => 'aprobar',
+            ])
+            ->assertRedirect();
+
+        $this->assertTrue($order->fresh()->estaAutorizada());
+        $this->assertSame(PurchaseOrder::ESTADO_EMITIDA, $order->fresh()->estado);
+    }
+
+    private function completeTwoStepApproval(PurchaseOrder $order, int $admonId, bool $approve = true): void
+    {
+        $service = app(PurchaseOrderApprovalService::class);
+        $fresh = $order->fresh();
+        $areaId = (int) $fresh->aprobacion_area_aprobador_id;
+
+        if ($areaId > 0 && $fresh->pasoAreaPendiente()) {
+            $service->resolve($fresh, $areaId, true, null);
+        }
+
+        $service->resolve($order->fresh(), $admonId, $approve, $approve ? null : 'MOTIVO DE PRUEBA');
     }
 
     /**

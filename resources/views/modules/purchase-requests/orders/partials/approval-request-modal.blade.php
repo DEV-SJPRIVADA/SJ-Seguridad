@@ -9,8 +9,8 @@
                 <div>
                     <h3 class="ficha-empleados-masivos-modal__title">Autorización de la orden</h3>
                     <p class="ficha-empleados-masivos-modal__lead">
-                        Elija al director administrativo o a quien haga sus veces. Decide por correo o en Autorizaciones compras.
-                        Sin su autorización la orden no se puede imprimir ni enviar al proveedor; si la rechaza, queda anulada y el saldo vuelve al pedido.
+                        Elija al Director Admon. y Financiero. Al enviar, también se notifica a quien ya autorizó la solicitud: esa persona debe dar el visto bueno primero.
+                        Sin ambas autorizaciones la orden no se puede imprimir ni enviar al proveedor; si alguno rechaza, queda anulada y el saldo vuelve al pedido.
                     </p>
                 </div>
             </div>

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\PurchaseRequests\PurchaseOrderApprovalController;
 use App\Http\Controllers\Supplies\SupplyProductController;
 use App\Http\Controllers\Supplies\SupplyRequestController;
 use App\Http\Controllers\Supplies\SupplySeguimientoController;
@@ -25,6 +26,9 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('supplies/{mod
     Route::middleware(['supply.tab:quality'])->group(function () {
         Route::get('/aprobacion-insumos', [SupplyRequestController::class, 'approvalIndex'])->name('approval.index');
         Route::get('/aprobacion-insumos/exportar', [SupplyRequestController::class, 'approvalExport'])->name('approval.export');
+        // Antes de /aprobacion-insumos/{supply_request} para que "ordenes" no se tome como id.
+        Route::get('/aprobacion-insumos/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'showFromQuality'])->name('approval.order-approval.show');
+        Route::patch('/aprobacion-insumos/ordenes/{purchase_order}', [PurchaseOrderApprovalController::class, 'updateFromQuality'])->name('approval.order-approval.update');
         Route::get('/aprobacion-insumos/{supply_request}/editar', [SupplyRequestController::class, 'approvalEdit'])->name('approval.edit');
         Route::patch('/aprobacion-insumos/{supply_request}', [SupplyRequestController::class, 'approvalUpdate'])->name('approval.update');
         Route::get('/insumos-aprobados', [SupplyRequestController::class, 'approvedIndex'])->name('approved.index');

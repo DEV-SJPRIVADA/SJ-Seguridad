@@ -159,6 +159,24 @@
     min-width: 9.5rem;
 }
 
+/* Emitir OC: valores monetarios en formato Colombia (COP) legibles y alineados a la derecha. */
+.purchase-order-lines .js-line-unit {
+    min-width: 8.75rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+
+.purchase-order-lines .js-line-iva-value,
+.purchase-order-lines .js-line-total {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
+.purchase-order-lines tfoot th:last-child {
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+}
+
 /* Órdenes de compra del pedido (detalle de solicitud / suministro): desplegable con líneas y valores unitarios. */
 .pur-req-orders__lines {
     margin-top: 0.6rem;

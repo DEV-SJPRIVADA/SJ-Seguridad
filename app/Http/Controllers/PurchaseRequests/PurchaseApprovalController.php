@@ -67,19 +67,29 @@ class PurchaseApprovalController extends Controller
                 ->sortByDesc(fn (PurchaseQuotationBatch $batch): int => $batch->estaPendiente() ? 1 : 0)
                 ->values();
         } elseif ($vista === 'ordenes') {
-            // OC que Compras envió a este aprobador (director o administrador); las retiradas no quedan asignadas.
-            // Se carga la cotización aprobada vinculada (si existe) para mostrarla en el listado.
+            // OC donde este usuario es paso 1 (quien autorizó la solicitud) o paso 2 (Director Admon.).
             $query = PurchaseOrder::query()
-                ->with(['source', 'aprobacionSolicitadaPor', 'purchaseQuotation.aprobador'])
-                ->where('aprobacion_aprobador_id', $userId);
+                ->with(['source', 'aprobacionSolicitadaPor', 'aprobacionAreaAprobador', 'aprobacionAprobador', 'purchaseQuotation.aprobador'])
+                ->where(function ($assigned) use ($userId): void {
+                    $assigned->where('aprobacion_aprobador_id', $userId)
+                        ->orWhere('aprobacion_area_aprobador_id', $userId);
+                });
 
-            $estado === 'todos'
-                ? $query->whereNotNull('aprobacion_estado')
-                : $query->where('aprobacion_estado', $estado);
+            match ($estado) {
+                'todos' => $query->where(fn ($q) => $q
+                    ->whereNotNull('aprobacion_estado')
+                    ->orWhereNotNull('aprobacion_area_estado')),
+                PurchaseOrder::APROBACION_PENDIENTE => $query->where('estado', PurchaseOrder::ESTADO_PENDIENTE_APROBACION),
+                PurchaseOrder::APROBACION_APROBADA => $query->where('aprobacion_estado', PurchaseOrder::APROBACION_APROBADA),
+                default => $query->where(fn ($q) => $q
+                    ->where('aprobacion_estado', PurchaseOrder::APROBACION_RECHAZADA)
+                    ->orWhere('aprobacion_area_estado', PurchaseOrder::APROBACION_RECHAZADA)),
+            };
 
             $orderApprovals = $query
-                ->orderByRaw('CASE WHEN aprobacion_estado = ? THEN 0 ELSE 1 END', [PurchaseOrder::APROBACION_PENDIENTE])
+                ->orderByRaw('CASE WHEN estado = ? THEN 0 ELSE 1 END', [PurchaseOrder::ESTADO_PENDIENTE_APROBACION])
                 ->orderByDesc('aprobacion_resuelta_at')
+                ->orderByDesc('aprobacion_area_resuelta_at')
                 ->orderByDesc('aprobacion_solicitada_at')
                 ->get();
         } else {
@@ -109,8 +119,20 @@ class PurchaseApprovalController extends Controller
             ->where('estado', PurchaseRequest::ESTADO_PENDIENTE)
             ->count();
         $pendingOrderApprovalsCount = PurchaseOrder::query()
-            ->where('aprobacion_estado', PurchaseOrder::APROBACION_PENDIENTE)
-            ->where('aprobacion_aprobador_id', $userId)
+            ->where('estado', PurchaseOrder::ESTADO_PENDIENTE_APROBACION)
+            ->where(function ($q) use ($userId): void {
+                $q->where(function ($area) use ($userId): void {
+                    $area->where('aprobacion_area_aprobador_id', $userId)
+                        ->where('aprobacion_area_estado', PurchaseOrder::APROBACION_PENDIENTE);
+                })->orWhere(function ($admon) use ($userId): void {
+                    $admon->where('aprobacion_aprobador_id', $userId)
+                        ->where('aprobacion_estado', PurchaseOrder::APROBACION_PENDIENTE)
+                        ->where(function ($ready) {
+                            $ready->whereNull('aprobacion_area_aprobador_id')
+                                ->orWhere('aprobacion_area_estado', PurchaseOrder::APROBACION_APROBADA);
+                        });
+                });
+            })
             ->count();
         $pendingCancellationsCount = PurchaseOrder::query()
             ->where('estado', PurchaseOrder::ESTADO_ANULACION_PENDIENTE)

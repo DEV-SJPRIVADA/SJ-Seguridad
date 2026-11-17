@@ -219,7 +219,8 @@ class PurchaseOrderController extends Controller
     {
         $purchaseOrder->load([
             'items', 'source', 'provider', 'evaluation', 'purchaseQuotation.aprobador',
-            'anulacionAprobador', 'anulacionSolicitadaPor', 'aprobacionAprobador', 'aprobacionSolicitadaPor',
+            'anulacionAprobador', 'anulacionSolicitadaPor',
+            'aprobacionAprobador', 'aprobacionAreaAprobador', 'aprobacionSolicitadaPor',
         ]);
         $canProcess = auth()->user() !== null && $access->canEmitOrder(auth()->user());
 

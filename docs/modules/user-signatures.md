@@ -11,7 +11,7 @@ Cada usuario sube en **Mi perfil** un PNG de su firma manuscrita. El archivo que
 - Subida / reemplazo / borrado solo por el dueño de la cuenta (`POST|DELETE /profile/signature`)
 - PNG, máximo 2 MB, disco `local` (`storage/app/private/user-signatures/{userId}/`)
 - Componente Blade `<x-user-signature :user="$user" />` o `:src` (data URI)
-- Snapshot al **autorizar** una OC: cuatro casillas del FO-AD-07 (elaborado, revisor, aprobado, gerente)
+- Snapshot de OC en **dos momentos**: casilla revisor (Director(a) área solicitante) al visto bueno del paso 1; elaborado, Admon. y gerente al autorizar el paso 2
 - FO-GH-22 (`requisitions.print`): Líder = `requested_by`; Dirección GH Recibió = `managed_by` (o quien pasó a `en_gestion`); Aprobación Gerencia = usuario `gerencia@sjsp.com.co` **solo si** gerencia ya autorizó (cargo nuevo)
 - Casilla Gerente / Gerencia = `config('user-signatures.gerente_email')` (`gerencia@sjsp.com.co`)
 - Sin imagen: casilla en blanco
@@ -71,7 +71,7 @@ Migraciones: `2026_11_13_083005_add_signature_path_to_users_table`, `2026_11_13_
 
 1. Solo el usuario carga o quita su firma en Mi perfil.
 2. El PDF de la OC muestra imagen **solo si la OC está autorizada** y hay snapshot de ese slot.
-3. El snapshot se toma en `PurchaseOrderApprovalService::resolve()` cuando `$approve === true`.
+3. El snapshot del revisor se toma al aprobar el **paso 1** (`captureSlot`). El resto, al aprobar el **paso 2** (`capture`). Un rechazo no congela firmas.
 4. Si el usuario cambia o borra su PNG después, las OC ya autorizadas conservan la copia.
 5. OC históricas (`aprobacion_requerida = false` o autorizadas antes de esta feature) no tienen snapshot: casillas sin imagen.
 6. Gerente: lookup por email configurado (incluye inactivos). Si no hay usuario o no hay PNG, casilla sin imagen; en la OC el nombre se imprime si el usuario existe.
