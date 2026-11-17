@@ -311,7 +311,9 @@ permisos para modificar Catálogos
 23. Al correo electrónico de los implicados en el proceso de selección
     llegara la notificación con los datos de la requisición.
 
-24. Abra la pestaña Gestión.
+24. Abra la pestaña MT-GH-06. Sobre los filtros se muestra el título
+    **Matriz de Gestión de Requisiciones de Personal - Noviembre de 2026 -
+    Versión 02**.
 
 25. Por defecto el listado muestra requisiciones En curso (sin
     Contratado ni Cancelada). Use el filtro de estados **Todos** para
@@ -466,6 +468,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.17        | 2026-11-17                 | Pestaña de Gestión Humana rotulada MT-GH-06; título de la matriz sobre los filtros |
 | 1.16        | 2026-11-13                 | Impresión FO-GH-22: firmas del pie un poco más grandes |
 | 1.15        | 2026-11-13                 | Impresión FO-GH-22: firmas de líder (solicitante), GH y gerencia si hay PNG en Mi perfil |
 | 1.14        | 2026-10-20                 | Duración del contrato: con tipo Fijo se elige 6 o 12 meses; con otros tipos se prellena con el nombre del tipo (editable) |

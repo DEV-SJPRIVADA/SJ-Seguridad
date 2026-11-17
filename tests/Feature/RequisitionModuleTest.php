@@ -102,6 +102,41 @@ class RequisitionModuleTest extends TestCase
             ->assertDontSee('FO-GH-22 Solicitar');
     }
 
+    public function test_gestion_humana_gestion_tab_uses_matrix_label_and_title(): void
+    {
+        $manager = User::factory()->create([
+            'area_key' => 'gestion_humana',
+            'must_change_password' => false,
+        ]);
+        $manager->assignRole('usuario');
+        $manager->givePermissionTo([
+            'view.board.gestion_humana.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $this->actingAs($manager)
+            ->get(route('requisitions.manage', ['module' => 'gestion_humana']))
+            ->assertOk()
+            ->assertSee('MT-GH-06', false)
+            ->assertSee('Matriz de Gestión de Requisiciones de Personal - Noviembre de 2026 - Versión 02', false);
+
+        $operacionesManager = User::factory()->create([
+            'area_key' => 'operaciones',
+            'must_change_password' => false,
+        ]);
+        $operacionesManager->assignRole('usuario');
+        $operacionesManager->givePermissionTo([
+            'view.board.operaciones.requisiciones',
+            'requisitions.tab.gestion',
+        ]);
+
+        $this->actingAs($operacionesManager)
+            ->get(route('requisitions.manage', ['module' => 'operaciones']))
+            ->assertOk()
+            ->assertDontSee('MT-GH-06', false)
+            ->assertDontSee('Matriz de Gestión de Requisiciones de Personal - Noviembre de 2026 - Versión 02', false);
+    }
+
     public function test_clients_parameter_type_is_no_longer_manageable(): void
     {
         $user = User::factory()->create([

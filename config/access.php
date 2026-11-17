@@ -492,6 +492,7 @@ return [
     'requisition_module_tabs' => [
         'gestion_humana' => [
             'solicitar' => 'FO-GH-22 Solicitar',
+            'gestion' => 'MT-GH-06',
         ],
     ],
 

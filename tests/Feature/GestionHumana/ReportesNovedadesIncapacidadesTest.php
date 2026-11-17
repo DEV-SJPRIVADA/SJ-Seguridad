@@ -37,6 +37,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
             ->assertOk()
             ->assertSee('Incapacidades', false)
             ->assertSee('Extemporánea', false)
+            ->assertSee('Observaciones', false)
             ->assertSee('name="extemporanea"', false)
             ->assertDontSee('listado y formularios en preparación', false);
 
@@ -272,6 +273,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
             'fecha_inicio' => '2026-09-10',
             'fecha_fin' => '2026-09-12',
             'extemporanea' => true,
+            'observaciones' => 'Soporte entregado tarde',
             'created_by' => $editor->id,
             'updated_by' => $editor->id,
         ]);
@@ -294,6 +296,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
         $this->assertSame(1, $onlyYes->json('recordsFiltered'));
         $this->assertStringContainsString('SI EXTEMP', (string) $onlyYes->json('data.0.1'));
         $this->assertStringContainsString('Sí', (string) $onlyYes->json('data.0.10'));
+        $this->assertStringContainsString('Soporte entregado tarde', (string) $onlyYes->json('data.0.11'));
 
         $onlyNo = $this->actingAs($editor)
             ->getJson(route('gestion-humana.reportes-novedades.incapacidades.datatable', array_merge($range, [

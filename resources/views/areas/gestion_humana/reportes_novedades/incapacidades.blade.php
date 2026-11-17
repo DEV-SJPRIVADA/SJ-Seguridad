@@ -104,6 +104,7 @@
                                     <th>Recepción</th>
                                     <th>Días entrega</th>
                                     <th>Extemporánea</th>
+                                    <th>Observaciones</th>
                                     <th>Obs. Nómina</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -860,7 +861,7 @@
                     order: [[6, 'desc']],
                     columnDefs: [
                         { targets: [9], orderable: false, searchable: false },
-                        { targets: [12], orderable: false, searchable: false },
+                        { targets: [13], orderable: false, searchable: false },
                     ],
                 });
 

@@ -10,7 +10,7 @@ Gestionar el flujo de requisicion de personal por area: solicitud del colaborado
 - Subtabs (label UI en `config/access.php` → `requisition_tabs`, con overrides por modulo en `requisition_module_tabs`):
   - **Dashboard** — KPIs ApexCharts; alcance global si el usuario puede abrir Dashboard/Gestion
   - **Solicitar** / **Mis requisiciones** — solo en `users.area_key` (area base). En `gestion_humana` el tab Solicitar se muestra como **FO-GH-22 Solicitar**
-  - **Gestion** — listado transversal de todas las areas
+  - **Gestion** — listado transversal de todas las areas. En `gestion_humana` el tab se rotula **MT-GH-06** y sobre los filtros se muestra el titulo **Matriz de Gestión de Requisiciones de Personal - Noviembre de 2026 - Versión 02**
   - **Autorizacion gerencia** — motivo Cargo nuevo (`requisitions.approve.management`)
   - **Catalogos** (ruta `parametros`) — cargos, motivos, ciudades, tipos, uniformes, contratos + toggles de encargados de seleccion
 - Hogares canonicos del sidebar (`SidebarVisibilityService` + `board_canonical_areas.requisiciones`):
@@ -254,6 +254,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-11-17 | Gestion GH: label del tab `MT-GH-06` (`requisition_module_tabs.gestion_humana.gestion`) y titulo «Matriz de Gestión de Requisiciones de Personal - Noviembre de 2026 - Versión 02» sobre los filtros (`.req-manage-shell__title`, solo `gestion_humana`) |
 | 2026-11-13 | Impresión FO-GH-22: PNG de firma a 50px (casilla 74px) |
 | 2026-11-13 | Impresión FO-GH-22: firmas manuscritas — Líder = `requested_by`; Dirección GH Recibió = `managed_by` (o log a `en_gestion`); Aprobación Gerencia = usuario `gerencia@sjsp.com.co` solo si hay autorización de cargo nuevo. Plantilla vacía sin firmas. Ver [`user-signatures.md`](user-signatures.md) |
 | 2026-10-20 | Duracion del contrato: tipo Fijo (`RequisitionContractType::isFixedTerm()`, nombre «Fijo») → `<x-searchable-select>` 6/12 meses (guarda `6`/`12`, `FIXED_TERM_DURATIONS`); otros tipos → texto prellenado con el nombre del tipo (editable, MAYÚSCULAS al guardar). Alpine `requisitionContractDuration` en `partials/form-fields` (hidden `contract_duration`). Validacion `Concerns\ValidatesContractDuration` (Store/Update): obligatoria si hay tipo; Fijo solo 6/12. Datos legados no se migran. |

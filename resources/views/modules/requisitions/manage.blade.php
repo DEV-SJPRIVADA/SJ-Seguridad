@@ -35,6 +35,10 @@
         <div class="app-container">
             <div class="panel">
                 <div class="panel__body req-manage-shell">
+                    @if ($moduleKey === 'gestion_humana')
+                        <h2 class="req-manage-shell__title">Matriz de Gestión de Requisiciones de Personal - Noviembre de 2026 - Versión 02</h2>
+                    @endif
+
                     <details class="req-manage-shell__filters req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
                         <summary class="req-manage-filters__panel-toggle">
                             <span>Filtros</span>
