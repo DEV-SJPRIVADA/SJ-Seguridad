@@ -46,7 +46,7 @@ class SourceOrdersVisibilityTest extends TestCase
                 ->assertOk()
                 ->assertSee('Órdenes de compra')
                 ->assertSee('Proveedor de prueba')
-                ->assertSee('300.00')
+                ->assertSee('$ 300,00')
                 ->assertSee('Anulada')
                 ->assertSee('Ver líneas y valores unitarios')
                 ->assertSee('Pendiente');

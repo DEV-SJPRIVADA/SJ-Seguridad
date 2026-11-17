@@ -5,7 +5,7 @@
 
 **Origen:** {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }}  
 **Proveedor:** {{ $order->provider_nombre }}  
-**Total:** {{ number_format((float) $order->total, 2) }}
+**Total:** {{ \App\Support\ColombianCurrency::format($order->total) }}
 
 **Motivo:**
 

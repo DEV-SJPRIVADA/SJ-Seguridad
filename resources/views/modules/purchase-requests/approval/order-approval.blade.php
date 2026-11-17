@@ -46,7 +46,7 @@
                 <div class="pur-req-detail__pills">
                     <span class="status-pill {{ $estadoPill }}">{{ $order->estadoLabel() }}</span>
                     <span class="status-pill status-pill--muted">{{ $order->aprobacionLabel() }}</span>
-                    <span class="status-pill status-pill--info">Total: {{ number_format((float) $order->total, 2) }}</span>
+                    <span class="status-pill status-pill--info">Total: {{ \App\Support\ColombianCurrency::format($order->total) }}</span>
                 </div>
             </div>
 

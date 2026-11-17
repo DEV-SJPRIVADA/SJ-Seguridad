@@ -286,6 +286,7 @@ Los insumos que Calidad aprobó aparecen junto con las solicitudes de compra, co
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.68 | 2026-11-17 | Compras | **Moneda colombiana en todo el proceso:** los precios y totales de la orden también se ven como `$ 1.250,00` en el **detalle de la orden**, el panel de **Órdenes de compra** del pedido, las pantallas de **revisión y anulación del director**, los listados de **Autorizaciones compras** y del tablero **Órdenes**, y el **costo total** del suministro. El PDF y el Excel conservan su formato propio. |
 | 1.67 | 2026-11-17 | Compras | **Emitir orden:** el **valor unidad**, el **valor IVA**, el **valor total** de cada línea y los totales del pie (Subtotal, IVA y TOTAL) se ven en formato de moneda colombiana (`$ 1.250,00`). Puede escribir el precio como `1250`, `1250,50` o `$ 1.250,50`: al salir del campo se muestra con formato y se guarda el número exacto. |
 | 1.66 | 2026-11-17 | Compras | **Autorizar una orden:** primero quien ya autorizó la solicitud (director o Calidad) y después el Director Admon. que elija Compras. Ambos reciben correo. El segundo no puede decidir hasta que el primero dé el visto bueno. |
 | 1.65 | 2026-11-17 | Compras | **Órdenes:** la columna **Origen** muestra solo el consecutivo (`SC-0045` o `SU-0012`). El buscador de la tabla encuentra ese número, el de la OC, el proveedor, la identificación, la ciudad, el estado y el total. |

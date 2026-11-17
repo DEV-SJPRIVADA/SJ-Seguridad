@@ -4,7 +4,7 @@
     <p><strong>Origen:</strong> {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }}</p>
     <p><strong>Proveedor:</strong> {{ $order->provider_nombre }} ({{ $order->provider_identificacion }})</p>
     <p><strong>Fecha de la orden:</strong> {{ $order->fechaImpresa() }}</p>
-    <p><strong>Total:</strong> {{ number_format((float) $order->total, 2) }}</p>
+    <p><strong>Total:</strong> {{ \App\Support\ColombianCurrency::format($order->total) }}</p>
     <p><strong>Solicitada por:</strong> {{ $order->anulacionSolicitadaPor?->name ?? '—' }}</p>
     <p><strong>Director que aprueba:</strong> {{ $order->anulacionAprobador?->name ?? '—' }}</p>
     @if ($order->anulacion_motivo)
@@ -30,7 +30,7 @@
                 <tr>
                     <td class="text-center">{{ $item->cantidad }}</td>
                     <td class="req-approval-letter__table-desc">{{ $item->descripcion ?? '—' }}</td>
-                    <td class="text-right req-approval-letter__table-num">{{ number_format((float) $item->valor_total, 2) }}</td>
+                    <td class="text-right req-approval-letter__table-num">{{ \App\Support\ColombianCurrency::format($item->valor_total) }}</td>
                 </tr>
             @endforeach
         </tbody>

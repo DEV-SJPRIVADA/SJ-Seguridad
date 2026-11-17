@@ -137,7 +137,7 @@
                                                     <span class="text-muted">Sin cotización</span>
                                                 @endif
                                             </td>
-                                            <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
+                                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($order->total) }}</td>
                                             <td>{{ $order->aprobacionSolicitadaPor?->name ?? '—' }}</td>
                                             <td class="text-center"><x-date-table :value="$order->aprobacion_solicitada_at" datetime /></td>
                                             <td class="text-center"><span class="status-pill {{ $pillClass }}">{{ $order->aprobacionLabel() }}</span></td>
@@ -219,7 +219,7 @@
                                             <td class="text-center">{{ $order->numeroOc }}</td>
                                             <td>{{ $order->sourceFolio() }}</td>
                                             <td>{{ $order->provider_nombre }}</td>
-                                            <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
+                                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($order->total) }}</td>
                                             <td>{{ $order->anulacionSolicitadaPor?->name ?? '—' }}</td>
                                             <td class="text-center"><x-date-table :value="$order->anulacion_solicitada_at" datetime /></td>
                                             <td class="text-center"><span class="status-pill {{ $pillClass }}">{{ $order->anulacionResultadoLabel() }}</span></td>

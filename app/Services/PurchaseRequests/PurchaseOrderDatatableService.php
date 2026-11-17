@@ -6,6 +6,7 @@ use App\Models\PurchaseOrder;
 use App\Models\PurchaseProvider;
 use App\Models\PurchaseRequest;
 use App\Models\SupplyRequest;
+use App\Support\ColombianCurrency;
 use App\Support\DisplayDate;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
@@ -378,7 +379,7 @@ final class PurchaseOrderDatatableService
             e($this->originLabel($order)),
             e((string) ($order->ciudad ?? '—')),
             (string) (int) $order->items_count,
-            number_format((float) $order->total, 2),
+            ColombianCurrency::format($order->total),
             $this->estadoPill($order),
             $this->recibidoPill($order),
             $this->rowActions($order),

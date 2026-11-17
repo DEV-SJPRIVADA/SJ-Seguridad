@@ -28,7 +28,7 @@
         </div>
         <div class="pur-review-facts__item">
             <dt>Total de la orden</dt>
-            <dd>{{ number_format((float) $order->total, 2) }}</dd>
+            <dd>{{ \App\Support\ColombianCurrency::format($order->total) }}</dd>
         </div>
         <div class="pur-review-facts__item">
             <dt>Solicitada por</dt>

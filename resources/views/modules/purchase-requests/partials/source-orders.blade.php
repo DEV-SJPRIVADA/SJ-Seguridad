@@ -45,9 +45,9 @@
                             <td class="text-center">{{ $order->numeroOc }}</td>
                             <td class="text-center">{{ $order->fechaImpresa() }}</td>
                             <td>{{ $order->provider_nombre }}</td>
-                            <td class="text-right">{{ number_format((float) $order->total - $iva, 2) }}</td>
-                            <td class="text-right">{{ number_format($iva, 2) }}</td>
-                            <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
+                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($order->total - $iva) }}</td>
+                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($iva) }}</td>
+                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($order->total) }}</td>
                             <td><span class="status-pill {{ $pill }}">{{ $order->estadoLabel() }}</span></td>
                             <td class="text-center">{{ $order->evaluation?->fecha_recibido?->format('d/m/Y') ?? 'Pendiente' }}</td>
                             <td class="text-center">
@@ -103,9 +103,9 @@
                                     <td class="text-center">{{ rtrim(rtrim(number_format((float) $line->cantidad, 2, '.', ''), '0'), '.') }}</td>
                                     <td>{{ $line->articulo ?? '—' }}</td>
                                     <td>{{ $line->descripcion ?? '—' }}</td>
-                                    <td class="text-right">{{ number_format((float) $line->valor_unidad, 2) }}</td>
-                                    <td class="text-right">{{ $line->ivaImpreso() }}</td>
-                                    <td class="text-right">{{ number_format((float) $line->valor_total, 2) }}</td>
+                                    <td class="text-right">{{ \App\Support\ColombianCurrency::format($line->valor_unidad) }}</td>
+                                    <td class="text-right">{{ $line->ivaImpreso(true) }}</td>
+                                    <td class="text-right">{{ \App\Support\ColombianCurrency::format($line->valor_total) }}</td>
                                 </tr>
                             @endforeach
                         @endforeach

@@ -222,24 +222,24 @@
                                                     <span class="text-muted">—</span>
                                                 @endif
                                             </td>
-                                            <td class="text-right">{{ number_format((float) $item->valor_unidad, 2) }}</td>
-                                            <td class="text-right">{{ $item->ivaImpreso() }}</td>
-                                            <td class="text-right">{{ number_format((float) $item->valor_total, 2) }}</td>
+                                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($item->valor_unidad) }}</td>
+                                            <td class="text-right">{{ $item->ivaImpreso(true) }}</td>
+                                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($item->valor_total) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>
                                 <tfoot>
                                     <tr>
                                         <th colspan="7" class="text-right">Subtotal</th>
-                                        <th class="text-right">{{ number_format((float) $subtotal, 2) }}</th>
+                                        <th class="text-right">{{ \App\Support\ColombianCurrency::format($subtotal) }}</th>
                                     </tr>
                                     <tr>
                                         <th colspan="7" class="text-right">IVA</th>
-                                        <th class="text-right">{{ number_format((float) $ivaTotal, 2) }}</th>
+                                        <th class="text-right">{{ \App\Support\ColombianCurrency::format($ivaTotal) }}</th>
                                     </tr>
                                     <tr>
                                         <th colspan="7" class="text-right">TOTAL</th>
-                                        <th class="text-right">{{ number_format((float) $order->total, 2) }}</th>
+                                        <th class="text-right">{{ \App\Support\ColombianCurrency::format($order->total) }}</th>
                                     </tr>
                                 </tfoot>
                             </table>
@@ -315,7 +315,7 @@
                         <li class="form-aside-guide__item">Origen: {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }}</li>
                         <li class="form-aside-guide__item">Fecha: {{ $order->fecha }}</li>
                         <li class="form-aside-guide__item">Líneas: {{ $order->items->count() }}</li>
-                        <li class="form-aside-guide__item">Total: {{ number_format((float) $order->total, 2) }}</li>
+                        <li class="form-aside-guide__item">Total: {{ \App\Support\ColombianCurrency::format($order->total) }}</li>
                         <li class="form-aside-guide__item">Estado: {{ $order->estadoLabel() }}</li>
                         @if ($order->purchaseQuotation)
                             <li class="form-aside-guide__item">Cotización: {{ $order->purchaseQuotation->descripcionVisible() }}</li>
@@ -354,7 +354,7 @@
                                     </a>
                                     — {{ $sibling->provider_nombre }}
                                     — {{ $sibling->fecha }}
-                                    — {{ number_format((float) $sibling->total, 2) }}
+                                    — {{ \App\Support\ColombianCurrency::format($sibling->total) }}
                                 </li>
                             @endforeach
                         @endif

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\ColombianCurrency;
 use Database\Factories\PurchaseOrderItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -54,11 +55,14 @@ class PurchaseOrderItem extends Model
     ];
 
     /**
-     * IVA para mostrar: valor y, si se eligió tasa, el porcentaje. Ej: "19.00 (19%)".
+     * IVA para mostrar: valor y, si se eligió tasa, el porcentaje. Ej: "38.00 (19%)".
+     * Con `$colombian` usa el formato de moneda Colombia: "$ 38,00 (19%)".
      */
-    public function ivaImpreso(): string
+    public function ivaImpreso(bool $colombian = false): string
     {
-        $valor = number_format((float) $this->iva, 2);
+        $valor = $colombian
+            ? ColombianCurrency::format($this->iva)
+            : number_format((float) $this->iva, 2);
 
         return $this->iva_porcentaje !== null
             ? $valor.' ('.PurchaseTaxRate::formatPorcentaje($this->iva_porcentaje).')'

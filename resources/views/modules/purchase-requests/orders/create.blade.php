@@ -50,7 +50,7 @@
                                 <strong>OC N.º {{ $issued->numeroOc }}</strong>
                                 — {{ $issued->provider_nombre }}
                                 — {{ $issued->fecha }}
-                                — {{ number_format((float) $issued->total, 2) }}
+                                — {{ \App\Support\ColombianCurrency::format($issued->total) }}
                             </li>
                         @endforeach
                     </ul>

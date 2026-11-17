@@ -54,7 +54,7 @@
                                             <td class="text-center">{{ $order->numeroOc }}</td>
                                             <td>{{ $order->sourceFolio() }}</td>
                                             <td>{{ $order->provider_nombre }}</td>
-                                            <td class="text-right">{{ number_format((float) $order->total, 2) }}</td>
+                                            <td class="text-right">{{ \App\Support\ColombianCurrency::format($order->total) }}</td>
                                             <td class="table-actions">
                                                 <a
                                                     href="{{ route('supplies.approval.order-approval.show', ['module' => $module, 'purchase_order' => $order->getKey()]) }}"

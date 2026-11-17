@@ -297,7 +297,7 @@
                                 @if ($supplyRequest->total_cost !== null)
                                     <div class="pur-req-form__meta-item">
                                         <span class="pur-req-form__meta-label">Costo total</span>
-                                        <span class="pur-req-form__meta-value">${{ number_format((float) $supplyRequest->total_cost, 2) }}</span>
+                                        <span class="pur-req-form__meta-value">{{ \App\Support\ColombianCurrency::format($supplyRequest->total_cost) }}</span>
                                     </div>
                                 @endif
                                 @if ($supplyRequest->purchasingManager)

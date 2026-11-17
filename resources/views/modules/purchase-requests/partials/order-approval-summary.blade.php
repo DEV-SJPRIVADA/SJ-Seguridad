@@ -4,7 +4,7 @@
     <p><strong>Origen:</strong> {{ $order->sourceLabel() }} N.º {{ $order->sourceFolio() }}</p>
     <p><strong>Proveedor:</strong> {{ $order->provider_nombre }} ({{ $order->provider_identificacion }})</p>
     <p><strong>Fecha de la orden:</strong> {{ $order->fechaImpresa() }}</p>
-    <p><strong>Total:</strong> {{ number_format((float) $order->total, 2) }}</p>
+    <p><strong>Total:</strong> {{ \App\Support\ColombianCurrency::format($order->total) }}</p>
     {{-- Cotización aprobada vinculada a la OC (opcional). --}}
     @if ($order->purchaseQuotation)
         <p><strong>Cotización aprobada:</strong> {{ $order->purchaseQuotation->descripcionVisible() }} · {{ $order->purchaseQuotation->loteLabel() }}</p>
@@ -42,9 +42,9 @@
                     <td class="text-center">{{ rtrim(rtrim(number_format((float) $item->cantidad, 2, '.', ''), '0'), '.') }}</td>
                     <td>{{ $item->articulo ?? '—' }}</td>
                     <td class="req-approval-letter__table-desc">{{ $item->descripcion ?? '—' }}</td>
-                    <td class="text-right req-approval-letter__table-num">{{ number_format((float) $item->valor_unidad, 2) }}</td>
-                    <td class="text-right req-approval-letter__table-num">{{ $item->ivaImpreso() }}</td>
-                    <td class="text-right req-approval-letter__table-num">{{ number_format((float) $item->valor_total, 2) }}</td>
+                    <td class="text-right req-approval-letter__table-num">{{ \App\Support\ColombianCurrency::format($item->valor_unidad) }}</td>
+                    <td class="text-right req-approval-letter__table-num">{{ $item->ivaImpreso(true) }}</td>
+                    <td class="text-right req-approval-letter__table-num">{{ \App\Support\ColombianCurrency::format($item->valor_total) }}</td>
                 </tr>
             @endforeach
         </tbody>

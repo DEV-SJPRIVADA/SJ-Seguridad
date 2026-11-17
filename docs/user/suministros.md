@@ -116,6 +116,7 @@ Quien tenga el permiso **Suministros: Seguimiento** entra por **Compras → Sumi
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.18 | 2026-11-17 | Compras | El **costo total** del suministro y el total de las OC pendientes de autorización se ven en formato de moneda colombiana (`$ 1.250,00`). |
 | 1.17 | 2026-11-09 | Compras | La columna Valor en Órdenes y Gasto se muestra como moneda ($ 0.000,00). |
 | 1.16 | 2026-11-09 | Compras | Órdenes: filtro por mes y totales de cantidad y valor al pie de la tabla. |
 | 1.15 | 2026-11-09 | Compras | El nombre del producto ya no se desborda. Las órdenes de un producto van en la pestaña Órdenes. |

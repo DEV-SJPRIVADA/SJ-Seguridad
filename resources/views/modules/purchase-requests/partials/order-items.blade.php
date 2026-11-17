@@ -33,24 +33,24 @@
                         <td class="text-center">{{ rtrim(rtrim(number_format((float) $item->cantidad, 2, '.', ''), '0'), '.') }}</td>
                         <td>{{ $item->articulo ?? '—' }}</td>
                         <td class="pur-ord-lines__desc">{{ $item->descripcion ?? '—' }}</td>
-                        <td class="text-right">{{ number_format((float) $item->valor_unidad, 2) }}</td>
-                        <td class="text-right">{{ $item->ivaImpreso() }}</td>
-                        <td class="text-right">{{ number_format((float) $item->valor_total, 2) }}</td>
+                        <td class="text-right">{{ \App\Support\ColombianCurrency::format($item->valor_unidad) }}</td>
+                        <td class="text-right">{{ $item->ivaImpreso(true) }}</td>
+                        <td class="text-right">{{ \App\Support\ColombianCurrency::format($item->valor_total) }}</td>
                     </tr>
                 @endforeach
             </tbody>
             <tfoot>
                 <tr>
                     <th colspan="6" class="text-right">Subtotal</th>
-                    <th class="text-right">{{ number_format((float) $subtotal, 2) }}</th>
+                    <th class="text-right">{{ \App\Support\ColombianCurrency::format($subtotal) }}</th>
                 </tr>
                 <tr>
                     <th colspan="6" class="text-right">IVA</th>
-                    <th class="text-right">{{ number_format((float) $ivaTotal, 2) }}</th>
+                    <th class="text-right">{{ \App\Support\ColombianCurrency::format($ivaTotal) }}</th>
                 </tr>
                 <tr class="pur-ord-lines__total">
                     <th colspan="6" class="text-right">Total</th>
-                    <th class="text-right">{{ number_format((float) $order->total, 2) }}</th>
+                    <th class="text-right">{{ \App\Support\ColombianCurrency::format($order->total) }}</th>
                 </tr>
             </tfoot>
         </table>
