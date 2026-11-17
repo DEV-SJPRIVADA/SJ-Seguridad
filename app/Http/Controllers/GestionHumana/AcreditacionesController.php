@@ -418,11 +418,14 @@ class AcreditacionesController extends Controller
             );
         }
 
-        $this->acreditadoWorkingSetService->pin(
-            $request,
-            $this->activeAcreditadoFilterQuery($filters),
-            $ids,
-        );
+        // En Validaciones no aplica el working set de Acreditados.
+        if ((string) $request->input('_return_context') !== 'validaciones') {
+            $this->acreditadoWorkingSetService->pin(
+                $request,
+                $this->activeAcreditadoFilterQuery($filters),
+                $ids,
+            );
+        }
 
         $message = $updatedCount === 1
             ? '1 acreditado actualizado.'
@@ -444,6 +447,34 @@ class AcreditacionesController extends Controller
         ?string $status = null,
         ?string $error = null,
     ): RedirectResponse {
+        if ((string) $request->input('_return_context') === 'validaciones') {
+            $fecha = trim((string) $request->input('_return_fecha_reporte', ''));
+            $token = trim((string) $request->input('_return_run_token', ''));
+
+            if ($fecha === '') {
+                $fecha = Carbon::now(config('app.timezone'))->toDateString();
+            }
+
+            $query = ['fecha_reporte' => $fecha];
+            if ($token !== '') {
+                $query['run_token'] = $token;
+            }
+
+            $redirect = redirect()->route(
+                'gestion-humana.acreditaciones.validaciones',
+                $query,
+            );
+
+            if ($error !== null) {
+                return $redirect->with('error', $error);
+            }
+
+            return $redirect->with(
+                'status',
+                ($status ?? 'Acreditados actualizados.').' Vuelva a ejecutar validaciones para refrescar las colas.',
+            );
+        }
+
         if ((string) $request->input('_return_context') === 'export_apo') {
             $returnIds = collect($request->input('_return_ids', $request->input('ids', [])))
                 ->map(fn ($id): int => (int) $id)
@@ -1347,6 +1378,7 @@ class AcreditacionesController extends Controller
             'defaultCola' => AcreditacionValidacionesResultStore::COLA_SIN_ACREDITACION,
             'datatableUrl' => route('gestion-humana.acreditaciones.validaciones.datatable'),
             'bulkSelectableUrl' => route('gestion-humana.acreditaciones.validaciones.bulk-selectable'),
+            'bulkUpdateUrl' => route('gestion-humana.acreditaciones.acreditados.bulk-update'),
             'exportApoUrl' => route('gestion-humana.acreditaciones.export-apo'),
             'runUrl' => route('gestion-humana.acreditaciones.validaciones.run'),
             'exportUrls' => $exportUrls,

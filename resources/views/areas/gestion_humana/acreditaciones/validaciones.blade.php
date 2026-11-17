@@ -34,6 +34,7 @@
             activeCola: @js($defaultCola),
             lookupUrl: @js($lookupUrl),
             bulkSelectableUrl: @js($bulkSelectableUrl ?? null),
+            bulkUpdateUrl: @js($bulkUpdateUrl ?? null),
             exportApoUrl: @js($exportApoUrl ?? null),
             fechaReporte: @js($fecha),
             runToken: @js($runToken),
@@ -382,6 +383,20 @@
                                                     >
                                                         <x-lucide-file-output width="18" height="18" aria-hidden="true" />
                                                     </button>
+                                                    @if (in_array($colaCode, ['ausente_reporte', 'en_proceso_ya_acreditado'], true))
+                                                        <button
+                                                            type="button"
+                                                            class="btn btn--primary btn--sm acreditaciones-bulk-trigger"
+                                                            x-show="selectedIds.length > 0"
+                                                            x-cloak
+                                                            x-on:click="openBulkUpdate()"
+                                                            title="Actualizar seleccionados"
+                                                        >
+                                                            <x-lucide-list-checks width="16" height="16" aria-hidden="true" />
+                                                            <span>Actualizar</span>
+                                                            <span class="acreditaciones-bulk-trigger__count" x-text="selectedIds.length"></span>
+                                                        </button>
+                                                    @endif
                                         @if (! empty($exportUrls[$colaCode]))
                                                 <x-export-excel
                                                             :route="$exportUrls[$colaCode]"
@@ -464,6 +479,8 @@
                 'renovacionOptions' => $renovacionOptions,
                 'validacionesReturn' => $validacionesReturn,
             ])
+
+            @include('areas.gestion_humana.acreditaciones.partials.bulk-update-modal')
         </div>
     </div>
 
@@ -491,6 +508,7 @@
                     activeCola: config.activeCola,
                     lookupUrl: config.lookupUrl,
                     bulkSelectableUrl: config.bulkSelectableUrl || '',
+                    bulkUpdateUrl: config.bulkUpdateUrl || '',
                     exportApoUrl: config.exportApoUrl || '',
                     fechaReporte: config.fechaReporte || '',
                     runToken: config.runToken || '',
@@ -498,6 +516,15 @@
                     bulkSelectableLoading: false,
                     selectedMap: {},
                     selectedDocs: {},
+                    selectedRowsExtra: [],
+                    bulkUpdateOpen: false,
+                    submittingBulk: false,
+                    bulkForm: {
+                        observaciones: '',
+                        fecha_solicitud: '',
+                        vigencia_acr: '',
+                        renovacion: '',
+                    },
                     editOpen: false,
                     editIdentityLocked: true,
                     editForm: {
@@ -525,6 +552,37 @@
                     get selectedCount() {
                         return this.selectedIds.length + this.selectedDocuments.length;
                     },
+                    get selectedAcreditadoRows() {
+                        const byId = new Map();
+                        Object.values(this.bulkSelectableByCola).forEach((rows) => {
+                            if (! Array.isArray(rows)) {
+                                return;
+                            }
+                            rows.forEach((row) => {
+                                const id = Number(row && row.id);
+                                if (id > 0 && ! byId.has(id)) {
+                                    byId.set(id, row);
+                                }
+                            });
+                        });
+                        this.selectedRowsExtra.forEach((row) => {
+                            const id = Number(row && row.id);
+                            if (id > 0 && ! byId.has(id)) {
+                                byId.set(id, row);
+                            }
+                        });
+                        return Array.from(byId.values());
+                    },
+                    get selectedRows() {
+                        const selected = new Set(this.selectedIds);
+                        return this.selectedAcreditadoRows.filter((row) => selected.has(Number(row.id)));
+                    },
+                    get bulkHasPayload() {
+                        return String(this.bulkForm.observaciones || '').trim() !== ''
+                            || String(this.bulkForm.fecha_solicitud || '').trim() !== ''
+                            || String(this.bulkForm.vigencia_acr || '').trim() !== ''
+                            || String(this.bulkForm.renovacion || '').trim() !== '';
+                    },
                     rowIsDocumentKind(row) {
                         return row
                             && (row.select_kind === 'document' || ! row.id);
@@ -549,11 +607,27 @@
                     isSelected(id) {
                         return !! this.selectedMap[id];
                     },
-                    toggleRow(id, checked) {
+                    toggleRow(id, checked, rowMeta) {
                         this.selectedMap = {
                             ...this.selectedMap,
                             [id]: !! checked,
                         };
+
+                        const numericId = Number(rowMeta && rowMeta.id ? rowMeta.id : id);
+
+                        if (! checked) {
+                            this.selectedRowsExtra = this.selectedRowsExtra.filter(
+                                (row) => Number(row.id) !== numericId,
+                            );
+                            return;
+                        }
+
+                        if (rowMeta && numericId > 0) {
+                            this.selectedRowsExtra = [
+                                ...this.selectedRowsExtra.filter((row) => Number(row.id) !== numericId),
+                                { ...rowMeta, id: numericId },
+                            ];
+                        }
                     },
                     toggleDoc(documentNumber, checked) {
                         const doc = String(documentNumber || '').trim();
@@ -684,6 +758,95 @@
                             url.searchParams.set('document_numbers', docs.join(','));
                         }
                         window.location.href = url.toString();
+                    },
+                    openBulkUpdate() {
+                        if (this.selectedIds.length < 1) {
+                            return;
+                        }
+                        this.bulkForm = {
+                            observaciones: '',
+                            fecha_solicitud: '',
+                            vigencia_acr: '',
+                            renovacion: '',
+                        };
+                        this.bulkUpdateOpen = true;
+                        this.submittingBulk = false;
+                        this.syncBulkRenovacion('');
+                    },
+                    closeBulkUpdate() {
+                        this.bulkUpdateOpen = false;
+                        this.submittingBulk = false;
+                    },
+                    submitBulkUpdate() {
+                        if (this.submittingBulk || this.selectedIds.length < 1 || ! this.bulkHasPayload) {
+                            return;
+                        }
+
+                        if (! this.bulkUpdateUrl) {
+                            return;
+                        }
+
+                        this.submittingBulk = true;
+
+                        const form = document.createElement('form');
+                        form.method = 'POST';
+                        form.style.display = 'none';
+                        form.action = this.bulkUpdateUrl;
+
+                        const append = (name, value) => {
+                            const input = document.createElement('input');
+                            input.type = 'hidden';
+                            input.name = name;
+                            input.value = value == null ? '' : String(value);
+                            form.appendChild(input);
+                        };
+
+                        const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
+                            || '';
+                        append('_token', token);
+
+                        this.selectedIds.forEach((id) => append('ids[]', id));
+
+                        // Regresa a Validaciones conservando fecha y corrida.
+                        append('_return_context', 'validaciones');
+                        append('_return_fecha_reporte', this.fechaReporte);
+                        append('_return_run_token', this.runToken);
+
+                        const observaciones = String(this.bulkForm.observaciones || '').trim();
+                        const fecha = String(this.bulkForm.fecha_solicitud || '').trim();
+                        const vigencia = String(this.bulkForm.vigencia_acr || '').trim();
+                        const renovacion = String(this.bulkForm.renovacion || '').trim();
+
+                        if (observaciones !== '') {
+                            append('observaciones', observaciones);
+                        }
+                        if (fecha !== '') {
+                            append('fecha_solicitud', fecha);
+                        }
+                        if (vigencia !== '') {
+                            append('vigencia_acr', vigencia);
+                        }
+                        if (renovacion !== '') {
+                            append('renovacion', renovacion);
+                        }
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    },
+                    syncBulkRenovacion(value) {
+                        this.bulkForm.renovacion = String(value || '');
+                        this.$nextTick(() => {
+                            const wrap = document.querySelector('.js-bulk-renovacion-select');
+                            if (! wrap || ! window.Alpine || typeof window.Alpine.$data !== 'function') {
+                                return;
+                            }
+                            try {
+                                const data = window.Alpine.$data(wrap);
+                                if (data && 'value' in data) {
+                                    data.value = String(value || '');
+                                }
+                            } catch (e) {}
+                        });
                     },
                     setCola(cola) {
                         this.activeCola = cola;
@@ -984,7 +1147,11 @@
                         if (! alpine) {
                             return;
                         }
-                        alpine.toggleRow(Number(this.value), this.checked);
+                        let meta = null;
+                        try {
+                            meta = JSON.parse(this.getAttribute('data-validaciones-row') || 'null');
+                        } catch (e) {}
+                        alpine.toggleRow(Number(this.value), this.checked, meta);
                     });
 
                     $table.on('change', '.js-validaciones-row-select-doc', function () {

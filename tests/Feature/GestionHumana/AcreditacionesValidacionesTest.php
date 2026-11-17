@@ -1443,6 +1443,97 @@ class AcreditacionesValidacionesTest extends TestCase
         }
     }
 
+    public function test_shell_exposes_bulk_update_for_ausente_and_en_proceso_colas(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-09-04';
+        $this->seedBothOriginsCarga($editor->id, $fecha);
+        $payload = $this->runAndGetPayload($editor, $fecha);
+
+        $html = $this->actingAs($editor)
+            ->get(route('gestion-humana.acreditaciones.validaciones', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $payload['run_token'],
+            ]))
+            ->assertOk()
+            ->assertSee('Actualizar seleccionados', false)
+            ->assertSee('bulkUpdateUrl', false)
+            ->assertSee('js-bulk-renovacion-select', false)
+            ->getContent();
+
+        // Un botón por cada cola habilitada (ausente del reporte + EN PROCESO / ACREDITADO).
+        $this->assertSame(2, substr_count($html, 'title="Actualizar seleccionados"'));
+    }
+
+    public function test_bulk_update_from_validaciones_updates_selected_acreditados_and_returns_to_run(): void
+    {
+        $editor = $this->editorUser();
+        $fecha = '2026-09-19';
+        $carga = $this->seedBothOriginsCarga($editor->id, $fecha);
+
+        $ausente = AcreditacionAcreditado::factory()->create([
+            'document_number' => '880101',
+            'full_name' => 'Ausente Bulk',
+            'cargo_apo' => 'VIGILANTE',
+            'estado' => AcreditacionAcreditado::ESTADO_ACREDITADO,
+            'vigencia_acr' => '2027-01-01',
+        ]);
+
+        AcreditacionReporteDiarioFila::factory()->acreditado()->create([
+            'carga_id' => $carga->id,
+            'document_number' => '880102',
+            'cargo' => 'ESCOLTA',
+            'vigencia_acr' => '2027-06-01',
+        ]);
+        $this->createFicha('880102', 'En Proceso Bulk', EmployeeFichaProfile::STATUS_ACTIVO);
+
+        $enProceso = AcreditacionAcreditado::factory()->enProceso()->create([
+            'document_number' => '880102',
+            'full_name' => 'En Proceso Bulk',
+            'cargo_apo' => 'ESCOLTA',
+            'vigencia_acr' => null,
+        ]);
+
+        $payload = $this->runAndGetPayload($editor, $fecha);
+
+        $ausenteIds = collect($payload['colas'][AcreditacionValidacionesResultStore::COLA_AUSENTE_REPORTE])
+            ->pluck('acreditado_id')
+            ->all();
+        $enProcesoIds = collect($payload['colas'][AcreditacionValidacionesResultStore::COLA_EN_PROCESO_YA_ACREDITADO])
+            ->pluck('acreditado_id')
+            ->all();
+
+        $this->assertContains($ausente->id, $ausenteIds);
+        $this->assertContains($enProceso->id, $enProcesoIds);
+
+        $this->actingAs($editor)
+            ->post(route('gestion-humana.acreditaciones.acreditados.bulk-update'), [
+                'ids' => [$ausente->id, $enProceso->id],
+                'fecha_solicitud' => '2026-09-20',
+                'observaciones' => 'Carga masiva desde validaciones',
+                '_return_context' => 'validaciones',
+                '_return_fecha_reporte' => $fecha,
+                '_return_run_token' => $payload['run_token'],
+            ])
+            ->assertRedirect(route('gestion-humana.acreditaciones.validaciones', [
+                'fecha_reporte' => $fecha,
+                'run_token' => $payload['run_token'],
+            ]))
+            ->assertSessionHas('status');
+
+        $ausente->refresh();
+        $enProceso->refresh();
+
+        $this->assertSame('Carga masiva desde validaciones', $ausente->observaciones);
+        $this->assertSame('Carga masiva desde validaciones', $enProceso->observaciones);
+        $this->assertSame('2026-09-20', optional($ausente->fecha_solicitud)?->format('Y-m-d'));
+        $this->assertSame('2026-09-20', optional($enProceso->fecha_solicitud)?->format('Y-m-d'));
+        $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $ausente->estado);
+        $this->assertSame(AcreditacionAcreditado::ESTADO_EN_PROCESO, $enProceso->estado);
+        $this->assertSame($editor->id, (int) $ausente->updated_by);
+        $this->assertSame($editor->id, (int) $enProceso->updated_by);
+    }
+
     /**
      * @return array{
      *     run_token: string,

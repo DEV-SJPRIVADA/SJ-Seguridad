@@ -100,8 +100,10 @@ final class AcreditacionValidacionesDatatableService
      *     id: int|null,
      *     document_number: string,
      *     full_name: string,
+     *     cargo: string,
      *     cargo_apo: string,
      *     estado: string,
+     *     vigencia_acr: string,
      *     select_kind: string
      * }>
      */
@@ -140,8 +142,10 @@ final class AcreditacionValidacionesDatatableService
                     'id' => $id > 0 ? $id : null,
                     'document_number' => (string) ($row['document_number'] ?? ''),
                     'full_name' => (string) ($row['full_name'] ?? ''),
+                    'cargo' => (string) ($row['cargo'] ?? ''),
                     'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
                     'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
+                    'vigencia_acr' => (string) ($row['vigencia_acr'] ?? ''),
                     'select_kind' => $id > 0 ? 'acreditado' : 'document',
                 ];
             })
@@ -351,6 +355,7 @@ final class AcreditacionValidacionesDatatableService
                 'full_name' => (string) ($row['full_name'] ?? ''),
                 'cargo_apo' => (string) ($row['cargo_apo'] ?? ''),
                 'estado' => (string) ($row['estado_label'] ?? $row['estado'] ?? ''),
+                'vigencia_acr' => (string) ($row['vigencia_acr'] ?? ''),
             ], JSON_UNESCAPED_UNICODE));
 
             return sprintf(
