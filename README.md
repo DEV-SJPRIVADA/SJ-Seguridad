@@ -104,3 +104,17 @@ Todo cambio funcional futuro debe actualizar la documentacion afectada en la mis
 - Que rutas, permisos, tablas y vistas toca
 - Que riesgos o dependencias introduce
 - Como se opera y valida el cambio
+
+## Integracion con SJ LegalSuite
+
+StatFlow es el maestro de empleados y **empuja** cambios por HTTPS a SJ LegalSuite (Hostinger). No hay pull, tunel ni base de datos compartida, y el guardado de la ficha no se modifica: la sincronizacion detecta cambios por `updated_at` (polling) cada minuto, con una carga completa semanal los lunes a las 03:00.
+
+Procedimiento de activacion:
+
+1. **Dry-run:** `php artisan integracion:push-empleados --full --dry-run`. No envia nada; imprime total, lotes y 5 payloads de muestra.
+2. **Revision:** validar los conteos con Gestion Humana (sin cargo, sin correo, tipos de documento desconocidos).
+3. **Canal:** con `INTEGRATION_LEGALSUITE_URL`, `_TOKEN` y `_SECRET` definidos, ejecutar `php artisan integracion:probar`. Envia un lote vacio firmado: no escribe empleados y confirma TLS, token, firma y reloj.
+4. **Primer full manual:** poner `INTEGRATION_LEGALSUITE_ENABLED=true`; ejecutar `php artisan integracion:push-empleados --full`; verificar en LegalSuite con `php artisan integracion:estado`.
+5. **Activar cron:** dejar el `schedule:run` del servidor activo; `integracion:push-cambios` corre cada minuto y el full semanal los lunes a las 03:00.
+
+Detalle tecnico y troubleshooting: [`docs/modules/integraciones.md`](docs/modules/integraciones.md).

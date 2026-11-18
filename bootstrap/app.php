@@ -47,6 +47,16 @@ return Application::configure(basePath: dirname(__DIR__))
             ->timezone('America/Bogota')
             ->withoutOverlapping();
 
+        $schedule->command('integracion:push-cambios')
+            ->everyMinute()
+            ->timezone('America/Bogota')
+            ->withoutOverlapping()
+            ->runInBackground();
+
+        $schedule->command('integracion:push-empleados --full')
+            ->weeklyOn(1, '03:00')
+            ->timezone('America/Bogota')
+            ->withoutOverlapping();
         $schedule->command('audit:purge --force')
             ->monthlyOn(1, '03:00')
             ->timezone('America/Bogota');

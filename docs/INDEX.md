@@ -58,6 +58,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Planeación estratégica | [`modules/planeacion-estrategica.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/planeacion-estrategica.md) | [`user/planeacion-estrategica.md`](c:/laragon/www/SJSEGURIDAD/docs/user/planeacion-estrategica.md) |
 | Indicadores | [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md) | [`user/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/user/indicadores.md) |
 | Audit log | [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md) | [`user/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/user/audit-log.md) |
+| Integraciones (LegalSuite) | [`modules/integraciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/integraciones.md) | [`user/integraciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/integraciones.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md) | [`user/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matriz-clientes.md) |
 | Branding | [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md) | — |
 
@@ -106,6 +107,7 @@ Analisis del costo de construir la plataforma desde cero sin inteligencia artifi
 - [`modules/planeacion-estrategica.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/planeacion-estrategica.md)
 - [`modules/indicadores.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/indicadores.md)
 - [`modules/audit-log.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/audit-log.md)
+- [`modules/integraciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/integraciones.md)
 - [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md)
 
 ## Objetivo de esta documentacion

@@ -53,6 +53,7 @@
 - **Botones icon-only:** chrome/filtros usan `.req-manage-filters__icon-btn` (`--primary` / `--ghost` / `--danger`); acciones de fila usan `.cursos-catalogo-page__icon-btn`. No crear familias CSS por modulo. Ver `.cursor/rules/icon-buttons-ui.mdc` y `docs/modules/branding.md`.
 - **Persistencia en mayúsculas:** textos de formularios e import masivo se guardan en MAYÚSCULAS UTF-8 (excepto contraseñas, emails, códigos/keys técnicas). Usar `UppercasesValidatedText` / `UppercaseFormText`. Regla: [`.cursor/rules/uppercase-persistence.mdc`](.cursor/rules/uppercase-persistence.mdc).
 - **CSS:** `resources/css/app.css` solo importa capas. Chrome en `base/`, cada área o tablero en su archivo bajo `areas/` (Requisiciones en `modules/requisiciones/`). No reordenar `@import` ni mezclar tableros. Regla: [`.cursor/rules/css-cascade.mdc`](.cursor/rules/css-cascade.mdc).
+- **Integraciones:** la salida hacia SJ LegalSuite es push por HTTPS con polling de `updated_at` (sin observers ni colas), tablas `integration_sync_state` / `integration_sync_log` y comandos `integracion:*`; ver [`docs/modules/integraciones.md`](docs/modules/integraciones.md).
 
 ## Estructura y Arquitectura Modular (Híbrida)
 - **Módulos Compartidos:** Funcionalidades usadas por múltiples áreas (ej. Requisiciones). Se ubican en:
