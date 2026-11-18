@@ -75,10 +75,12 @@ Whitelist estricta por registro (ningun otro campo viaja):
 
 1. `integracion:push-cambios` (cada minuto) lee `integration_sync_state.key = 'employees'`.
 2. `watermark = last_watermark ?? now()->subDay()`.
-3. Selecciona perfiles con `updated_at >= watermark - 1 minuto` (solape anti-perdida), ordenados por `updated_at` e `id`.
+3. Selecciona perfiles con `updated_at > watermark`, ordenados por `updated_at` e `id`.
 4. Envia en lotes de 500 con `Http::retry(3, 2000)` y `timeout=60`.
 5. **Solo si todos los lotes responden 2xx** actualiza `last_watermark = max(updated_at enviado)`. Si algo falla, el watermark no se mueve y el siguiente ciclo reintenta.
 6. Cada corrida escribe en `integration_sync_log`.
+
+La comparacion es **estrictamente mayor**. Con `>=` (o con un solape de un minuto) el perfil cuyo `updated_at` coincidia con el watermark volvia a entrar en cada corrida y el watermark nunca avanzaba, generando un reenvio infinito del mismo registro cada minuto. Contrapartida asumida: un perfil actualizado en el mismo segundo del watermark y confirmado despues de la consulta puede quedar fuera del incremental; el full semanal de los lunes lo recupera y el receptor es idempotente, asi que no hay duplicados ni perdida definitiva.
 
 `integracion:push-empleados --full` envia todos los perfiles sin filtro de fecha (9 lotes con el volumen actual) y actualiza el watermark al terminar.
 

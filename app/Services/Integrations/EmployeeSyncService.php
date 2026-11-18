@@ -142,7 +142,10 @@ class EmployeeSyncService
         $filtered = EmployeeFichaProfile::query()
             ->when(
                 $mode === 'incremental',
-                fn (Builder $query) => $query->where('updated_at', '>=', $watermark->copy()->subMinute())
+                // Estrictamente mayor: con `>=` el registro cuyo updated_at coincide
+                // con el watermark volvia a entrar en cada corrida y el watermark
+                // nunca avanzaba (reenvio infinito del mismo registro).
+                fn (Builder $query) => $query->where('updated_at', '>', $watermark)
             );
 
         $stats = $this->stats($filtered);

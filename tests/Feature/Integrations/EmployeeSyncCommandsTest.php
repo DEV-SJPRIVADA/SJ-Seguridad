@@ -163,6 +163,32 @@ class EmployeeSyncCommandsTest extends TestCase
         $this->assertTrue($state->last_watermark->equalTo(Carbon::parse('2026-01-01 10:00:00')));
     }
 
+    public function test_incremental_no_reenvia_el_mismo_registro_en_corridas_seguidas(): void
+    {
+        Http::fake(['*' => Http::response(['created' => 1, 'updated' => 0, 'skipped' => 0, 'errors' => []], 200)]);
+
+        $this->insertProfiles(1);
+        $this->seedState();
+
+        $this->artisan('integracion:push-cambios')->assertExitCode(0);
+
+        Http::assertSentCount(1);
+
+        // Segunda corrida sin cambios: el registro del watermark no debe reenviarse.
+        $this->artisan('integracion:push-cambios')->assertExitCode(0);
+
+        Http::assertSentCount(1);
+
+        $last = IntegrationSyncLog::query()->where('mode', 'incremental')->latest('id')->firstOrFail();
+
+        $this->assertSame(0, $last->records_sent);
+        $this->assertSame('ok', $last->status);
+
+        $state = IntegrationSyncState::query()->where('key', 'employees')->firstOrFail();
+
+        $this->assertTrue($state->last_watermark->equalTo(Carbon::parse('2026-01-01 10:00:00')));
+    }
+
     public function test_dry_run_no_hace_http(): void
     {
         Http::fake();
