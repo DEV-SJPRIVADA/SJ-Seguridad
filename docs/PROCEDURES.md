@@ -76,6 +76,8 @@ En producción el cron debe ejecutar `php artisan schedule:run` cada minuto. Los
 | `cursos:sync-estados` | 06:15 | Cursos |
 | `acreditaciones:sync-estados` | 06:20 | Acreditaciones |
 | `mt_st_04:sync-estados` | 06:25 | MT-ST-04 |
+| `integracion:push-cambios` | cada 5 minutos | Integraciones |
+| `integracion:push-empleados --full` | lunes 03:00 | Integraciones |
 
 ### MT-ST-04 — sync manual
 
