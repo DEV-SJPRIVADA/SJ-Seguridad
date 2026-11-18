@@ -104,7 +104,7 @@
                                     <th>Recepción</th>
                                     <th>Días entrega</th>
                                     <th>Extemporánea</th>
-                                    <th>Observaciones</th>
+                                    <th>Obs. devolución</th>
                                     <th>Obs. Nómina</th>
                                     <th>Acciones</th>
                                 </tr>
