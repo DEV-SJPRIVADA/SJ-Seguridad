@@ -12,7 +12,7 @@ Reemplazar el Excel de novedades de Gestion Humana (vacaciones, incapacidades, r
 Aplica al tablero **MT-GH-04 Novedades** en el area **Gestion Humana**, con cuatro pestanas:
 
 - **Vacaciones** — registrar disfrute o compensacion, dias, fechas (inicio, fin, reintegro), periodos y firma para la carta Word; Nómina deja su observacion.
-- **Incapacidades** — tipo, dias, fechas de control y devolucion; **días entrega** se calcula solo (hoy − inicio, o envío final − inicio); Nómina solo completa su observación. El listado muestra **Extemporánea** (Sí/No) y, a continuación, las **Observaciones** registradas. Cada fila tiene **Adjuntos** (PDF o JPG) para consultar, previsualizar y descargar; quien edita puede agregarlos o quitarlos.
+- **Incapacidades** — tipo, dias, fechas de control y devolucion; **días entrega** se calcula solo (hoy − inicio, o envío final − inicio); Nómina solo completa su observación. El listado muestra **Extemporánea** (Sí/No) y, a continuación, **Obs. devolución** registrada. Cada fila tiene **Adjuntos** (PDF o JPG) para consultar, previsualizar y descargar; quien edita puede agregarlos o quitarlos.
 - **Retiros** — altas manuales o automaticas al desvincular; motivo y fechas; Nómina observa.
 - **Permisos** – licencias, sanciones, permisos remunerados y demas novedades de la hoja de permisos/licencia. La columna **Marca GH** es un check que se guarda al hacer clic.
 
@@ -67,7 +67,7 @@ En cada pestana puede filtrar, exportar a Excel y consultar el **historial** de 
 5. En **Permisos**, con **Editar**, marque o desmarque el check de la columna **Marca GH** directamente en el listado: el cambio se guarda al instante. Con Revisar o solo consulta, el check se ve deshabilitado. Con **Revisar**: abra la fila y complete solo los campos de Nómina (el resto se ve en solo lectura). Cuando la **Observación Nómina** ya tiene texto, el campo y la celda del listado se muestran en **verde**.
 6. En **Incapacidades**, el icono de clip abre **Adjuntos**. Ahí se ven el nombre, la fecha, quién lo subió y el tamaño. El icono de ojo abre la **vista previa** del PDF o JPG; el de descarga guarda el archivo. Con **Editar** puede agregar varios PDF o JPG (de una vez o en otro momento) y eliminar uno. Al eliminar la incapacidad se borran también sus archivos. Nómina y quien solo consulta pueden ver, previsualizar y descargar, no subir ni borrar.
 7. En cualquier pestana, si una **cédula** aparece en más de una fila del listado filtrado, el valor de la columna **Cédula** se muestra en **rojo** para que detecte los duplicados de inmediato. La marca se calcula sobre todos los registros del filtro (no solo la página visible) y no se incluye en el export a Excel.
-8. Puede **ordenar** el listado haciendo clic en el encabezado de cualquier columna (Cédula, Nombre, Cargo, Destino, Novedad, Días, Inicio, Fin, Observaciones, Obs. Nómina, etc.). Un clic ordena ascendente y otro descendente. La columna **Acciones** no se ordena y, en **Incapacidades**, **Días entrega** tampoco (es un cálculo). En **Incapacidades**, **Extemporánea** (Sí/No) aparece después de Días entrega, seguida de **Observaciones**; ambas se pueden ordenar. Al entrar sin ordenar, se muestra primero la fecha más reciente. El orden es independiente de los filtros y el export a Excel conserva el orden por defecto.
+8. Puede **ordenar** el listado haciendo clic en el encabezado de cualquier columna (Cédula, Nombre, Cargo, Destino, Novedad, Días, Inicio, Fin, Obs. devolución, Obs. Nómina, etc.). Un clic ordena ascendente y otro descendente. La columna **Acciones** no se ordena y, en **Incapacidades**, **Días entrega** tampoco (es un cálculo). En **Incapacidades**, **Extemporánea** (Sí/No) aparece después de Días entrega, seguida de **Obs. devolución**; ambas se pueden ordenar. Al entrar sin ordenar, se muestra primero la fecha más reciente. El orden es independiente de los filtros y el export a Excel conserva el orden por defecto.
 
 ### Retiros automaticos
 
@@ -77,6 +77,7 @@ Cuando se desvincula un empleado (desde Ficha o desde Desvinculaciones masivas),
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.16 | 2026-11-18 | Agent | Incapacidades: la columna del listado muestra **Obs. devolución** (`observacion_devolucion`) en lugar de **Observaciones**. |
 | 1.15 | 2026-11-17 | Agent | Incapacidades: columna **Observaciones** en el listado, después de **Extemporánea** (ordenable). |
 | 1.14 | 2026-11-10 | Agent | Incapacidades: filtro **Extemporánea** (Sí / No / Todas) en Filtros; aplica al listado y al Excel. |
 | 1.13 | 2026-11-10 | Agent | Incapacidades: columna **Extemporánea** (Sí/No) en el listado, después de Días entrega. |

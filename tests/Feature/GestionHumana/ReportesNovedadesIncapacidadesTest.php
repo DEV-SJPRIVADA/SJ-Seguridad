@@ -37,7 +37,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
             ->assertOk()
             ->assertSee('Incapacidades', false)
             ->assertSee('Extemporánea', false)
-            ->assertSee('Observaciones', false)
+            ->assertSee('Obs. devolución', false)
             ->assertSee('name="extemporanea"', false)
             ->assertDontSee('listado y formularios en preparación', false);
 
@@ -273,7 +273,7 @@ class ReportesNovedadesIncapacidadesTest extends TestCase
             'fecha_inicio' => '2026-09-10',
             'fecha_fin' => '2026-09-12',
             'extemporanea' => true,
-            'observaciones' => 'Soporte entregado tarde',
+            'observacion_devolucion' => 'Soporte entregado tarde',
             'created_by' => $editor->id,
             'updated_by' => $editor->id,
         ]);

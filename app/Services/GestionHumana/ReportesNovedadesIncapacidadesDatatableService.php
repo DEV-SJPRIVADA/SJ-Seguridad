@@ -82,7 +82,7 @@ final class ReportesNovedadesIncapacidadesDatatableService
     /**
      * Orden solicitado por DataTables server-side; los indices remiten a las columnas visibles del Blade.
      * "Dias entrega" (9) es calculada y no ordena; "Extemporanea" (10) usa el boolean persistido;
-     * "Observaciones" (11) y "Obs. Nomina" (12) ordenan por su columna de texto.
+     * "Obs. devolucion" (11) y "Obs. Nomina" (12) ordenan por su columna de texto.
      *
      * @param  Builder<ReportesNovedadesIncapacidad>  $query
      */
@@ -102,7 +102,7 @@ final class ReportesNovedadesIncapacidadesDatatableService
             7 => $query->orderBy('fecha_fin', $direction)->orderBy('id', $direction),
             8 => $query->orderBy('fecha_recepcion', $direction)->orderBy('id', $direction),
             10 => $query->orderBy('extemporanea', $direction)->orderBy('id', $direction),
-            11 => $query->orderBy('observaciones', $direction)->orderBy('id', $direction),
+            11 => $query->orderBy('observacion_devolucion', $direction)->orderBy('id', $direction),
             12 => $query->orderBy('observacion_nomina', $direction)->orderBy('id', $direction),
             default => $query->orderByDesc('fecha_inicio')->orderByDesc('id'),
         };
@@ -180,7 +180,7 @@ final class ReportesNovedadesIncapacidadesDatatableService
             e(DisplayDate::date($row->fecha_recepcion) ?: '—'),
             e((string) ($row->diasEntregaCalculados() ?? '—')),
             $this->formatExtemporaneaCell((bool) $row->extemporanea),
-            e((string) ($row->observaciones ?: '—')),
+            e((string) ($row->observacion_devolucion ?: '—')),
             ReportesNovedadesUi::observacionNominaCell($row->observacion_nomina),
         ];
 
