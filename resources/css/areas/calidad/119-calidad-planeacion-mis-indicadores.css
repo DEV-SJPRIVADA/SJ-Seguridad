@@ -1,0 +1,36 @@
+/* Mis indicadores (pestaña captura): estado anual del capturador. */
+
+.planeacion-mis-indicadores__year {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+.planeacion-mis-indicadores__year .form-field {
+    min-width: 8rem;
+}
+
+/* Mes del último resultado, en gris junto al valor. */
+.planeacion-mis-indicadores__month {
+    margin-left: 2px;
+    font-size: 0.75rem;
+    color: #94a3b8;
+    font-weight: 600;
+}
+
+/* La columna de estado puede llevar varios meses: permitir salto de línea. */
+.planeacion-mis-indicadores-page .data-table td .status-pill {
+    white-space: normal;
+    line-height: 1.25;
+    text-align: left;
+}
+
+@media (max-width: 768px) {
+    .planeacion-mis-indicadores__year {
+        width: 100%;
+    }
+
+    .planeacion-mis-indicadores__year .form-field {
+        flex: 1;
+    }
+}

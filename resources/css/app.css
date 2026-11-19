@@ -241,6 +241,8 @@
 @import './areas/calidad/117-calidad-planeacion.css';
 /* 118 Calidad / Planeación estratégica — Estrategia (DOFA) */
 @import './areas/calidad/118-calidad-planeacion-estrategia.css';
+/* 119 Calidad / Planeación estratégica — Mis indicadores */
+@import './areas/calidad/119-calidad-planeacion-mis-indicadores.css';
 
 /* 119 Compras / Aprobación OC */
 @import './areas/compras/119-compras-aprobacion-oc.css';

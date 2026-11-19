@@ -3,7 +3,7 @@
     /** @var list<array<string, mixed>> $versionHistory */
     $consultQuery = $consultQuery ?? null;
     $activeVersionId = (int) ($activeVersionId ?? 0);
-    {{-- El acabado de tarjeta lateral solo aplica cuando el partial va dentro del aside del formulario. --}}
+    // El acabado de tarjeta lateral solo aplica cuando el partial va dentro del aside del formulario.
     $inAside = (bool) ($inAside ?? false);
 @endphp
 

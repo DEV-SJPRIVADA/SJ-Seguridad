@@ -59,7 +59,7 @@ return [
         'planeacion.dashboard.view' => 'Planeación: Dashboard',
         'planeacion.indicadores.view' => 'Planeación: Ver indicadores',
         'planeacion.indicadores.edit' => 'Planeación: Editar indicadores',
-        'planeacion.captura.view' => 'Planeación: Ver captura',
+        'planeacion.captura.view' => 'Planeación: Ver mis indicadores',
         'planeacion.captura.edit' => 'Planeación: Capturar',
         'planeacion.estrategia.view' => 'Planeación: Ver estrategia',
         'planeacion.estrategia.edit' => 'Planeación: Editar estrategia',
@@ -174,7 +174,7 @@ return [
         'planeacion.dashboard.view' => 'Permite ver el dashboard de Planeación estratégica. No se otorga al editar indicadores.',
         'planeacion.indicadores.view' => 'Permite listar y consultar la definición de los indicadores de Planeación estratégica.',
         'planeacion.indicadores.edit' => 'Permite crear, editar, publicar, archivar y restablecer indicadores. Incluye la consulta de la pestaña Indicadores.',
-        'planeacion.captura.view' => 'Permite ver la pestaña Captura de Planeación estratégica.',
+        'planeacion.captura.view' => 'Permite ver la pestaña Mis indicadores con el estado anual de los indicadores asignados.',
         'planeacion.captura.edit' => 'Permite guardar o reemplazar la captura propia de un indicador asignado.',
         'planeacion.estrategia.view' => 'Permite ver el DOFA, los objetivos y las estrategias de Planeación estratégica.',
         'planeacion.estrategia.edit' => 'Permite crear, editar y archivar DOFA, objetivos y estrategias. Incluye la consulta de la pestaña.',
@@ -442,7 +442,7 @@ return [
     'planeacion_tabs' => [
         'dashboard' => 'Dashboard',
         'indicadores' => 'Indicadores',
-        'captura' => 'Captura',
+        'captura' => 'Mis indicadores',
         'estrategia' => 'Estrategia',
     ],
 

@@ -12,7 +12,7 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 
 - **Dashboard** — resumen del mes: cuántos indicadores hay, cuántas capturas faltan y cuáles cumplen o no la meta.
 - **Indicadores** — crear, editar, publicar, archivar, compartir y abrir la ficha (historial enero–diciembre).
-- **Captura** — diligenciar el mes de los indicadores que le asignaron.
+- **Mis indicadores** — diligenciar el mes de los indicadores que le asignaron, con el estado del año.
 
 **En esta versión:**
 
@@ -46,7 +46,7 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 | --- | --- |
 | Calidad (editar indicadores) | Crea, corrige, publica, archiva, restablece y comparte indicadores. Ve todos en listado, ficha y dashboard. También puede capturar. |
 | Consulta de un indicador | Ve la pestaña Indicadores y el Dashboard de **ese** indicador (y el historial del equipo asignado). También captura su fila si está marcado para captura. |
-| Captura | Solo ve la pestaña Captura de **sus** indicadores. Diligencia o reemplaza su mes. No ve el listado ni el dashboard. |
+| Mis indicadores | Solo ve la pestaña **Mis indicadores** con **sus** indicadores, cuántos meses lleva capturados del año y cuáles le faltan. Diligencia o reemplaza su mes. No ve el listado ni el dashboard. |
 | Administrador de usuarios | Puede asignar el tablero y las funciones a mano. El rol administrador los trae de base. Al **compartir** un indicador, el sistema abre solo el acceso mínimo a esa persona. |
 
 ## Desarrollo
@@ -54,7 +54,7 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 ### Entrar al tablero
 
 1. Entre a **Calidad → Planeación estratégica**.
-2. Verá las pestañas que le correspondan (Dashboard, Indicadores y/o Captura).
+2. Verá las pestañas que le correspondan (Dashboard, Indicadores, Mis indicadores y/o Estrategia).
 
 ### Crear y publicar un indicador (Calidad)
 
@@ -92,12 +92,13 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 
 ### Capturar el mes
 
-
-1. Abra **Captura** y elija el indicador.
-2. Seleccione año y mes. Complete los campos, el análisis y, si no cumple la meta, el **plan de mejora**.
-3. Guarde. Si ya había capturado ese mes, el sistema pide confirmación antes de **reemplazar**.
-4. Si el mes está cerrado por una versión nueva, no podrá guardar.
-5. En la misma pantalla puede descargar **Excel** o **PDF** de su ficha.
+1. Abra **Mis indicadores** y elija el **año** que quiere revisar (arriba a la derecha).
+2. La tabla muestra sus indicadores con cuántos meses lleva capturados del año, en qué meses queda pendiente y el resultado del último mes registrado.
+3. Pulse el ícono **Capturar** del indicador.
+4. Seleccione año y mes. Complete los campos, el análisis y, si no cumple la meta, el **plan de mejora**.
+5. Guarde. Si ya había capturado ese mes, el sistema pide confirmación antes de **reemplazar**.
+6. Si el mes está cerrado por una versión nueva, no podrá guardar.
+7. En la misma pantalla puede descargar **Excel** o **PDF** de su ficha.
 
 ### Consultar la ficha
 
@@ -118,7 +119,7 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 
 | Versión | Fecha | Autor | Descripción del cambio |
 | --- | --- | --- | --- |
-| 2.0 | 2026-11-11 | Documentador | FEAT-051: pestaña Estrategia con DOFA, objetivos y estrategias encadenados. |
+| 2.1 | 2026-11-18 | Documentador | Pestaña **Mis indicadores**: estado anual, filtro por año; atajo **Capturar** en Indicadores. |
 | 1.9 | 2026-11-11 | Documentador | Suplencias temporales: el suplente captura a nombre del titular dentro del rango. |
 | 1.8 | 2026-11-11 | Documentador | Compartir por área además de usuarios sueltos; suplencias quedan como pendiente definido. |
 | 1.7 | 2026-11-11 | Documentador | Análisis visible en consolidado; Excel/PDF también desde captura; etiquetas del gráfico valor arriba y % dentro. |

@@ -209,6 +209,15 @@ final class PlaneacionIndicatorDatatableService
         }
 
         if ($canEdit && ! $indicator->isArchived()) {
+            // Atajo de captura: solo para quien edita indicadores (canCaptureIndicator lo permite).
+            if ($indicator->current_published_version_id !== null) {
+                $captureUrl = route('calidad.planeacion.captura.show', $indicator);
+                $html .= '<a href="'.e($captureUrl).'" class="cursos-catalogo-page__icon-btn" title="Capturar" aria-label="Capturar">'.
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
+                    '<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>'.
+                    '</a>';
+            }
+
             $editUrl = route('calidad.planeacion.indicadores.edit', $indicator);
             $html .= '<a href="'.e($editUrl).'" class="cursos-catalogo-page__icon-btn" title="Editar" aria-label="Editar">'.
                 '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'.
