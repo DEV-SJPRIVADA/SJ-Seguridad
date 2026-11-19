@@ -167,10 +167,23 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const duplicateMessage = @json($errors->first('hired_document'));
-                const prefix = 'DUPLICATE_HIRED_DOCUMENT:';
+                const hiredDocumentMessage = @json($errors->first('hired_document'));
+                // Duplicado y desvinculado sin Seguimientos reutilizan el mismo confirm hidden.
+                const confirmableAlerts = [
+                    {
+                        prefix: @json(\App\Rules\Requisitions\HiredDocumentNotDuplicated::PREFIX_DUPLICATE),
+                        title: 'Cédula duplicada',
+                    },
+                    {
+                        prefix: @json(\App\Rules\Requisitions\HiredDocumentNotDuplicated::PREFIX_REHIRE_UNTRACKED),
+                        title: 'Desvinculado sin seguimiento',
+                    },
+                ];
+                const alertConfig = confirmableAlerts.find(function (item) {
+                    return hiredDocumentMessage && hiredDocumentMessage.startsWith(item.prefix);
+                });
 
-                if (!duplicateMessage || !duplicateMessage.startsWith(prefix) || typeof Swal === 'undefined') {
+                if (!alertConfig || typeof Swal === 'undefined') {
                     return;
                 }
 
@@ -185,8 +198,8 @@
 
                 Swal.fire({
                     icon: 'warning',
-                    title: 'Cedula duplicada',
-                    text: duplicateMessage.slice(prefix.length).trim(),
+                    title: alertConfig.title,
+                    text: hiredDocumentMessage.slice(alertConfig.prefix.length).trim(),
                     showCancelButton: true,
                     confirmButtonText: 'Confirmar y continuar',
                     cancelButtonText: 'Cancelar',

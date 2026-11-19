@@ -4,6 +4,7 @@ namespace Tests\Feature\GestionHumana;
 
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
+use App\Models\EmployeeTerminationFollowup;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
@@ -194,7 +195,174 @@ class EmployeeFichaEmploymentPeriodTest extends TestCase
         );
 
         $this->assertTrue($validator->fails());
-        $this->assertStringContainsString('REHIRE_NOT_ALLOWED', $validator->errors()->first('hired_document'));
+        $this->assertStringContainsString(HiredDocumentNotDuplicated::PREFIX_REHIRE_NOT_ALLOWED, $validator->errors()->first('hired_document'));
+    }
+
+    public function test_explicit_not_rehireable_cannot_be_confirmed(): void
+    {
+        $entry = $this->createInFichaEntry(withActivePeriod: true);
+
+        $periodService = app(EmployeeFichaEmploymentPeriodService::class);
+        $closed = $periodService->closeActivePeriod($entry, [
+            'termination_cause_code' => 'DESPIDO',
+            'is_rehireable' => false,
+            'last_work_day' => now()->subDays(2)->toDateString(),
+            'termination_date' => now()->subDay()->toDateString(),
+        ], User::factory()->create()->id);
+        $periodService->syncProfileAfterTermination($entry);
+
+        EmployeeTerminationFollowup::factory()->forPeriod($closed)->create([
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+        ]);
+
+        $validator = validator(
+            ['hired_document' => $entry->hired_document],
+            ['hired_document' => [new HiredDocumentNotDuplicated(999, true, $entry->hired_document)]],
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString(HiredDocumentNotDuplicated::PREFIX_REHIRE_NOT_ALLOWED, $validator->errors()->first('hired_document'));
+    }
+
+    public function test_untracked_desvinculado_requires_confirmation_on_requisition(): void
+    {
+        $entry = $this->createInFichaEntry(withActivePeriod: true);
+
+        $periodService = app(EmployeeFichaEmploymentPeriodService::class);
+        $periodService->closeActivePeriod($entry, [
+            'termination_cause_code' => 'FIN_CONTRATO',
+            'is_rehireable' => null,
+            'last_work_day' => now()->subDays(2)->toDateString(),
+            'termination_date' => now()->subDay()->toDateString(),
+        ], User::factory()->create()->id);
+        $periodService->syncProfileAfterTermination($entry);
+
+        $this->assertFalse(EmployeeTerminationFollowup::query()
+            ->where('personal_requisition_ficha_entry_id', $entry->id)
+            ->exists());
+
+        $validator = validator(
+            ['hired_document' => $entry->hired_document],
+            ['hired_document' => [new HiredDocumentNotDuplicated(999, false, null)]],
+        );
+
+        $this->assertTrue($validator->fails());
+        $this->assertStringContainsString(HiredDocumentNotDuplicated::PREFIX_REHIRE_UNTRACKED, $validator->errors()->first('hired_document'));
+    }
+
+    public function test_untracked_desvinculado_confirmed_sync_puts_employee_back_to_pending(): void
+    {
+        $entry = $this->createInFichaEntry(withActivePeriod: true);
+
+        $periodService = app(EmployeeFichaEmploymentPeriodService::class);
+        $periodService->closeActivePeriod($entry, [
+            'termination_cause_code' => 'FIN_CONTRATO',
+            'is_rehireable' => null,
+            'last_work_day' => now()->subDays(2)->toDateString(),
+            'termination_date' => now()->subDay()->toDateString(),
+        ], User::factory()->create()->id);
+        $periodService->syncProfileAfterTermination($entry);
+
+        $validator = validator(
+            ['hired_document' => $entry->hired_document],
+            ['hired_document' => [new HiredDocumentNotDuplicated(999, true, $entry->hired_document)]],
+        );
+
+        $this->assertFalse($validator->fails());
+
+        $newRequisition = $this->createRequisition('REQ-REHIRE-UNTRACKED', [
+            'hired_document' => $entry->hired_document,
+            'hired_full_name' => $entry->hired_full_name,
+        ]);
+
+        app(PersonalRequisitionFichaSync::class)->syncOnUpdate(
+            $newRequisition,
+            PersonalRequisition::STATUS_CONTRATADO,
+            $entry->hired_document,
+            $entry->hired_full_name,
+            true,
+            User::factory()->create()->id,
+        );
+
+        $entry->refresh();
+
+        $this->assertNull($entry->moved_to_ficha_at);
+        $this->assertTrue($entry->isRehirePending());
+        $this->assertSame($newRequisition->id, $entry->personal_requisition_id);
+    }
+
+    public function test_desvinculado_without_period_or_followup_confirmed_allows_rehire(): void
+    {
+        $entry = $this->createInFichaEntry(withActivePeriod: false);
+        $entry->profile->update([
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'termination_date' => now()->subDay()->toDateString(),
+        ]);
+
+        $this->assertFalse(EmployeeTerminationFollowup::query()
+            ->where('personal_requisition_ficha_entry_id', $entry->id)
+            ->exists());
+
+        $blocked = validator(
+            ['hired_document' => $entry->hired_document],
+            ['hired_document' => [new HiredDocumentNotDuplicated(999, false, null)]],
+        );
+
+        $this->assertTrue($blocked->fails());
+        $this->assertStringContainsString(HiredDocumentNotDuplicated::PREFIX_REHIRE_UNTRACKED, $blocked->errors()->first('hired_document'));
+
+        $confirmed = validator(
+            ['hired_document' => $entry->hired_document],
+            ['hired_document' => [new HiredDocumentNotDuplicated(999, true, $entry->hired_document)]],
+        );
+
+        $this->assertFalse($confirmed->fails());
+
+        $newRequisition = $this->createRequisition('REQ-REHIRE-NO-PERIOD', [
+            'hired_document' => $entry->hired_document,
+            'hired_full_name' => $entry->hired_full_name,
+        ]);
+
+        app(PersonalRequisitionFichaSync::class)->syncOnUpdate(
+            $newRequisition,
+            PersonalRequisition::STATUS_CONTRATADO,
+            $entry->hired_document,
+            $entry->hired_full_name,
+            true,
+            User::factory()->create()->id,
+        );
+
+        $entry->refresh();
+
+        $this->assertNull($entry->moved_to_ficha_at);
+        $this->assertSame($newRequisition->id, $entry->personal_requisition_id);
+    }
+
+    public function test_rehireable_with_followup_allows_hired_document_without_confirmation(): void
+    {
+        $entry = $this->createInFichaEntry(withActivePeriod: true);
+
+        $periodService = app(EmployeeFichaEmploymentPeriodService::class);
+        $closed = $periodService->closeActivePeriod($entry, [
+            'termination_cause_code' => 'FIN_CONTRATO',
+            'is_rehireable' => true,
+            'last_work_day' => now()->subDays(2)->toDateString(),
+            'termination_date' => now()->subDay()->toDateString(),
+        ], User::factory()->create()->id);
+        $periodService->syncProfileAfterTermination($entry);
+
+        EmployeeTerminationFollowup::factory()->forPeriod($closed)->create([
+            'document_number' => $entry->hired_document,
+            'full_name' => $entry->hired_full_name,
+        ]);
+
+        $validator = validator(
+            ['hired_document' => $entry->hired_document],
+            ['hired_document' => [new HiredDocumentNotDuplicated(999, false, null)]],
+        );
+
+        $this->assertFalse($validator->fails());
     }
 
     private function createInFichaEntry(bool $withActivePeriod = false): PersonalRequisitionFichaEntry

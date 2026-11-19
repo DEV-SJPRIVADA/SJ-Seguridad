@@ -19,10 +19,20 @@
     $requiresCommercialClientInitially = $selectedClientTypeId !== '' && in_array((int) $selectedClientTypeId, $commercialClientTypeIds, true);
     $currentStatus = old('status', $requisition?->status);
     $showHiredFieldsInitially = $currentStatus === \App\Models\PersonalRequisition::STATUS_CONTRATADO;
+    $hiredDocumentConfirmPrefixes = [
+        \App\Rules\Requisitions\HiredDocumentNotDuplicated::PREFIX_DUPLICATE,
+        \App\Rules\Requisitions\HiredDocumentNotDuplicated::PREFIX_REHIRE_UNTRACKED,
+    ];
     $hiredDocumentErrors = collect($errors->get('hired_document'))
-        ->map(fn ($message) => str_starts_with($message, 'DUPLICATE_HIRED_DOCUMENT:')
-            ? trim(substr($message, strlen('DUPLICATE_HIRED_DOCUMENT:')))
-            : $message)
+        ->map(function ($message) use ($hiredDocumentConfirmPrefixes) {
+            foreach ($hiredDocumentConfirmPrefixes as $prefix) {
+                if (str_starts_with($message, $prefix)) {
+                    return trim(substr($message, strlen($prefix)));
+                }
+            }
+
+            return $message;
+        })
         ->all();
 @endphp
 

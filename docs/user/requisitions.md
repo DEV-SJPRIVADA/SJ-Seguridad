@@ -392,6 +392,12 @@ permisos para modificar Catálogos
   alerta de confirmación con el código de esa requisición; confirme solo
   si es la misma persona (el registro de la lista de espera se resigna a
   la requisición actual).
+- Si la cédula es de un empleado **desvinculado no recontratable**, el
+  sistema bloquea el guardado (no hay confirmación).
+- Si la cédula es de un empleado **desvinculado que no está en
+  Seguimientos** (no hay decisión formal de recontratabilidad), aparece
+  una alerta informativa; si confirma, el registro vuelve a Pendientes
+  como reingreso.
 
 28. Exporte a Excel; incluye todos los campos de la requisición
     (incluida compensación) según los filtros activos.
@@ -468,6 +474,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.18        | 2026-11-19                 | Contratado: desvinculado no recontratable se bloquea; desvinculado sin Seguimientos pide confirmación para reingresar |
 | 1.17        | 2026-11-17                 | Pestaña de Gestión Humana rotulada MT-GH-06; título de la matriz sobre los filtros |
 | 1.16        | 2026-11-13                 | Impresión FO-GH-22: firmas del pie un poco más grandes |
 | 1.15        | 2026-11-13                 | Impresión FO-GH-22: firmas de líder (solicitante), GH y gerencia si hay PNG en Mi perfil |

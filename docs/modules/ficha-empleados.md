@@ -58,16 +58,19 @@ Invocado desde `RequisitionController::update` dentro de la misma transaccion, c
 1. **`status` distinto de `contratado`:** si la entrada propia (`personal_requisition_id` = requisicion actual) esta **pendiente**, se ejecuta cleanup (`EmployeeFichaOnHiredBootstrap::cleanupBeforePendingEntryDelete`: descarta colas abiertas de cursos/acreditación y borra el perfil — el FK del perfil es `nullOnDelete`, no cascade) y luego se **elimina** la entry. Si ya esta **en ficha**, se **conserva** (caso raro documentado abajo).
 2. **`status = contratado` sin duplicado:** upsert de la entry + **`EmployeeFichaOnHiredBootstrap`**: perfil mínimo (`requires_courses` / `requires_acreditacion` / `requires_psicofisicos` = true, `employment_status` = activo), encola Cursos y Acreditaciones si aplica. **No** setea `moved_to_ficha_at` ni abre periodo laboral. Plantilla masivos sigue excluyendo Pendientes.
 3. **`status = contratado` con cedula duplicada y `confirm_duplicate_hired=1`:** la entrada de la **otra** requisicion se **reasigna** + bootstrap de perfil/colas. Si la entrada reasignada ya estaba **en ficha**, conserva ese estado.
-4. **Reingreso recontratable:** limpia `moved_to_ficha_at`, reactiva perfil a activo, re-encola si elegible. `isRehirePending()` se basa en periodos **cerrados** + aún pendiente (no en `employment_status` desvinculado), porque bootstrap/carta dejan el perfil activo.
+4. **Reingreso recontratable:** limpia `moved_to_ficha_at`, reactiva perfil a activo, re-encola si elegible. `isRehirePending()` se basa en periodos **cerrados** + aún pendiente (no en `employment_status` desvinculado), porque bootstrap/carta dejan el perfil activo. También aplica si el usuario **confirma** un desvinculado **sin Seguimientos** (`isUntrackedDesvinculado` + `confirm_duplicate_hired=1`). Un No explícito (`is_rehireable === false`) nunca entra por este camino.
 
-Servicio: `App\Services\GestionHumana\EmployeeFichaOnHiredBootstrap`. Tests: `tests/Feature/GestionHumana/EmployeeFichaOnHiredBootstrapTest.php`.
+Servicio: `App\Services\GestionHumana\EmployeeFichaOnHiredBootstrap`. Tests: `tests/Feature/GestionHumana/EmployeeFichaOnHiredBootstrapTest.php` + `EmployeeFichaEmploymentPeriodTest`.
 
 ### Deteccion de duplicado (`App\Rules\Requisitions\HiredDocumentNotDuplicated`)
 
-- Aplica solo cuando `status = contratado` y `confirm_duplicate_hired` no viene en `1`.
-- Busca una entrada de `personal_requisition_ficha_entries` con el mismo `hired_document` y `personal_requisition_id` distinto al de la requisicion actual.
-- Si existe, falla con mensaje reconocible por el frontend: `DUPLICATE_HIRED_DOCUMENT: Esta cedula ya esta registrada en otra requisicion ({code}). Confirme para continuar.`
-- El frontend (`edit.blade.php`) intercepta ese prefijo y muestra un SweetAlert2 de confirmacion; al confirmar reenvia el formulario con `confirm_duplicate_hired=1` (input hidden).
+- Aplica solo cuando `status = contratado`.
+- Busca una entrada de `personal_requisition_ficha_entries` con el mismo `hired_document` y `personal_requisition_id` distinto al de la requisicion actual (incluye huérfanas con RQ null).
+- **Desvinculado no recontratable** (`isExplicitlyNotRehireable`: último periodo cerrado con `is_rehireable = false`): falla con `REHIRE_NOT_ALLOWED:` y **no** admite confirmación (aunque vaya `confirm_duplicate_hired=1`).
+- **Desvinculado sin Seguimientos** (`isUntrackedDesvinculado`: perfil desvinculado, sin fila en `employee_termination_followups`, y no es un No explícito): falla con `REHIRE_UNTRACKED:`. El frontend (`edit.blade.php`) muestra SweetAlert2 informativo; al confirmar reenvía con `confirm_duplicate_hired=1` y el sync hace reingreso (limpia `moved_to_ficha_at`).
+- **Desvinculado recontratable Sí** (periodo cerrado `is_rehireable = true` y hay seguimiento): deja pasar sin modal.
+- Cédula duplicada de activo / otra RQ: `DUPLICATE_HIRED_DOCUMENT:` + el mismo SweetAlert de confirmación.
+- El No explícito se evalúa **antes** de honrar `confirm_duplicate_hired`, para que nadie salte el bloqueo reenviando el formulario.
 - Duplicado **dentro de la misma requisicion** (guardar de nuevo sin cambiar cedula) no dispara la alerta: la regla excluye `personal_requisition_id` de la propia requisicion.
 
 **Riesgo conocido:** al reasignar una entrada duplicada, la requisicion "perdedora" (la que tenia la cedula antes) queda sin `fichaEntry` hasta que se vuelva a guardar con datos de contratado; es infrecuente (misma cedula en dos requisiciones activas) y reversible reabriendo esa requisicion.
@@ -438,6 +441,8 @@ Cobertura general:
 - Navegacion: tablero visible/oculto segun `view.board.gestion_humana.ficha_empleados`.
 
 Tests de regresion en `tests/Feature/RequisitionModuleTest.php` (marcar Contratado): validacion condicional de `hired_document`/`hired_full_name`, alta/reuso de entrada, duplicado (422 sin confirmar / reasignacion al confirmar), reversion de estado (elimina si pendiente, conserva si ya en ficha).
+
+Reingreso en `EmployeeFichaEmploymentPeriodTest`: No explícito bloquea incluso con confirm; desvinculado sin Seguimientos pide `REHIRE_UNTRACKED` y, al confirmar, `PersonalRequisitionFichaSync` lo devuelve a Pendientes; Sí con seguimiento pasa sin modal.
 
 ## Referencias
 

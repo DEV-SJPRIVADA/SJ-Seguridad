@@ -466,6 +466,38 @@ class EmployeeFichaEmploymentPeriodService
         return $latestClosed !== null && $latestClosed->is_rehireable === true;
     }
 
+    /**
+     * No recontratable formal: el último periodo cerrado tiene is_rehireable = false.
+     * Null o ausencia de periodo no cuentan como No.
+     */
+    public function isExplicitlyNotRehireable(PersonalRequisitionFichaEntry $entry): bool
+    {
+        $latestClosed = $this->latestClosedPeriod($entry);
+
+        return $latestClosed !== null && $latestClosed->is_rehireable === false;
+    }
+
+    public function hasTerminationFollowup(PersonalRequisitionFichaEntry $entry): bool
+    {
+        if ($entry->relationLoaded('terminationFollowups')) {
+            return $entry->terminationFollowups->isNotEmpty();
+        }
+
+        return $entry->terminationFollowups()->exists();
+    }
+
+    /**
+     * Desvinculado sin fila en Seguimientos y sin No explícito: pide confirmación al marcar Contratado.
+     */
+    public function isUntrackedDesvinculado(PersonalRequisitionFichaEntry $entry): bool
+    {
+        $entry->loadMissing('profile');
+
+        return $entry->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
+            && ! $this->hasTerminationFollowup($entry)
+            && ! $this->isExplicitlyNotRehireable($entry);
+    }
+
     public function isEligibleForRehire(PersonalRequisitionFichaEntry $entry): bool
     {
         return $entry->moved_to_ficha_at !== null
