@@ -106,7 +106,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 1. Abra la ficha del empleado **activo**.
 2. Pulse **Registrar desvinculacion** (solo usuarios con permiso de desvincular).
 3. Complete causal, si es recontratable, ultimo dia de trabajo y fecha de desvinculacion.
-4. Si la persona tiene **vacaciones, incapacidad o permiso** en **MT-GH-04 Novedades** cuyas fechas se cruzan con el retiro, el sistema **no permite** desvincular y muestra el motivo. (Solo un **super-admin** puede marcar «Forzar…» para continuar.)
+4. Si la persona tiene **vacaciones, incapacidad o permiso** en **MT-GH-04 Novedades** cuyas fechas se cruzan con el retiro, el sistema **notifica el cruce y pide su aprobación**: marque «Apruebo la desvinculación con novedades vigentes» y escriba el **motivo**. La desvinculación **sí se registra**, y queda en auditoría **quién la aprobó**, el motivo y las novedades detectadas.
 5. Al confirmar, el vinculo activo se cierra y el empleado queda **desvinculado** (no sale en export masivos sin rango de fechas).
 6. Automaticamente se crea (si no existia) una fila en el tablero **Desvinculaciones → Seguimientos** para el checklist post-retiro. Guia: [`desvinculaciones.md`](desvinculaciones.md).
 
@@ -169,6 +169,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.49 | 2026-11-19 | Agent | Desvinculación con cruce en MT-GH-04 ya **no se bloquea**: muestra las novedades, exige aprobación con motivo y registra en auditoría quién aprobó (antes solo super-admin podía forzar). Masivos conserva el bloqueo por fila. |
 | 1.48 | 2026-11-17 | Agent | Export Pendientes: el Excel ahora sale con la **plantilla de actualización** (reimportable) y trae los datos ya ingresados en la carta de contratación / Gestionar Empleado; completa desde la requisición solo lo faltante (nacimiento, ingreso, cargo, salario, sexo). |
 | 1.47 | 2026-11-09 | Agent | Carga masiva: columnas opcionales al final de la plantilla para los datos del formulario que el extracto nompr07 no trae (lugar de nacimiento, teléfono 2, códigos de caja, ARP y centro de trabajo, nómina avanzada). Una celda vacía no borra el valor ya guardado. |
 | 1.46 | 2026-11-06 | Agent | Pendientes: búsqueda, cargo, cliente, ciudad e ingreso en una sola fila. Filtrar y limpiar quedan entre «Ingreso hasta» y el icono de volver a empleados en ficha. |

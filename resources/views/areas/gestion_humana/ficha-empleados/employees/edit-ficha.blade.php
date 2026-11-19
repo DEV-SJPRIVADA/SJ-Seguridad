@@ -11,8 +11,8 @@
             'termination_date',
             'is_rehireable',
             'termination_notes',
-            'novedades_conflict',
-            'force_novedades_conflict',
+            'novedades_conflict_ack',
+            'novedades_conflict_reason',
         ]);
         $startInEditMode = $canManageFicha && $errors->any() && ! $showTerminateModal;
     @endphp
@@ -362,7 +362,6 @@
                 'entry' => $entry,
                 'catalogs' => $catalogs,
                 'canTerminate' => $canTerminate ?? false,
-                'canForceNovedadesConflict' => $canForceNovedadesConflict ?? false,
                 'show' => $showTerminateModal,
             ])
 

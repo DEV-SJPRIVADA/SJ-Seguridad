@@ -2,11 +2,13 @@
 
 namespace Tests\Feature\GestionHumana;
 
+use App\Models\AuditLog;
 use App\Models\EmployeeFichaEmploymentPeriod;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PayrollCatalogItem;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Models\ReportesNovedadesIncapacidad;
 use App\Models\ReportesNovedadesVacacion;
 use App\Models\RequisitionCity;
 use App\Models\RequisitionClient;
@@ -19,6 +21,7 @@ use App\Models\User;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Config;
 use Tests\TestCase;
 
 class TerminationNovedadesConflictTest extends TestCase
@@ -31,21 +34,15 @@ class TerminationNovedadesConflictTest extends TestCase
 
         $this->seed(DatabaseSeeder::class);
         PermissionCatalog::sync();
+        Config::set('audit.enabled', true);
+        Config::set('audit.queue', false);
     }
 
-    public function test_terminate_blocked_when_vacaciones_overlap(): void
+    public function test_terminate_asks_approval_when_vacaciones_overlap(): void
     {
         $terminator = $this->terminatorUser();
         $entry = $this->createActiveEntry('9001001001', 'Empleado Cruce Vac');
-
-        ReportesNovedadesVacacion::query()->create([
-            'document_number' => '9001001001',
-            'employee_name' => 'Empleado Cruce Vac',
-            'novedad' => 'VACACIONES DISF',
-            'dias_novedad' => 5,
-            'fecha_inicio' => '2026-10-01',
-            'fecha_fin' => '2026-10-05',
-        ]);
+        $this->seedVacacion('9001001001', 'Empleado Cruce Vac', '2026-10-01', '2026-10-05');
 
         $this->actingAs($terminator)
             ->from(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
@@ -56,33 +53,19 @@ class TerminationNovedadesConflictTest extends TestCase
                 'termination_date' => '2026-10-03',
             ])
             ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
-            ->assertSessionHasErrors('novedades_conflict');
+            ->assertSessionHasErrors('novedades_conflict_ack');
 
+        // Ya no bloquea por sí solo el cruce: sin aprobación no se cierra el vínculo.
         $entry->refresh();
         $this->assertSame(EmployeeFichaProfile::STATUS_ACTIVO, $entry->profile?->employment_status);
-        $this->assertNotNull(
-            EmployeeFichaEmploymentPeriod::query()
-                ->where('personal_requisition_ficha_entry_id', $entry->id)
-                ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
-                ->first()
-        );
+        $this->assertNotNull($this->activePeriod($entry));
     }
 
     public function test_terminate_allowed_when_vacaciones_do_not_overlap(): void
     {
         $terminator = $this->terminatorUser();
         $entry = $this->createActiveEntry('9001001002', 'Empleado Sin Cruce');
-
-        ReportesNovedadesVacacion::query()->create([
-            'document_number' => '9001001002',
-            'employee_name' => 'Empleado Sin Cruce',
-            'novedad' => 'VACACIONES DISF',
-            'dias_novedad' => 5,
-            'fecha_inicio' => '2026-01-01',
-            'fecha_fin' => '2026-01-05',
-        ]);
-
-        $this->seedTerminationCause('RENUNCIA');
+        $this->seedVacacion('9001001002', 'Empleado Sin Cruce', '2026-01-01', '2026-01-05');
 
         $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.ficha.terminate', $entry), [
@@ -96,21 +79,19 @@ class TerminationNovedadesConflictTest extends TestCase
 
         $entry->refresh();
         $this->assertSame(EmployeeFichaProfile::STATUS_DESVINCULADO, $entry->profile?->employment_status);
+
+        // Sin cruce no se exige aprobación ni se registra el evento dedicado.
+        $this->assertDatabaseMissing('audit_logs', [
+            'event_type' => 'termination_novedades',
+            'action' => 'approve',
+        ]);
     }
 
-    public function test_vacacion_without_fecha_fin_blocks_after_start(): void
+    public function test_vacacion_without_fecha_fin_also_requires_approval(): void
     {
         $terminator = $this->terminatorUser();
         $entry = $this->createActiveEntry('9001001003', 'Empleado Vac abierta');
-
-        ReportesNovedadesVacacion::query()->create([
-            'document_number' => '9001001003',
-            'employee_name' => 'Empleado Vac abierta',
-            'novedad' => 'VACACIONES DISF',
-            'dias_novedad' => 10,
-            'fecha_inicio' => '2026-09-01',
-            'fecha_fin' => null,
-        ]);
+        $this->seedVacacion('9001001003', 'Empleado Vac abierta', '2026-09-01', null);
 
         $this->actingAs($terminator)
             ->from(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
@@ -120,54 +101,108 @@ class TerminationNovedadesConflictTest extends TestCase
                 'last_work_day' => '2026-10-01',
                 'termination_date' => '2026-10-01',
             ])
-            ->assertSessionHasErrors('novedades_conflict');
+            ->assertSessionHasErrors('novedades_conflict_ack');
     }
 
-    public function test_super_admin_can_force_despite_conflict(): void
+    public function test_incapacidad_overlap_requires_approval(): void
     {
-        $super = User::factory()->create(['must_change_password' => false]);
-        $super->assignRole('super-admin');
+        $terminator = $this->terminatorUser();
+        $entry = $this->createActiveEntry('9001001006', 'Empleado Incap');
 
-        $entry = $this->createActiveEntry('9001001004', 'Empleado Force');
-        $this->seedTerminationCause('RENUNCIA');
-
-        ReportesNovedadesVacacion::query()->create([
-            'document_number' => '9001001004',
-            'employee_name' => 'Empleado Force',
-            'novedad' => 'VACACIONES COMP',
-            'dias_novedad' => 3,
+        ReportesNovedadesIncapacidad::query()->create([
+            'document_number' => '9001001006',
+            'employee_name' => 'Empleado Incap',
+            'tipo_incapacidad' => 'ACCIDENTE LABORAL',
+            'dias' => 10,
             'fecha_inicio' => '2026-10-01',
-            'fecha_fin' => '2026-10-03',
+            'fecha_fin' => '2026-10-10',
         ]);
 
-        $this->actingAs($super)
+        $this->actingAs($terminator)
+            ->from(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
+            ->post(route('gestion-humana.ficha-empleados.employees.ficha.terminate', $entry), [
+                'termination_cause_code' => 'RENUNCIA',
+                'is_rehireable' => '1',
+                'last_work_day' => '2026-10-05',
+                'termination_date' => '2026-10-05',
+            ])
+            ->assertSessionHasErrors('novedades_conflict_ack');
+    }
+
+    public function test_approval_with_reason_closes_link_and_audits_approver(): void
+    {
+        $terminator = $this->terminatorUser();
+        $entry = $this->createActiveEntry('9001001004', 'Empleado Aprobado');
+        $this->seedVacacion('9001001004', 'Empleado Aprobado', '2026-10-01', '2026-10-03');
+
+        $this->actingAs($terminator)
             ->post(route('gestion-humana.ficha-empleados.employees.ficha.terminate', $entry), [
                 'termination_cause_code' => 'RENUNCIA',
                 'is_rehireable' => '1',
                 'last_work_day' => '2026-10-02',
                 'termination_date' => '2026-10-02',
-                'force_novedades_conflict' => '1',
+                'novedades_conflict_ack' => '1',
+                'novedades_conflict_reason' => 'Se confirmó con GH y Nómina el caso.',
             ])
             ->assertRedirect(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
             ->assertSessionHasNoErrors();
 
         $entry->refresh();
         $this->assertSame(EmployeeFichaProfile::STATUS_DESVINCULADO, $entry->profile?->employment_status);
+
+        // Traza dedicada con quién aprobó y qué novedades estaban cruzadas.
+        $log = AuditLog::query()
+            ->where('event_type', 'termination_novedades')
+            ->where('action', 'approve')
+            ->latest('id')
+            ->first();
+
+        $this->assertNotNull($log);
+        $this->assertSame($terminator->id, $log->user_id);
+        $this->assertSame('SE CONFIRMÓ CON GH Y NÓMINA EL CASO.', $log->reason);
+        $this->assertSame($terminator->id, $log->metadata['approved_by_user_id']);
+        $this->assertSame($terminator->name, $log->metadata['approved_by_name']);
+        $this->assertSame(1, $log->metadata['novedades_conflict_count']);
+        $this->assertSame('vacaciones', $log->metadata['novedades_conflicts'][0]['sheet']);
     }
 
-    public function test_non_super_admin_force_flag_is_ignored(): void
+    public function test_live_check_endpoint_reports_overlap_without_blocking(): void
     {
         $terminator = $this->terminatorUser();
-        $entry = $this->createActiveEntry('9001001005', 'Empleado No Force');
+        $entry = $this->createActiveEntry('9001001007', 'Empleado Consulta');
+        $this->seedVacacion('9001001007', 'Empleado Consulta', '2026-10-01', '2026-10-05');
 
-        ReportesNovedadesVacacion::query()->create([
-            'document_number' => '9001001005',
-            'employee_name' => 'Empleado No Force',
-            'novedad' => 'VACACIONES DISF',
-            'dias_novedad' => 2,
-            'fecha_inicio' => '2026-10-01',
-            'fecha_fin' => '2026-10-02',
-        ]);
+        $this->actingAs($terminator)
+            ->getJson(route('gestion-humana.ficha-empleados.employees.ficha.terminate.novedades', $entry).'?last_work_day=2026-10-03&termination_date=2026-10-03')
+            ->assertOk()
+            ->assertJsonPath('has_conflicts', true)
+            ->assertJsonPath('conflicts.0.sheet', 'vacaciones');
+
+        // Sin solape, el aviso queda vacío.
+        $this->actingAs($terminator)
+            ->getJson(route('gestion-humana.ficha-empleados.employees.ficha.terminate.novedades', $entry).'?last_work_day=2026-12-01&termination_date=2026-12-01')
+            ->assertOk()
+            ->assertJsonPath('has_conflicts', false)
+            ->assertJsonCount(0, 'conflicts');
+    }
+
+    public function test_live_check_endpoint_requires_terminate_permission(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['ficha_empleados.view']);
+
+        $entry = $this->createActiveEntry('9001001008', 'Empleado Sin Permiso');
+
+        $this->actingAs($viewer)
+            ->getJson(route('gestion-humana.ficha-empleados.employees.ficha.terminate.novedades', $entry).'?last_work_day=2026-10-03&termination_date=2026-10-03')
+            ->assertForbidden();
+    }
+
+    public function test_approval_without_reason_is_rejected(): void
+    {
+        $terminator = $this->terminatorUser();
+        $entry = $this->createActiveEntry('9001001005', 'Empleado Sin Motivo');
+        $this->seedVacacion('9001001005', 'Empleado Sin Motivo', '2026-10-01', '2026-10-02');
 
         $this->actingAs($terminator)
             ->from(route('gestion-humana.ficha-empleados.employees.ficha.edit', $entry))
@@ -176,9 +211,33 @@ class TerminationNovedadesConflictTest extends TestCase
                 'is_rehireable' => '1',
                 'last_work_day' => '2026-10-01',
                 'termination_date' => '2026-10-01',
-                'force_novedades_conflict' => '1',
+                'novedades_conflict_ack' => '1',
+                'novedades_conflict_reason' => '   ',
             ])
-            ->assertSessionHasErrors('novedades_conflict');
+            ->assertSessionHasErrors('novedades_conflict_reason');
+
+        $entry->refresh();
+        $this->assertSame(EmployeeFichaProfile::STATUS_ACTIVO, $entry->profile?->employment_status);
+    }
+
+    private function seedVacacion(string $document, string $name, string $start, ?string $end): void
+    {
+        ReportesNovedadesVacacion::query()->create([
+            'document_number' => $document,
+            'employee_name' => $name,
+            'novedad' => 'VACACIONES DISF',
+            'dias_novedad' => 5,
+            'fecha_inicio' => $start,
+            'fecha_fin' => $end,
+        ]);
+    }
+
+    private function activePeriod(PersonalRequisitionFichaEntry $entry): ?EmployeeFichaEmploymentPeriod
+    {
+        return EmployeeFichaEmploymentPeriod::query()
+            ->where('personal_requisition_ficha_entry_id', $entry->id)
+            ->where('status', EmployeeFichaEmploymentPeriod::STATUS_ACTIVO)
+            ->first();
     }
 
     private function terminatorUser(): User

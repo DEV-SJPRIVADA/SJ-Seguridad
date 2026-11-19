@@ -17,7 +17,7 @@ Tablero de area **Gestion Humana** para registrar y exportar las cuatro hojas de
 - Lookup cedula → Ficha (nombre, cargo, destino, fecha ingreso / tipo segun aplique).
 - Catalogos fijos en `config/reportes_novedades.php` (sin pantallas de administracion V1).
 - DataTables `serverSide: true`; `<x-searchable-select>`; `BaseExport` + `<x-export-excel>` (sin Select2 / sin `excelHtml5`).
-- Hook Desvinculaciones: alta Retiros en `ensureForClosedPeriod`; soft-delete en `revert`.
+- Hook Desvinculaciones: alta Retiros en `ensureForClosedPeriod`; soft-delete en `revert`. El **cruce** de Vacaciones / Incapacidades / Permisos con un retiro ya no bloquea la desvinculación individual (Ficha): exige aprobación con motivo y se audita; en **Masivos** sigue bloqueando la fila. Detalle: [`desvinculaciones.md`](desvinculaciones.md).
 
 **Fuera de alcance V1:** import `.xlsm`, dashboard KPI, correos, BD FERIADOS / Tabla1, workflow estados, pestana Auditoria del tablero, admin UI de catalogos, roles Spatie nuevos (`nomina`), backfill historico Excel.
 

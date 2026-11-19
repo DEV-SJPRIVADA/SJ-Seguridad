@@ -105,6 +105,7 @@ Servicio: `App\Services\Access\FichaEmpleadosAccessService` — `isAdminBypass()
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.edit` | `ficha_empleados.manage` |
 | PATCH | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/ficha` | `gestion-humana.ficha-empleados.employees.ficha.update` | `ficha_empleados.manage` |
 | POST | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/desvincular` | `gestion-humana.ficha-empleados.employees.ficha.terminate` | `ficha_empleados.terminate` |
+| GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/desvincular/novedades` | `gestion-humana.ficha-empleados.employees.ficha.terminate.novedades` | JSON con novedades cruzadas (`last_work_day`, `termination_date`); `ficha_empleados.terminate` |
 | GET | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/carta-contratacion` | `gestion-humana.ficha-empleados.employees.contratacion.quick` | `ficha_empleados.manage` — carta rápida desde Pendientes |
 | POST | `/gestion-humana/ficha-empleados/empleados/{fichaEntry}/carta-contratacion` | `gestion-humana.ficha-empleados.employees.contratacion.quick.generate` | `ficha_empleados.manage` |
 | GET | `/gestion-humana/ficha-empleados/empleados/periodos/{period}/cartas/plantillas` | `gestion-humana.ficha-empleados.employees.period.letters.templates` | `ficha_empleados.terminate` |
@@ -211,6 +212,13 @@ Catálogo **Causal desvinculacion** (`termination_cause`) en pestaña Catalogos.
 Catálogos nómina en `payroll_catalog_items` (`catalog_type`, `code`, `name`). Puente cargo: `requisition_position_payroll_maps`. UI admin: pestaña **Catálogos** en Ficha empleados; modal edición `.ficha-empleados-catalogs-page__modal-card` (cabecera con icono, orden/activo en fila, pie de acciones); tras CRUD se permanece en el catálogo activo (`?catalog=`); **Volver al tablero** regresa al grid. Seed alternativo: `php artisan employee-ficha:seed-catalogs`.
 
 Ruta desvinculacion: `POST .../empleados/{fichaEntry}/desvincular` (`ficha.terminate`) — requiere `ficha_empleados.terminate`.
+
+**Cruce con novedades MT-GH-04 (2026-11-19):** `FichaEmpleadosController::terminate` llama a `TerminationNovedadesConflictService::assertAcknowledged(documentNumber, lastWorkDay, terminationDate, ack, reason)`. Si hay solape con Vacaciones / Incapacidades / Permisos:
+- Sin `novedades_conflict_ack=1` → `ValidationException` en `novedades_conflict_ack` (el modal lista las novedades y el vínculo sigue activo).
+- Con `ack` pero sin `novedades_conflict_reason` (texto no vacío) → `ValidationException` en `novedades_conflict_reason`.
+- Con ambos → cierra el vínculo normal y audita: `employment_period`/`close` incluye `novedades_conflict_approved` + detalle, y se escribe `termination_novedades`/`approve` con `approved_by_user_id`, `approved_by_name`, `reason` y `novedades_conflicts[]`.
+
+**Sin permiso nuevo:** cualquier usuario con `ficha_empleados.terminate` puede aprobar (decisión del usuario 2026-11-19). El bloqueo duro por fila queda solo en **Desvinculaciones → Masivos** (`assertNoConflictsOrForced`, con `force_novedades_conflict` para super-admin). Request: `novedades_conflict_ack` (`sometimes|boolean`) y `novedades_conflict_reason` (`nullable|string|max:500`, normalizado a MAYÚSCULAS).
 
 ## Carta rápida de contratación (desde Pendientes)
 

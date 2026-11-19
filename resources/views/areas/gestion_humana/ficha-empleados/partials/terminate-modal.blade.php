@@ -1,4 +1,11 @@
-{{-- Variables: $entry, $catalogs, $canTerminate, $show, $canForceNovedadesConflict --}}
+{{-- Variables: $entry, $catalogs, $canTerminate, $show --}}
+@php
+    // El bloque de aprobación del cruce se muestra si el envío anterior lo detectó o si
+    // el usuario ya había marcado la casilla; el modal además lo revela en vivo al elegir fechas.
+    $approvalOpenOnLoad = $errors->has('novedades_conflict_ack')
+        || $errors->has('novedades_conflict_reason')
+        || (bool) old('novedades_conflict_ack');
+@endphp
 @if ($canTerminate ?? false)
     <x-modal name="ficha-terminate" maxWidth="lg" :show="$show ?? false" focusable>
         <div class="modal-card ficha-empleados-terminate-modal">
@@ -29,7 +36,17 @@
                 </div>
             @endif
 
-            <form method="POST" action="{{ route('gestion-humana.ficha-empleados.employees.ficha.terminate', $entry) }}" class="ficha-empleados-terminate-modal__form">
+            <form
+                method="POST"
+                action="{{ route('gestion-humana.ficha-empleados.employees.ficha.terminate', $entry) }}"
+                class="ficha-empleados-terminate-modal__form"
+                x-data="fichaTerminateNovedades({
+                    url: @js(route('gestion-humana.ficha-empleados.employees.ficha.terminate.novedades', $entry)),
+                    approvalOpenOnLoad: @js($errors->has('novedades_conflict_ack') || $errors->has('novedades_conflict_reason') || (bool) old('novedades_conflict_ack')),
+                    acknowledged: @js((bool) old('novedades_conflict_ack')),
+                    reason: @js((string) old('novedades_conflict_reason')),
+                })"
+            >
                 @csrf
 
                 <div class="form-grid form-grid--two ficha-empleados-form__grid">
@@ -77,25 +94,49 @@
                         <textarea id="termination_notes" name="termination_notes" class="form-input supply-textarea" rows="3" maxlength="1000">{{ old('termination_notes') }}</textarea>
                     </div>
 
-                    @if ($canForceNovedadesConflict ?? false)
-                        {{-- Solo super-admin: continuar pese a cruce con MT-GH-04 --}}
-                        <div class="form-field form-grid__full">
-                            <label class="ficha-empleados-terminate-modal__force" for="force_novedades_conflict">
-                                <input
-                                    type="checkbox"
-                                    id="force_novedades_conflict"
-                                    name="force_novedades_conflict"
-                                    value="1"
-                                    class="form-check"
-                                    @checked(old('force_novedades_conflict'))
-                                >
-                                <span class="ficha-empleados-terminate-modal__force-copy">
-                                    <span class="ficha-empleados-terminate-modal__force-title">Forzar desvinculación a pesar del cruce con vacaciones / incapacidad / permiso</span>
-                                    <span class="ficha-empleados-terminate-modal__force-hint">Visible solo para super-admin. Use solo si confirmó el caso con GH/Nómina.</span>
-                                </span>
-                            </label>
+                    {{-- Aviso en vivo: el modal consulta el cruce con MT-GH-04 al elegir las fechas --}}
+                    <div class="form-field form-grid__full" x-show="hasConflicts" x-cloak>
+                        <div class="alert alert--warning ficha-empleados-terminate-modal__alert" role="alert">
+                            <p><strong>Esta persona tiene novedades que se cruzan con el retiro:</strong></p>
+                            <ul class="ficha-empleados-form__error-list">
+                                <template x-for="conflict in conflicts" :key="conflict.sheet + '-' + conflict.id">
+                                    <li x-text="conflict.detail"></li>
+                                </template>
+                            </ul>
                         </div>
-                    @endif
+                    </div>
+
+                    {{-- Aprobación del cruce con MT-GH-04: ya no bloquea, pero queda auditado quién aprobó --}}
+                    <div class="form-field form-grid__full" x-show="hasConflicts || approvalOpenOnLoad" x-cloak>
+                        <label class="ficha-empleados-terminate-modal__force" for="novedades_conflict_ack">
+                            <input
+                                type="checkbox"
+                                id="novedades_conflict_ack"
+                                name="novedades_conflict_ack"
+                                value="1"
+                                class="form-check"
+                                x-model="acknowledged"
+                            >
+                            <span class="ficha-empleados-terminate-modal__force-copy">
+                                <span class="ficha-empleados-terminate-modal__force-title">Apruebo la desvinculación con novedades vigentes</span>
+                                <span class="ficha-empleados-terminate-modal__force-hint">Marque esta casilla si el retiro se cruza con vacaciones, incapacidad o permiso y confirma el caso con GH/Nómina. La aprobación queda registrada en auditoría con su usuario.</span>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="form-field form-grid__full" x-show="hasConflicts || approvalOpenOnLoad" x-cloak>
+                        <label class="form-label" for="novedades_conflict_reason">Motivo de la aprobación <span class="text-danger">*</span></label>
+                        <textarea
+                            id="novedades_conflict_reason"
+                            name="novedades_conflict_reason"
+                            class="form-input supply-textarea"
+                            rows="2"
+                            maxlength="500"
+                            placeholder="Explique por qué se desvincula con novedades vigentes"
+                            x-model="reason"
+                        >{{ old('novedades_conflict_reason') }}</textarea>
+                        <p class="form-hint">Se guarda en auditoría junto con las novedades detectadas.</p>
+                    </div>
                 </div>
 
                 <div class="ficha-empleados-terminate-modal__actions">
