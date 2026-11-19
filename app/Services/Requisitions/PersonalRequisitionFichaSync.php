@@ -5,6 +5,7 @@ namespace App\Services\Requisitions;
 use App\Models\EmployeeFichaProfile;
 use App\Models\PersonalRequisition;
 use App\Models\PersonalRequisitionFichaEntry;
+use App\Rules\Requisitions\HiredDocumentNotDuplicated;
 use App\Services\GestionHumana\EmployeeFichaEmploymentPeriodService;
 use App\Services\GestionHumana\EmployeeFichaOnHiredBootstrap;
 use Illuminate\Validation\ValidationException;
@@ -62,7 +63,7 @@ class PersonalRequisitionFichaSync
             && ($ownEntry === null || $existingByDocument->id !== $ownEntry->id)
             && $existingByDocument->moved_to_ficha_at !== null
             && $existingByDocument->profile?->employment_status === EmployeeFichaProfile::STATUS_DESVINCULADO
-            && $this->employmentPeriodService->isRehireable($existingByDocument)) {
+            && $this->allowsRehire($existingByDocument, $confirmDuplicate)) {
             if ($ownEntry !== null && $ownEntry->id !== $existingByDocument->id) {
                 $this->onHiredBootstrap->cleanupBeforePendingEntryDelete($ownEntry, $userId);
                 $ownEntry->delete();
@@ -103,7 +104,7 @@ class PersonalRequisitionFichaSync
                         : '#'.$otherEntry->personal_requisition_id);
 
                 throw ValidationException::withMessages([
-                    'hired_document' => "DUPLICATE_HIRED_DOCUMENT: Esta cédula ya está registrada ({$label}). Confirme para continuar.",
+                    'hired_document' => HiredDocumentNotDuplicated::PREFIX_DUPLICATE." Esta cédula ya está registrada ({$label}). Confirme para continuar.",
                 ]);
             }
 
@@ -153,5 +154,19 @@ class PersonalRequisitionFichaSync
         ]);
 
         $this->onHiredBootstrap->bootstrap($entry->fresh(), $userId);
+    }
+
+    /**
+     * Reingreso silencioso si es recontratable Sí; o reingreso confirmado si está
+     * desvinculado sin Seguimientos (no es un No explícito).
+     */
+    private function allowsRehire(PersonalRequisitionFichaEntry $entry, bool $confirmed): bool
+    {
+        if ($this->employmentPeriodService->isRehireable($entry)) {
+            return true;
+        }
+
+        return $confirmed
+            && $this->employmentPeriodService->isUntrackedDesvinculado($entry);
     }
 }

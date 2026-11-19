@@ -80,7 +80,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 4. Se descarga el Word/ZIP. El empleado **sigue en Pendientes**. Los datos mínimos quedan guardados para cuando complete la ficha con **Gestionar Empleado** / **Gestionar reingreso**. En el listado, el icono de carta pasa a color verde para indicar que ya se generó (puede volver a abrirla para regenerar).
 5. Si ya está **En ficha**, genere la carta desde la barra de acciones de la ficha (flujo anterior).
 
-**Nota sobre reintegro:** un empleado solo **desvinculado** en En ficha no tiene botón de reintegro ahí. El reingreso nace cuando una nueva requisición queda en estado **Contratado** con esa cédula (recontratable): el registro vuelve a **Pendientes** con badge Reingreso; ahí sí puede generar la carta rápida y luego Gestionar reingreso.
+**Nota sobre reintegro:** un empleado solo **desvinculado** en En ficha no tiene botón de reintegro ahí. El reingreso nace cuando una nueva requisición queda en estado **Contratado** con esa cédula: si es **recontratable** pasa solo; si está desvinculado y **no aparece en Seguimientos**, el sistema pide confirmación y, al aceptar, también vuelve a **Pendientes** con badge Reingreso. Si es **no recontratable**, se bloquea. Ahí sí puede generar la carta rápida y luego Gestionar reingreso.
 
 ### Consultar registros ya movidos (En ficha)
 
@@ -127,8 +127,8 @@ Si el listado del modal esta vacio, un administrador debe subir plantillas en el
 
 ### Reingreso por requisicion
 
-1. Cree una requisicion **Contratado** con la misma cedula de un empleado desvinculado **recontratable**.
-2. El registro vuelve a **Pendientes** con badge **Reingreso**.
+1. Cree una requisicion **Contratado** con la misma cedula de un empleado desvinculado **recontratable** (o desvinculado **sin seguimiento**, confirmando la alerta).
+2. El registro vuelve a **Pendientes** con badge **Reingreso**. Si es **no recontratable**, el sistema no deja guardar.
 3. Pulse **Gestionar reingreso**, revise las condiciones laborales nuevas y confirme. Puede corregir los datos de identificación (nombre, apellidos, lugar y fecha de nacimiento, sexo); la **cédula** se muestra de solo lectura porque une el historial de cursos, acreditaciones y psicofísicos.
 4. Se abre un nuevo vinculo; el historial de vinculos anteriores queda visible en la ficha.
 
@@ -169,6 +169,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.50 | 2026-11-19 | Agent | Al marcar Contratado: desvinculado no recontratable se bloquea; desvinculado sin Seguimientos pide confirmación y, si acepta, vuelve a Pendientes como reingreso. |
 | 1.49 | 2026-11-19 | Agent | Desvinculación con cruce en MT-GH-04 ya **no se bloquea**: muestra las novedades, exige aprobación con motivo y registra en auditoría quién aprobó (antes solo super-admin podía forzar). Masivos conserva el bloqueo por fila. |
 | 1.48 | 2026-11-17 | Agent | Export Pendientes: el Excel ahora sale con la **plantilla de actualización** (reimportable) y trae los datos ya ingresados en la carta de contratación / Gestionar Empleado; completa desde la requisición solo lo faltante (nacimiento, ingreso, cargo, salario, sexo). |
 | 1.47 | 2026-11-09 | Agent | Carga masiva: columnas opcionales al final de la plantilla para los datos del formulario que el extracto nompr07 no trae (lugar de nacimiento, teléfono 2, códigos de caja, ARP y centro de trabajo, nómina avanzada). Una celda vacía no borra el valor ya guardado. |
