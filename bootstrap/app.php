@@ -48,7 +48,7 @@ return Application::configure(basePath: dirname(__DIR__))
             ->withoutOverlapping();
 
         $schedule->command('integracion:push-cambios')
-            ->everyMinute()
+            ->everyFiveMinutes()
             ->timezone('America/Bogota')
             ->withoutOverlapping()
             ->runInBackground();

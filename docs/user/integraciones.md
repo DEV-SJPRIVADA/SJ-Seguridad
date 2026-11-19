@@ -8,7 +8,7 @@ Solo los **datos basicos del empleado** que necesita el area juridica: documento
 
 ## Cada cuanto
 
-- **Cambios:** cada minuto. Si alguien modifica la ficha de un empleado, el cambio llega a LegalSuite en el siguiente minuto.
+- **Cambios:** cada 5 minutos. Si alguien modifica la ficha de un empleado, el cambio llega a LegalSuite en los 5 minutos siguientes.
 - **Carga completa:** todos los lunes a las 3:00 a.m. (hora de Colombia) se reenvia todo el catalogo como respaldo.
 
 ## Que pasa cuando un empleado se desvincula

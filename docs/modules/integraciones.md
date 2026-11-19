@@ -73,7 +73,7 @@ Whitelist estricta por registro (ningun otro campo viaja):
 
 ## Flujo
 
-1. `integracion:push-cambios` (cada minuto) lee `integration_sync_state.key = 'employees'`.
+1. `integracion:push-cambios` (cada 5 minutos) lee `integration_sync_state.key = 'employees'`.
 2. `watermark = last_watermark ?? now()->subDay()`.
 3. Selecciona perfiles con `updated_at > watermark`, ordenados por `updated_at` e `id`.
 4. Envia en lotes de 500 con `Http::retry(3, 2000)` y `timeout=60`.
@@ -97,7 +97,7 @@ php artisan integracion:probar                         # valida URL, TLS, token,
 php artisan integracion:push-empleados --full --dry-run   # simulacion del catalogo completo
 php artisan integracion:push-cambios --dry-run            # simulacion incremental
 php artisan integracion:push-empleados --full             # primer envio manual
-php artisan integracion:push-cambios                      # lo ejecuta el scheduler cada minuto
+php artisan integracion:push-cambios                      # lo ejecuta el scheduler cada 5 minutos
 ```
 
 Opciones: `--dry-run` (no hace HTTP, imprime conteos y 5 payloads) y `--limit=N` (maximo de perfiles, util en pruebas).
@@ -108,8 +108,10 @@ Opciones: `--dry-run` (no hace HTTP, imprime conteos y 5 payloads) y `--limit=N`
 
 En `bootstrap/app.php`:
 
-- `integracion:push-cambios` -> `everyMinute()->withoutOverlapping()->runInBackground()` (America/Bogota).
+- `integracion:push-cambios` -> `everyFiveMinutes()->withoutOverlapping()->runInBackground()` (America/Bogota), es decir en los minutos :00, :05, :10... de cada hora (288 corridas al dia).
 - `integracion:push-empleados --full` -> `weeklyOn(1, '03:00')->withoutOverlapping()` (America/Bogota), es decir todos los lunes a las 03:00.
+
+El cron del servidor **sigue siendo cada minuto** (`* * * * *`): ese es el latido de Laravel y no ejecuta la integracion en cada latido, solo despierta al scheduler para que decida que tarea toca. Bajar la frecuencia de la integracion se hace en `bootstrap/app.php`, no en el cron.
 
 El servidor debe tener el cron de Laravel activo:
 
@@ -145,6 +147,14 @@ En produccion la bandera se deja en `false`: cualquier URL sin `https://` falla 
 - **Municipios:** StatFlow no tiene el catalogo `colombian_municipalities`, por lo que no puede validar el codigo DANE ni derivar el departamento. Envia el codigo tal cual (5 digitos) y `*_department_code = null`; LegalSuite valida contra su catalogo y deriva el departamento.
 - **`termination_date` centinela:** la ficha usa `9999-12-31` para "sin desvinculacion"; se traduce a `null` para no guardar fechas imposibles.
 - **`retry_sleep_ms`:** clave extra en `config/integrations.php` (2000 ms) para poder anular la espera entre reintentos en pruebas.
+
+## Limitaciones conocidas
+
+- **Rechazos por registro invisibles en el productor.** El receptor responde `207` cuando acepta el lote pero descarta filas; `sendBatch()` trata cualquier `2xx` como exito, asi que esos rechazos no suman en `records_failed` ni en `last_failed`. Para verificar una carga masiva, contar en LegalSuite: `SELECT SUM(external_id IS NOT NULL) FROM employees;` debe igualar los registros enviados. Pendiente de mejora: volcar a `integration_sync_log.message` el conteo de rechazos que devuelve la respuesta.
+- **`integracion:estado` muestra solo el ultimo lote.** LegalSuite sobrescribe `storage/app/integraciones/last-run.json` en cada lote, de modo que en un full de 9 lotes solo se ven los totales del noveno. El total real se obtiene con SQL. Pendiente de mejora: acumular el resumen por `run_id`.
+- **`document_type` colapsado:** `employees.document_type` es `varchar(8)` en LegalSuite, asi que `CEDULA EXTRANJERIA` y `TARJETA EXTRANJERIA` se guardan como `CE`. Un valor nulo o desconocido en el origen cae en `CEDULA`.
+- **Un nulo del origen sobrescribe.** Los campos que viajan en el payload se escriben aunque lleguen en `null`: si StatFlow no tiene el dato, LegalSuite pierde el que tuviera. Afecta sobre todo a `municipality_code` / `work_department_code` (ciudad de trabajo), que en la ficha casi nunca esta diligenciada.
+- **Carrera de un segundo en el watermark.** La comparacion es estricta (`updated_at > watermark`), asi que un perfil modificado en el mismo segundo del watermark y confirmado despues de la consulta espera al full semanal. El receptor es idempotente, no hay duplicados ni perdida definitiva.
 
 ## Troubleshooting
 
