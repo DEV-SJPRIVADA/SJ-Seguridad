@@ -54,8 +54,8 @@ Prefijo `calidad/planeacion`, nombre `calidad.planeacion.*`, middleware `auth`, 
 | POST | `/calidad/planeacion/estrategia/objetivos/{objective}/estrategias` | `calidad.planeacion.estrategia.strategies.store` | `.edit` |
 | PATCH | `/calidad/planeacion/estrategia/estrategias/{strategy}` | `calidad.planeacion.estrategia.strategies.update` | `.edit` |
 | DELETE | `/calidad/planeacion/estrategia/estrategias/{strategy}` | `calidad.planeacion.estrategia.strategies.destroy` | `.edit` |
-| GET | `/calidad/planeacion/captura` | `calidad.planeacion.captura` | `planeacion.captura.view` o `.edit` |
-| GET | `/calidad/planeacion/captura/datatable` | `calidad.planeacion.captura.datatable` | Igual |
+| GET | `/calidad/planeacion/captura` | `calidad.planeacion.captura` | `planeacion.captura.view` o `.edit` (pestaña **Mis indicadores**) |
+| GET | `/calidad/planeacion/captura/datatable` | `calidad.planeacion.captura.datatable` | Igual; acepta `?year=` (default año actual) |
 | GET | `/calidad/planeacion/captura/{indicator}` | `calidad.planeacion.captura.show` | Captura de **ese** indicador (`canCaptureIndicator`) |
 | POST | `/calidad/planeacion/captura/{indicator}` | `calidad.planeacion.captura.store` | `planeacion.captura.edit` + asignación |
 
@@ -71,7 +71,7 @@ El tablero en el menú usa `view.board.calidad.planeacion_estrategica`. `manage.
 | `planeacion.dashboard.view` | Planeación: Dashboard | Pestaña Dashboard (sin `edit`) |
 | `planeacion.indicadores.view` | Planeación: Ver indicadores | Listar y abrir ficha; sin `.edit` = solo indicadores con `can_consult` |
 | `planeacion.indicadores.edit` | Planeación: Editar indicadores | CRUD, versionar, publicar, compartir, archivar y restablecer; implica consulta de todos |
-| `planeacion.captura.view` | Planeación: Ver captura | Pestaña Captura |
+| `planeacion.captura.view` | Planeación: Ver mis indicadores | Pestaña **Mis indicadores** (estado anual) |
 | `planeacion.captura.edit` | Planeación: Capturar | Guardar o reemplazar la captura **propia** |
 | `planeacion.estrategia.view` | Planeación: Ver estrategia | Pestaña **Estrategia** (DOFA, objetivos, estrategias) en modo consulta |
 | `planeacion.estrategia.edit` | Planeación: Editar estrategia | CRUD de DOFA, objetivos y estrategias; implica view |
@@ -125,7 +125,7 @@ Directorio `resources/views/areas/calidad/planeacion/`.
 | `form.blade.php` | Constructor: ficha, campos, fórmula, Probar |
 | `show.blade.php` | Ficha anual; export Excel/PDF; compartir vía ícono (modal); restablecer si está archivado |
 | `exports/ficha-pdf.blade.php` | PDF de la ficha (una hoja A4 horizontal; gráfico PNG embebido) |
-| `captura.blade.php` | Listado de indicadores a capturar |
+| `captura.blade.php` | Listado **Mis indicadores**: año, meses capturados, estado y último resultado |
 | `captura-form.blade.php` | Formulario del mes + ficha propia; Excel/PDF |
 | `partials/ficha-gestion.blade.php` | Hoja tipo FT-OP-01 (ene–dic, gráfico, análisis) |
 | `partials/share.blade.php` | Modal de asignar usuarios o áreas (captura / consulta) y suplencias; se abre con ícono `users` |
@@ -163,7 +163,7 @@ JSON de cada campo: `{ key, label, decimals (0\|2), required, sort }`.
 | `PlaneacionIndicatorService` | Crear/editar/publicar/archivar/restablecer; si la versión de trabajo está congelada, el update abre un borrador vN+1 |
 | `PlaneacionPeriodService` | Qué versión rige cada mes (cierre del mes de publicación de vN>1) |
 | `PlaneacionCaptureService` | Guardar/reemplazar captura propia; unicidad por persona/mes |
-| `PlaneacionConsolidadoService` | Ficha anual: suma de campos del mes + recálculo; filtro Todos / un capturador |
+| `PlaneacionConsolidadoService` | Ficha anual: suma de campos del mes + recálculo; filtro Todos / un capturador. `yearSummary()` alimenta la tabla **Mis indicadores** (1 consulta por página) |
 | `PlaneacionEstrategiaService` | FEAT-051: alta/edición de DOFA con cuadrantes, objetivos y estrategias; auditoría en cada cambio |
 | `PlaneacionAssignmentService` | Sync de asignados + auto-permisos |
 | `PlaneacionDashboardService` | KPI y series del mes, acotados al perfil |

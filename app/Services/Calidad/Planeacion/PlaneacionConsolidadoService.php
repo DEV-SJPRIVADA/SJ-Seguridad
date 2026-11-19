@@ -169,6 +169,84 @@ class PlaneacionConsolidadoService
     }
 
     /**
+     * Estado anual de un indicador para el capturador (tabla Mis indicadores).
+     *
+     * Una sola consulta de capturas por página; los periodos se resuelven en
+     * memoria con `versionForCapture` (requiere 'versions' precargado).
+     *
+     * @param  list<QualityPlanningIndicator>  $indicators
+     * @return array<int, array{year: int, captured: list<int>, pending: list<int>, closed: list<int>, last_month: int|null, last_result: float|null, last_complies: bool|null}>
+     */
+    public function yearSummary(array $indicators, User $user, int $year): array
+    {
+        if ($indicators === []) {
+            return [];
+        }
+
+        $versionToIndicator = [];
+        foreach ($indicators as $indicator) {
+            foreach ($indicator->versions as $version) {
+                $versionToIndicator[(int) $version->id] = (int) $indicator->id;
+            }
+        }
+
+        $captures = $versionToIndicator === []
+            ? collect()
+            : QualityPlanningCapture::query()
+                ->whereIn('indicator_version_id', array_keys($versionToIndicator))
+                ->where('user_id', $user->id)
+                ->where('year', $year)
+                ->orderBy('month')
+                ->get()
+                ->groupBy(fn (QualityPlanningCapture $capture): int => $versionToIndicator[(int) $capture->indicator_version_id] ?? 0);
+
+        $currentMonth = (int) now()->month;
+        $isCurrentYear = $year === (int) now()->year;
+        $summary = [];
+
+        foreach ($indicators as $indicator) {
+            $id = (int) $indicator->id;
+            $rows = $captures->get($id, collect());
+            $captured = $rows->pluck('month')->map(fn ($month): int => (int) $month)->unique()->sort()->values()->all();
+            $pending = [];
+            $closed = [];
+
+            for ($month = 1; $month <= 12; $month++) {
+                if (in_array($month, $captured, true)) {
+                    continue;
+                }
+
+                // Meses futuros del año en curso todavía no son exigibles.
+                if ($isCurrentYear && $month > $currentMonth) {
+                    continue;
+                }
+
+                $period = $this->periods->versionForCapture($indicator, $year, $month);
+
+                if ($period->closed) {
+                    $closed[] = $month;
+                } elseif ($period->isCapturable()) {
+                    $pending[] = $month;
+                }
+            }
+
+            $last = $rows->sortByDesc('month')->first();
+
+            $summary[$id] = [
+                'year' => $year,
+                'captured' => $captured,
+                'pending' => $pending,
+                'closed' => $closed,
+                'last_month' => $last !== null ? (int) $last->month : null,
+                'last_result' => $last?->result_value !== null ? (float) $last->result_value : null,
+                'last_complies' => $last !== null ? (bool) $last->complies : null,
+            ];
+        }
+
+        return $summary;
+    }
+
+    /**
      * Capturadores activos (can_capture) visibles según el perfil del consultante.
      *
      * @return Collection<int, User>

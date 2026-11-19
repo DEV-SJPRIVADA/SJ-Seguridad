@@ -329,13 +329,20 @@ class PlaneacionEstrategicaController extends Controller
         return response()->json(['result' => $result]);
     }
 
-    public function captura(): View
+    public function captura(Request $request): View
     {
         abort_unless($this->access->canViewCapture(auth()->user()), 403);
 
+        $year = (int) $request->integer('year', (int) now()->year);
+        if ($year < 2000 || $year > 2100) {
+            $year = (int) now()->year;
+        }
+
         return view('areas.calidad.planeacion.captura', [
             'subTabs' => $this->getPlaneacionSubTabs('captura'),
-            'datatableUrl' => route('calidad.planeacion.captura.datatable'),
+            'year' => $year,
+            'yearOptions' => $this->periods->yearOptions($year),
+            'datatableUrl' => route('calidad.planeacion.captura.datatable', ['year' => $year]),
         ]);
     }
 
@@ -344,11 +351,13 @@ class PlaneacionEstrategicaController extends Controller
         abort_unless($this->access->canViewCapture(auth()->user()), 403);
 
         $user = auth()->user();
+        $year = (int) $request->integer('year', (int) now()->year);
 
         return $this->captureDatatable->respond(
             $request,
             $user,
             $this->access->canEditIndicadores($user),
+            $year >= 2000 && $year <= 2100 ? $year : null,
         );
     }
 
