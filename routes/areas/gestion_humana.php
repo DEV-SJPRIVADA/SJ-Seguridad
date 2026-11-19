@@ -71,6 +71,7 @@ Route::middleware(['password.changed'])
         Route::get('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'editFicha'])->name('ficha.edit');
         Route::patch('/{fichaEntry}/ficha', [FichaEmpleadosController::class, 'updateFicha'])->name('ficha.update');
         Route::post('/{fichaEntry}/desvincular', [FichaEmpleadosController::class, 'terminate'])->name('ficha.terminate');
+        Route::get('/{fichaEntry}/desvincular/novedades', [FichaEmpleadosController::class, 'terminateNovedadesCheck'])->name('ficha.terminate.novedades');
         Route::get('/{fichaEntry}/carta-contratacion', [ContratacionLetterController::class, 'quickForm'])->name('contratacion.quick');
         Route::post('/{fichaEntry}/carta-contratacion', [ContratacionLetterController::class, 'generateQuick'])->name('contratacion.quick.generate');
         Route::get('/{fichaEntry}/cursos', [FichaEmpleadosController::class, 'employeeCursos'])->name('cursos');

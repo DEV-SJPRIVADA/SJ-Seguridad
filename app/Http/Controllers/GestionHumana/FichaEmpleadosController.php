@@ -741,7 +741,6 @@ class FichaEmpleadosController extends Controller
                 $canManage,
             ),
             'canTerminate' => $this->canTerminate() && $activePeriod !== null,
-            'canForceNovedadesConflict' => auth()->user()?->hasRole('super-admin') ?? false,
             'catalogs' => $this->catalogService->optionsForForms(),
             'subTabs' => $this->getFichaEmpleadosSubTabs('empleados'),
             'employeeCursos' => $employeeCursos,
@@ -902,6 +901,34 @@ class FichaEmpleadosController extends Controller
             ->with('status', 'Ficha de empleado actualizada.');
     }
 
+    /**
+     * Consulta previa: devuelve las novedades que se cruzan con el retiro para que el modal
+     * avise antes de enviar (la aprobación se exige igual en el POST).
+     */
+    public function terminateNovedadesCheck(Request $request, PersonalRequisitionFichaEntry $fichaEntry): JsonResponse
+    {
+        abort_unless($this->canTerminate(), 403);
+
+        $validated = $request->validate([
+            'last_work_day' => ['required', 'date'],
+            'termination_date' => ['required', 'date'],
+        ]);
+
+        $fichaEntry->loadMissing('profile');
+        $documentNumber = (string) ($fichaEntry->hired_document ?: $fichaEntry->profile?->document_number);
+
+        $conflicts = $this->novedadesConflictService->findConflicts(
+            $documentNumber,
+            $validated['last_work_day'],
+            $validated['termination_date'],
+        );
+
+        return response()->json([
+            'has_conflicts' => $conflicts !== [],
+            'conflicts' => $conflicts,
+        ]);
+    }
+
     public function terminate(TerminateEmployeeFichaRequest $request, PersonalRequisitionFichaEntry $fichaEntry): RedirectResponse
     {
         abort_unless($this->canTerminate(), 403);
@@ -911,12 +938,13 @@ class FichaEmpleadosController extends Controller
         $validated = $request->validated();
         $documentNumber = (string) ($fichaEntry->hired_document ?: $fichaEntry->profile?->document_number);
 
-        $this->novedadesConflictService->assertNoConflictsOrForced(
+        // Cruce con novedades MT-GH-04: no bloquea, pero exige aprobación explícita con motivo.
+        $novedadesConflicts = $this->novedadesConflictService->assertAcknowledged(
             $documentNumber,
             (string) $validated['last_work_day'],
             (string) $validated['termination_date'],
-            $request->user(),
-            $request->boolean('force_novedades_conflict'),
+            $request->boolean('novedades_conflict_ack'),
+            (string) ($validated['novedades_conflict_reason'] ?? ''),
         );
 
         DB::transaction(function () use ($request, $fichaEntry, $validated): void {
@@ -949,18 +977,42 @@ class FichaEmpleadosController extends Controller
         $this->auditLogService->logEvent(
             eventType: 'employment_period',
             action: 'close',
-            metadata: [
+            metadata: array_merge([
                 'document_number' => $fichaEntry->hired_document,
                 'termination_cause_code' => $validated['termination_cause_code'],
                 'is_rehireable' => (bool) $validated['is_rehireable'],
-                'force_novedades_conflict' => $request->boolean('force_novedades_conflict'),
-            ],
+            ], $novedadesConflicts === []
+                ? ['novedades_conflict_approved' => false]
+                : $this->novedadesConflictService->approvalAuditMetadata(
+                    $novedadesConflicts,
+                    (string) $validated['novedades_conflict_reason'],
+                )),
             model: $fichaEntry,
         );
 
+        // Traza dedicada: quién aprobó desvincular con novedades vigentes y con qué motivo.
+        if ($novedadesConflicts !== []) {
+            $this->auditLogService->logEvent(
+                eventType: 'termination_novedades',
+                action: 'approve',
+                reason: (string) $validated['novedades_conflict_reason'],
+                metadata: array_merge([
+                    'document_number' => $documentNumber,
+                    'approved_by_user_id' => (int) $request->user()->id,
+                    'approved_by_name' => (string) $request->user()->name,
+                ], $this->novedadesConflictService->approvalAuditMetadata(
+                    $novedadesConflicts,
+                    (string) $validated['novedades_conflict_reason'],
+                )),
+                model: $fichaEntry,
+            );
+        }
+
         return redirect()
             ->route('gestion-humana.ficha-empleados.employees.ficha.edit', $fichaEntry)
-            ->with('status', 'Desvinculacion registrada correctamente.');
+            ->with('status', $novedadesConflicts === []
+                ? 'Desvinculación registrada correctamente.'
+                : 'Desvinculación registrada con aprobación de novedades vigentes.');
     }
 
     /**

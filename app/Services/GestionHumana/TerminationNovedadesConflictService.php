@@ -12,8 +12,12 @@ use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Bloquea desvinculación si el retiro (último día + fecha desvinculación) se solapa
- * con vacaciones, incapacidades o permisos en MT-GH-04.
+ * Detecta si el retiro (último día + fecha desvinculación) se solapa con vacaciones,
+ * incapacidades o permisos de MT-GH-04.
+ *
+ * - Ficha empleados: el cruce ya no bloquea; exige aprobación explícita con justificación
+ *   (`assertAcknowledged`) y se audita quién la aprobó.
+ * - Masivos: mantiene el bloqueo por fila (`assertNoConflictsOrForced`).
  */
 class TerminationNovedadesConflictService
 {
@@ -64,6 +68,8 @@ class TerminationNovedadesConflictService
     }
 
     /**
+     * Bloqueo por fila (solo Masivos): si hay cruce y no hay forzado de super-admin, lanza error.
+     *
      * @throws ValidationException
      */
     public function assertNoConflictsOrForced(
@@ -98,6 +104,78 @@ class TerminationNovedadesConflictService
                 ...$messages,
             ])),
         ]);
+    }
+
+    /**
+     * Aprobación explícita (Ficha empleados): el cruce no bloquea, pero exige que el usuario
+     * confirme y justifique. Devuelve los conflictos detectados para persistirlos en auditoría.
+     *
+     * @return list<array{sheet: string, sheet_label: string, id: int, fecha_inicio: ?string, fecha_fin: ?string, open_ended: bool, detail: string}>
+     *
+     * @throws ValidationException
+     */
+    public function assertAcknowledged(
+        string $documentNumber,
+        CarbonInterface|string $lastWorkDay,
+        CarbonInterface|string $terminationDate,
+        bool $acknowledged,
+        string $approvalReason,
+    ): array {
+        $conflicts = $this->findConflicts($documentNumber, $lastWorkDay, $terminationDate);
+
+        if ($conflicts === []) {
+            return [];
+        }
+
+        $messages = array_map(
+            static fn (array $conflict): string => $conflict['detail'],
+            $conflicts,
+        );
+
+        // Sin confirmación explícita no se cierra el vínculo: se listan las novedades cruzadas.
+        if (! $acknowledged) {
+            throw ValidationException::withMessages([
+                'novedades_conflict_ack' => array_values(array_filter([
+                    'Hay novedades que se cruzan con el retiro. Revise el detalle y marque «Apruebo la desvinculación con novedades vigentes».',
+                    ...$messages,
+                ])),
+            ]);
+        }
+
+        // La justificación es obligatoria para dejar rastro del criterio aplicado.
+        if (trim($approvalReason) === '') {
+            throw ValidationException::withMessages([
+                'novedades_conflict_reason' => 'Debe registrar el motivo de la aprobación cuando hay cruce con novedades.',
+            ]);
+        }
+
+        return $conflicts;
+    }
+
+    /**
+     * Metadata de auditoría con el detalle de novedades aprobadas.
+     *
+     * @param  list<array{sheet: string, sheet_label: string, id: int, fecha_inicio: ?string, fecha_fin: ?string, open_ended: bool, detail: string}>  $conflicts
+     * @return array<string, mixed>
+     */
+    public function approvalAuditMetadata(array $conflicts, string $approvalReason): array
+    {
+        return [
+            'novedades_conflict_approved' => true,
+            'novedades_conflict_reason' => trim($approvalReason),
+            'novedades_conflict_count' => count($conflicts),
+            'novedades_conflicts' => array_map(
+                static fn (array $conflict): array => [
+                    'sheet' => $conflict['sheet'],
+                    'sheet_label' => $conflict['sheet_label'],
+                    'id' => $conflict['id'],
+                    'fecha_inicio' => $conflict['fecha_inicio'],
+                    'fecha_fin' => $conflict['fecha_fin'],
+                    'open_ended' => $conflict['open_ended'],
+                ],
+                $conflicts,
+            ),
+        ];
     }
 
     /**
