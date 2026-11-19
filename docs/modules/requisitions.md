@@ -155,6 +155,8 @@ Documentacion de la capa global: [`docs/modules/notifications-config.md`](notifi
 - Cierre `contratado`: obligatorios `hiring_date`, compensacion requerida por validacion, `hired_document`, `hired_birth_date`, `hired_sex` (género Masculino/Femenino de la persona contratada) y `hired_full_name` (una persona por fila). Independientes de `replacement_*`. Registros legado pueden tener nacimiento/género contratado vacíos hasta el próximo guardado en Contratado.
 - Al guardar `contratado`, el formulario `hired_sex` se persiste en la columna existente `sex` (sin columna nueva) y sincroniza `employee_ficha_profiles.sex` (M/F); `hired_birth_date` → `birth_date`. Así Export Apo / nómina siguen el mismo mapeo que hoy.
 - Guardar `contratado` upsert 1:1 en `personal_requisition_ficha_entries`; `hired_document` solo dígitos (5–20). Cédula ya usada en otra RQ **o** en Ficha sin RQ (p. ej. import masivo, `personal_requisition_id` null) pide confirmación (SweetAlert2) y vincula la entry existente (no crea perfil duplicado / no 500 por unique). Si la cédula es de un **desvinculado no recontratable**, se bloquea (`REHIRE_NOT_ALLOWED`). Si es desvinculado **sin fila en Seguimientos**, pide confirmación (`REHIRE_UNTRACKED`) y, al confirmar, el sync lo trata como reingreso. Detalle: [`ficha-empleados.md`](ficha-empleados.md).
+- En Gestión/editar, al escribir una cédula **desvinculada** se precargan nacimiento, género y nombres (`HiredPersonLookupService`, GET `requisitions.hired-document.lookup`). **No** se precarga la fecha de ingreso (queda la de esta RQ).
+- En **Pendientes** de Ficha, `hireDate()` usa `personal_requisitions.hiring_date` de la RQ actual (no el `hire_date` viejo del perfil). Al bootstrap de Contratado/reingreso, el perfil pendiente recibe esa misma fecha.
 - Tras crear, el solicitante no edita; solo GH (salvo bloqueo por pendiente gerencia).
 
 ## Encargados de seleccion (Reclutador)
@@ -254,6 +256,7 @@ Eliminada: `requisition_recruiters`. Legacy rename: `requisition_notification_em
 
 | Fecha | Descripcion |
 | --- | --- |
+| 2026-11-19 | Contratado: cédula desvinculada precarga datos (salvo fecha de ingreso); Pendientes muestra la fecha de ingreso de la RQ |
 | 2026-11-19 | Contratado: desvinculado No recontratable bloquea; desvinculado sin Seguimientos pide SweetAlert y, al confirmar, reingresa. Prefijo `REHIRE_UNTRACKED:` |
 | 2026-11-17 | Dashboard: azules de KPI *Solicitadas*, donut *Distribución por Estado* y charts Tendencia/Top Ciudades/Top Clientes unificados al azul corporativo `#003366` |
 | 2026-11-17 | Gestion GH: label del tab `MT-GH-06` (`requisition_module_tabs.gestion_humana.gestion`) y titulo «Matriz de Gestión de Requisiciones de Personal - Noviembre de 2026 - Versión 02» sobre los filtros (`.req-manage-shell__title`, solo `gestion_humana`) |

@@ -475,7 +475,17 @@
 
                 <div class="form-field">
                     <x-input-label for="hired_document" value="Cédula persona contratada *" />
-                    <input id="hired_document" name="hired_document" type="text" class="form-input" value="{{ old('hired_document', $requisition?->hired_document) }}" placeholder="Documento de identidad">
+                    <input
+                        id="hired_document"
+                        name="hired_document"
+                        type="text"
+                        class="form-input"
+                        value="{{ old('hired_document', $requisition?->hired_document) }}"
+                        placeholder="Documento de identidad"
+                        @if (! empty($hiredDocumentLookupUrl))
+                            data-lookup-url="{{ $hiredDocumentLookupUrl }}"
+                        @endif
+                    >
                     <x-input-error :messages="$hiredDocumentErrors" />
                 </div>
 
@@ -688,6 +698,97 @@
             }
         }
 
+        // Reingreso: al escribir una cédula desvinculada se precargan nombres, nacimiento y género (no la fecha de ingreso).
+        function setSearchableSelectValue(inputId, value) {
+            const input = document.getElementById(inputId);
+            if (!input) {
+                return;
+            }
+
+            const wrap = input.closest('[x-data]');
+            if (wrap && window.Alpine && typeof Alpine.$data === 'function') {
+                Alpine.$data(wrap).value = value || '';
+                return;
+            }
+
+            input.value = value || '';
+        }
+
+        function fillHiredPersonFromLookup(data) {
+            if (!data || !data.found) {
+                return;
+            }
+
+            const birth = document.getElementById('hired_birth_date');
+            const firstSurname = document.getElementById('hired_first_surname');
+            const secondSurname = document.getElementById('hired_second_surname');
+            const firstName = document.getElementById('hired_first_name');
+            const secondName = document.getElementById('hired_second_name');
+
+            if (birth && data.hired_birth_date) {
+                birth.value = data.hired_birth_date;
+            }
+            if (firstSurname && data.hired_first_surname) {
+                firstSurname.value = data.hired_first_surname;
+            }
+            if (secondSurname) {
+                secondSurname.value = data.hired_second_surname || '';
+            }
+            if (firstName && data.hired_first_name) {
+                firstName.value = data.hired_first_name;
+            }
+            if (secondName) {
+                secondName.value = data.hired_second_name || '';
+            }
+            if (data.hired_sex) {
+                setSearchableSelectValue('hired_sex', data.hired_sex);
+            }
+        }
+
+        function bindHiredDocumentLookup() {
+            const documentInput = document.getElementById('hired_document');
+            const lookupUrl = documentInput ? documentInput.getAttribute('data-lookup-url') : '';
+
+            if (!documentInput || !lookupUrl) {
+                return;
+            }
+
+            let lookupTimer = null;
+            let lastLookedUp = '';
+
+            function lookupHiredDocument() {
+                const cedula = (documentInput.value || '').replace(/\D+/g, '');
+
+                if (cedula.length < 5 || cedula === lastLookedUp) {
+                    return;
+                }
+
+                lastLookedUp = cedula;
+
+                fetch(lookupUrl + '?cedula=' + encodeURIComponent(cedula), {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+                    credentials: 'same-origin',
+                }).then(function (response) {
+                    if (!response.ok) {
+                        return null;
+                    }
+                    return response.json();
+                }).then(function (data) {
+                    fillHiredPersonFromLookup(data);
+                }).catch(function () {
+                    lastLookedUp = '';
+                });
+            }
+
+            documentInput.addEventListener('input', function () {
+                if (lookupTimer) {
+                    clearTimeout(lookupTimer);
+                }
+                lookupTimer = setTimeout(lookupHiredDocument, 400);
+            });
+            documentInput.addEventListener('blur', lookupHiredDocument);
+        }
+
         if (reasonSelect) {
             reasonSelect.addEventListener('change', toggleReplacementFields);
             toggleReplacementFields();
@@ -703,6 +804,8 @@
                 field.addEventListener('input', resetDuplicateHiredConfirmation);
             }
         });
+
+        bindHiredDocumentLookup();
 
         if (clientTypeSelect) {
             clientTypeSelect.addEventListener('change', function () {

@@ -26,6 +26,7 @@
                             'hiredSexOptions' => $hiredSexOptions,
                             'statusLabels' => $statusLabels,
                             'clientSearchUrl' => $clientSearchUrl,
+                            'hiredDocumentLookupUrl' => $hiredDocumentLookupUrl ?? null,
                             'selectedCommercialClient' => $selectedCommercialClient,
                         ])
 

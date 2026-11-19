@@ -70,6 +70,93 @@ class RequisitionModuleTest extends TestCase
             ->assertJsonPath('data.0.name', 'MADEMAX');
     }
 
+    public function test_lookup_hired_document_prefills_desvinculado_without_hire_date(): void
+    {
+        [$manager] = $this->createManagerAndRequisition('REQ-2026-LOOKUP-01');
+        $manager->givePermissionTo('view.board.gestion_humana.requisiciones');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '1094347036',
+            'hired_full_name' => 'BARON RODRIGUEZ DIEGO ARMANDO',
+            'first_surname' => 'BARON',
+            'second_surname' => 'RODRIGUEZ',
+            'first_name' => 'DIEGO',
+            'second_name' => 'ARMANDO',
+            'moved_to_ficha_at' => now(),
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '1094347036',
+            'full_name' => 'BARON RODRIGUEZ DIEGO ARMANDO',
+            'first_surname' => 'BARON',
+            'second_surname' => 'RODRIGUEZ',
+            'first_name' => 'DIEGO',
+            'second_name' => 'ARMANDO',
+            'birth_date' => '1991-04-12',
+            'sex' => 'M',
+            'employment_status' => EmployeeFichaProfile::STATUS_DESVINCULADO,
+            'hire_date' => '2020-02-01',
+            'termination_date' => '2025-06-30',
+        ]);
+
+        $this->actingAs($manager)
+            ->getJson(route('requisitions.hired-document.lookup', [
+                'module' => 'gestion_humana',
+                'cedula' => '1094347036',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('found', true)
+            ->assertJsonPath('hired_birth_date', '1991-04-12')
+            ->assertJsonPath('hired_sex', 'masculino')
+            ->assertJsonPath('hired_first_surname', 'BARON')
+            ->assertJsonPath('hired_second_surname', 'RODRIGUEZ')
+            ->assertJsonPath('hired_first_name', 'DIEGO')
+            ->assertJsonPath('hired_second_name', 'ARMANDO')
+            ->assertJsonMissingPath('hired_hire_date')
+            ->assertJsonMissingPath('hire_date');
+    }
+
+    public function test_lookup_hired_document_ignores_activo_and_requires_gestion(): void
+    {
+        [$manager] = $this->createManagerAndRequisition('REQ-2026-LOOKUP-02');
+        $manager->givePermissionTo('view.board.gestion_humana.requisiciones');
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '100200301',
+            'hired_full_name' => 'Persona Activa Lookup',
+            'moved_to_ficha_at' => now(),
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '100200301',
+            'full_name' => 'Persona Activa Lookup',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'hire_date' => '2024-01-10',
+        ]);
+
+        $this->actingAs($manager)
+            ->getJson(route('requisitions.hired-document.lookup', [
+                'module' => 'gestion_humana',
+                'cedula' => '100200301',
+            ]))
+            ->assertOk()
+            ->assertJsonPath('found', false);
+
+        $outsider = User::factory()->create(['must_change_password' => false]);
+        $outsider->assignRole('usuario');
+
+        $this->actingAs($outsider)
+            ->getJson(route('requisitions.hired-document.lookup', [
+                'module' => 'gestion_humana',
+                'cedula' => '1094347036',
+            ]))
+            ->assertForbidden();
+    }
+
     public function test_gestion_humana_solicitar_tab_uses_format_label(): void
     {
         $user = User::factory()->create([

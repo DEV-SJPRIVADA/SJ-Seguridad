@@ -115,8 +115,13 @@ class EmployeeFichaOnHiredBootstrap
             $profile->sex = $attributes['sex'];
         }
 
+        // Pendiente / reingreso: la fecha de ingreso es la de esta RQ, no la del vínculo anterior.
+        if ($entry->moved_to_ficha_at === null && filled($attributes['hire_date'] ?? null)) {
+            $profile->hire_date = $attributes['hire_date'];
+        }
+
         // Solo completar gaps de prefill RQ (no pisar nómina ya guardada).
-        foreach (['salary', 'hire_date', 'position_code', 'position_name', 'work_city_code', 'work_city_name', 'document_type'] as $field) {
+        foreach (['salary', 'position_code', 'position_name', 'work_city_code', 'work_city_name', 'document_type'] as $field) {
             if (! filled($profile->{$field}) && array_key_exists($field, $attributes) && filled($attributes[$field] ?? null)) {
                 $profile->{$field} = $attributes[$field];
             }

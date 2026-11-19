@@ -125,7 +125,7 @@ Middleware: `password.changed` (mismo grupo `auth`/`active` global de `routes/we
 
 ## Controlador (`App\Http\Controllers\GestionHumana\FichaEmpleadosController`)
 
-- `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `en_ficha`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`, `profile`. En **Pendientes** también acepta `cargo`, `cliente`, `ciudad`, `fecha_desde` y `fecha_hasta` (rango de ingreso vía `hireDateBetween`: perfil o `requisition.hiring_date`) y expone opciones de select desde valores presentes en RQ pendientes.
+- `index(Request $request): View` — filtro `estado=pendientes|en_ficha` (default `en_ficha`), busqueda `q` (cedula, nombre o `requisition.code`), eager load `requisition.position`, `requisition.client`, `requisition.city`, `movedBy`, `profile`. En **Pendientes** también acepta `cargo`, `cliente`, `ciudad`, `fecha_desde` y `fecha_hasta` (rango de ingreso vía `hireDateBetween`: **Pendientes** filtra por `requisition.hiring_date`; **En ficha** por `profile.hire_date`). `hireDate()` en Pendientes prioriza la fecha de la RQ (reingreso). Opciones de select desde valores presentes en RQ pendientes.
 - `datatable` — server-side via `EmployeeFichaEntryDatatableService`; aplica los mismos filtros que `entryListQuery`. Con `estado=en_ficha` y `employment_status=desvinculado` incluye columna **Recontratable** (`Si`/`No`/`—`) desde el ultimo periodo cerrado (`is_rehireable`). En `estado=pendientes`, el icono de carta rápida usa `.cursos-catalogo-page__icon-btn--success` si el vínculo activo tiene `termination_letter_path`.
 - `create(Request $request): View` — **dos modos** segun query `desde` (ver "Flujo Gestionar Empleado" abajo):
   - Sin `desde`: alta manual sin requisición — `$fichaEntry = null`, perfil vacio con `document_type='C'`, `employment_status=activo` y los tres flags `requires_courses`/`requires_acreditacion`/`requires_psicofisicos` en `true` (editables en el formulario).
@@ -443,6 +443,8 @@ Cobertura general:
 Tests de regresion en `tests/Feature/RequisitionModuleTest.php` (marcar Contratado): validacion condicional de `hired_document`/`hired_full_name`, alta/reuso de entrada, duplicado (422 sin confirmar / reasignacion al confirmar), reversion de estado (elimina si pendiente, conserva si ya en ficha).
 
 Reingreso en `EmployeeFichaEmploymentPeriodTest`: No explícito bloquea incluso con confirm; desvinculado sin Seguimientos pide `REHIRE_UNTRACKED` y, al confirmar, `PersonalRequisitionFichaSync` lo devuelve a Pendientes; Sí con seguimiento pasa sin modal.
+
+Pendientes / reingreso (2026-11-19): `hireDate()` y el filtro `hireDateBetween` usan `personal_requisitions.hiring_date` mientras `moved_to_ficha_at` es null. `EmployeeFichaOnHiredBootstrap` pisa `profile.hire_date` con esa fecha. El listado muestra esa fecha (`test_pendientes_datatable_shows_requisition_hiring_date_on_rehire`). En Gestión/editar, `HiredPersonLookupService` precarga nombres/nacimiento/género de un desvinculado (sin fecha de ingreso).
 
 ## Referencias
 

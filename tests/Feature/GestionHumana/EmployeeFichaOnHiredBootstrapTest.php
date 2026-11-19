@@ -210,9 +210,11 @@ class EmployeeFichaOnHiredBootstrapTest extends TestCase
         ], $actorId);
         $periodService->syncProfileAfterTermination($entry);
 
+        $newHireDate = now()->toDateString();
         $newRequisition = $this->createRequisition('REQ-BOOT-REHIRE', [
             'hired_document' => $entry->hired_document,
             'hired_full_name' => $entry->hired_full_name,
+            'hiring_date' => $newHireDate,
         ]);
 
         app(PersonalRequisitionFichaSync::class)->syncOnUpdate(
@@ -230,6 +232,8 @@ class EmployeeFichaOnHiredBootstrapTest extends TestCase
         $this->assertTrue($entry->isRehirePending());
         $this->assertSame(EmployeeFichaProfile::STATUS_ACTIVO, $entry->profile?->employment_status);
         $this->assertSame($newRequisition->id, $entry->personal_requisition_id);
+        $this->assertSame($newHireDate, $entry->profile?->hire_date?->toDateString());
+        $this->assertSame($newHireDate, $entry->hireDate()?->toDateString());
         $this->assertDatabaseHas('employee_curso_pending', [
             'document_number' => $entry->hired_document,
             'status' => EmployeeCursoPending::STATUS_PENDING,

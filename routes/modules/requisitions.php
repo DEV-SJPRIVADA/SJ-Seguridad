@@ -31,6 +31,7 @@ Route::middleware(['auth', 'active', 'password.changed'])->prefix('requisitions/
         Route::get('/gestion', [RequisitionController::class, 'manage'])->name('manage');
         Route::get('/gestion/exportar', [RequisitionController::class, 'exportExcel'])->name('export');
         Route::get('/gestion/imprimir-plantilla', [RequisitionController::class, 'printTemplate'])->name('print-template');
+        Route::get('/gestion/contratados/lookup-cedula', [RequisitionController::class, 'lookupHiredDocument'])->name('hired-document.lookup');
         Route::get('/gestion/{requisition}/editar', [RequisitionController::class, 'edit'])->name('edit');
         Route::get('/gestion/{requisition}/imprimir', [RequisitionController::class, 'print'])->name('print');
         Route::patch('/gestion/{requisition}', [RequisitionController::class, 'update'])->name('update');

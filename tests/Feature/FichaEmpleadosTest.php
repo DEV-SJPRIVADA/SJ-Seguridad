@@ -17,6 +17,7 @@ use App\Models\RequisitionUniform;
 use App\Models\User;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Navigation\NavigationResolver;
+use App\Support\DisplayDate;
 use App\Support\PermissionCatalog;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -323,6 +324,40 @@ class FichaEmpleadosTest extends TestCase
         $payload = $datatable->json();
         $this->assertStringContainsString('Pendiente Filtro', $this->datatableRowTexts($payload));
         $this->assertStringNotContainsString('En Ficha Filtro', $this->datatableRowTexts($payload));
+    }
+
+    public function test_pendientes_datatable_shows_requisition_hiring_date_on_rehire(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->assignRole('usuario');
+        $viewer->givePermissionTo('ficha_empleados.view');
+
+        $requisition = $this->createRequisition('REQ-FICHA-REHIRE-DATE', [
+            'hiring_date' => '2026-11-19',
+        ]);
+
+        $entry = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => $requisition->id,
+            'hired_document' => '1094347036',
+            'hired_full_name' => 'Reingreso Fecha RQ',
+            'moved_to_ficha_at' => null,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $entry->id,
+            'document_number' => '1094347036',
+            'full_name' => 'Reingreso Fecha RQ',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'hire_date' => '2020-02-01',
+        ]);
+
+        $datatable = $this->getFichaEmpleadosDatatable($viewer, ['estado' => 'pendientes']);
+        $datatable->assertOk();
+        $rowText = $this->datatableRowTexts($datatable->json());
+
+        $this->assertStringContainsString('Reingreso Fecha RQ', $rowText);
+        $this->assertStringContainsString(DisplayDate::date('2026-11-19'), $rowText);
+        $this->assertStringNotContainsString(DisplayDate::date('2020-02-01'), $rowText);
     }
 
     public function test_ficha_empleados_index_shows_hire_termination_and_status_columns(): void

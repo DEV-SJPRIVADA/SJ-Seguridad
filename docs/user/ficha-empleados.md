@@ -54,7 +54,7 @@ Aplica al tablero **Ficha empleados**, visible unicamente en el area **Gestion H
 2. Abra la pestaña **Empleados**; por defecto se muestra la pill **Pendientes**.
 3. Use el buscador (cédula, nombre o código de requisición) para filtrar.
 4. En la misma fila puede filtrar por **cargo**, **cliente**, **ciudad** y un **rango de fecha de ingreso** (desde/hasta). Los iconos **Filtrar** y **Limpiar filtros** están entre «Ingreso hasta» y el icono de volver a empleados en ficha. Filtrar aplica la búsqueda y los filtros; limpiar deja solo la vista Pendientes.
-5. Revise las columnas: cédula, nombre, cargo, cliente, ciudad y fecha de ingreso.
+5. Revise las columnas: cédula, nombre, cargo, cliente, ciudad y fecha de ingreso. En **reingreso**, la fecha de ingreso es la de la requisición que acaba de marcar Contratado, no la del vínculo anterior.
 6. Para descargar el listado a Excel, use el icono de Excel en la barra de acciones (respeta búsqueda y filtros activos). El archivo sale con la **plantilla de actualización** (las mismas columnas de "Exportar datos para actualizar", reimportable) y trae lo ya diligenciado en la **carta de contratación** o en **Gestionar Empleado** (dirección, teléfono, correo, salario, cargo, etc.); lo que aún no tenga dato se completa con la requisición (fecha de nacimiento, fecha de ingreso, cargo, salario y sexo) y el resto queda vacío.
 
 ### Gestionar Empleado (mover un pendiente a ficha)
@@ -169,6 +169,7 @@ Alternativa masiva: `php artisan employee-ficha:seed-catalogs --from=docs/Contra
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.51 | 2026-11-19 | Agent | En Pendientes, la fecha de ingreso es la de la requisición Contratado (reingreso), no la del vínculo anterior. |
 | 1.50 | 2026-11-19 | Agent | Al marcar Contratado: desvinculado no recontratable se bloquea; desvinculado sin Seguimientos pide confirmación y, si acepta, vuelve a Pendientes como reingreso. |
 | 1.49 | 2026-11-19 | Agent | Desvinculación con cruce en MT-GH-04 ya **no se bloquea**: muestra las novedades, exige aprobación con motivo y registra en auditoría quién aprobó (antes solo super-admin podía forzar). Masivos conserva el bloqueo por fila. |
 | 1.48 | 2026-11-17 | Agent | Export Pendientes: el Excel ahora sale con la **plantilla de actualización** (reimportable) y trae los datos ya ingresados en la carta de contratación / Gestionar Empleado; completa desde la requisición solo lo faltante (nacimiento, ingreso, cargo, salario, sexo). |

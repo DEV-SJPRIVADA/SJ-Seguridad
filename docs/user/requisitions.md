@@ -398,6 +398,9 @@ permisos para modificar Catálogos
   Seguimientos** (no hay decisión formal de recontratabilidad), aparece
   una alerta informativa; si confirma, el registro vuelve a Pendientes
   como reingreso.
+- Si la cédula ya está en Ficha como **desvinculado** (reingreso), al
+  salir del campo se precargan nombres, fecha de nacimiento y género.
+  La **Fecha de ingreso** no se copia: debe ser la de esta contratación.
 
 28. Exporte a Excel; incluye todos los campos de la requisición
     (incluida compensación) según los filtros activos.
@@ -474,6 +477,7 @@ de Gestión humana (salvo ajustes puntuales por superadministrador).
 | **Versión** | **Fecha de Actualización** | **Razón del Cambio**      |
 |-------------|----------------------------|---------------------------|
 | 01          |                            | Elaboración del Documento |
+| 1.19        | 2026-11-19                 | Contratado: cédula de desvinculado precarga nombres/nacimiento/género (no la fecha de ingreso) |
 | 1.18        | 2026-11-19                 | Contratado: desvinculado no recontratable se bloquea; desvinculado sin Seguimientos pide confirmación para reingresar |
 | 1.17        | 2026-11-17                 | Pestaña de Gestión Humana rotulada MT-GH-06; título de la matriz sobre los filtros |
 | 1.16        | 2026-11-13                 | Impresión FO-GH-22: firmas del pie un poco más grandes |

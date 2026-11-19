@@ -26,6 +26,7 @@ use App\Models\User;
 use App\Services\Access\RequisitionAccessService;
 use App\Services\Notifications\NotificationConfigService;
 use App\Services\Requisitions\CommercialClientBridge;
+use App\Services\Requisitions\HiredPersonLookupService;
 use App\Services\Requisitions\PersonalRequisitionChangeLogger;
 use App\Services\Requisitions\PersonalRequisitionFichaSync;
 use App\Services\Requisitions\PersonalRequisitionFilterBag;
@@ -59,6 +60,7 @@ class RequisitionController extends Controller
         private readonly RequisitionSelectionOfficerAccessService $selectionOfficerAccess,
         private readonly NotificationConfigService $notificationConfig,
         private readonly PersonalRequisitionFichaSync $fichaSync,
+        private readonly HiredPersonLookupService $hiredPersonLookup,
         private readonly RequisitionAuditLogService $auditLogService,
         private readonly RequisitionAdditionalNotificationRecipients $additionalNotificationRecipients,
         private readonly RequisitionPrintSignatureService $printSignatures,
@@ -633,8 +635,18 @@ class RequisitionController extends Controller
             'statusLabels' => PersonalRequisition::statuses(),
             'subTabs' => $this->getRequisitionSubTabs($module, 'gestion'),
             'clientSearchUrl' => route('requisitions.clients.search', ['module' => $module]),
+            'hiredDocumentLookupUrl' => route('requisitions.hired-document.lookup', ['module' => $module]),
             'selectedCommercialClient' => CommercialClientBridge::findForRequisition($requisition),
         ]);
+    }
+
+    public function lookupHiredDocument(Request $request, string $module): JsonResponse
+    {
+        $this->abortIfUnknownModule($module);
+
+        return response()->json(
+            $this->hiredPersonLookup->lookupDesvinculado((string) $request->query('cedula', ''))
+        );
     }
 
     public function update(UpdatePersonalRequisitionRequest $request, string $module, PersonalRequisition $requisition): RedirectResponse

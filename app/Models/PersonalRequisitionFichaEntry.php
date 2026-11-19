@@ -130,11 +130,13 @@ class PersonalRequisitionFichaEntry extends Model
     public function scopeHireDateBetween(Builder $query, string $from, string $to): Builder
     {
         return $query->where(function (Builder $inner) use ($from, $to): void {
-            $inner->whereHas('profile', fn (Builder $profile) => $profile->whereBetween('hire_date', [$from, $to]))
-                ->orWhere(function (Builder $withoutProfile) use ($from, $to): void {
-                    $withoutProfile->whereDoesntHave('profile')
-                        ->whereHas('requisition', fn (Builder $req) => $req->whereBetween('hiring_date', [$from, $to]));
-                });
+            $inner->where(function (Builder $pending) use ($from, $to): void {
+                $pending->whereNull('moved_to_ficha_at')
+                    ->whereHas('requisition', fn (Builder $req) => $req->whereBetween('hiring_date', [$from, $to]));
+            })->orWhere(function (Builder $inFicha) use ($from, $to): void {
+                $inFicha->whereNotNull('moved_to_ficha_at')
+                    ->whereHas('profile', fn (Builder $profile) => $profile->whereBetween('hire_date', [$from, $to]));
+            });
         });
     }
 
@@ -187,6 +189,11 @@ class PersonalRequisitionFichaEntry extends Model
 
     public function hireDate(): ?Carbon
     {
+        // Pendientes: la fecha de ingreso es la de la RQ que acaba de contratar (reingreso).
+        if ($this->moved_to_ficha_at === null) {
+            return $this->requisition?->hiring_date ?? $this->profile?->hire_date;
+        }
+
         return $this->profile?->hire_date ?? $this->requisition?->hiring_date;
     }
 
