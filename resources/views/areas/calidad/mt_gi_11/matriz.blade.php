@@ -130,11 +130,14 @@
                         </div>
                     </div>
 
-                    <div class="data-table-wrap data-table-wrap--booting">
+                    <div class="data-table-wrap req-manage-shell__table data-table-wrap--booting">
+                        @include('partials.data-table-loader')
                         <table
                             class="data-table js-mt-gi-11-datatable"
                             data-dt-url="{{ $datatableUrl }}"
                             data-dt-can-edit="{{ $canEdit ? '1' : '0' }}"
+                            style="width:100%"
+                            aria-label="Matriz MT-GI-11"
                         >
                             <thead>
                                 <tr>
@@ -153,8 +156,8 @@
                                     <th>Versión actualizada</th>
                                     <th>Estado</th>
                                     <th>Usuario que solicitó</th>
-                                    <th>Adj.</th>
-                                    <th></th>
+                                    <th>Adjuntos</th>
+                                    <th>Acciones</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -218,13 +221,39 @@
                                     Descargar plantilla
                                 </a>
 
-                                <form method="POST" action="{{ $importUrl }}" enctype="multipart/form-data" class="ficha-empleados-masivos-modal__import-form">
+                                <form method="POST" action="{{ $importUrl }}" enctype="multipart/form-data" class="ficha-empleados-masivos-modal__import-form" data-mt-gi-11-import-form>
                                     @csrf
-                                    <input type="file" name="import_file" accept=".xlsx,.xls,.csv" class="ficha-empleados-masivos-modal__file-input" required>
-                                    <button type="submit" class="btn btn--primary btn--sm ficha-empleados-masivos-modal__action">
-                                        <x-lucide-upload width="15" height="15" aria-hidden="true" />
-                                        Importar archivo
-                                    </button>
+                                    {{-- Input oculto: se dispara desde la etiqueta "Elegir archivo". --}}
+                                    <input
+                                        type="file"
+                                        id="mt-gi-11-import-file"
+                                        name="import_file"
+                                        accept=".xlsx,.xls,.csv"
+                                        class="ficha-empleados-masivos-modal__file-input"
+                                        data-mt-gi-11-import-file
+                                        required
+                                        hidden
+                                    >
+                                    <span class="ficha-empleados-masivos-modal__file-name" data-mt-gi-11-import-name>Sin archivo seleccionado</span>
+                                    <div class="ficha-empleados-masivos-modal__import-actions">
+                                        <label
+                                            for="mt-gi-11-import-file"
+                                            class="btn btn--secondary btn--sm ficha-empleados-masivos-modal__action"
+                                            data-mt-gi-11-import-choose
+                                        >
+                                            <x-lucide-file-up width="15" height="15" aria-hidden="true" />
+                                            Elegir archivo
+                                        </label>
+                                        <button
+                                            type="submit"
+                                            class="btn btn--primary btn--sm ficha-empleados-masivos-modal__action ficha-empleados-masivos-modal__action--primary"
+                                            data-mt-gi-11-import-submit
+                                            disabled
+                                        >
+                                            <x-lucide-upload width="15" height="15" aria-hidden="true" />
+                                            Importar
+                                        </button>
+                                    </div>
                                 </form>
                             </div>
                         </section>
@@ -268,13 +297,36 @@
                 return;
             }
 
+            // Quita el estado de carga del wrapper. Se llama al inicializar, al
+            // recibir el XHR y como red de seguridad: la tabla nunca queda oculta.
+            const $wrap = $table.closest('.data-table-wrap');
+            const revealTable = function () {
+                $wrap.removeClass('data-table-wrap--booting');
+                $wrap.find('.data-table-wrap__loader').attr('aria-busy', 'false');
+            };
+
             const api = $table.DataTable({
                 processing: true,
                 serverSide: true,
                 ajax: { url: $table.data('dt-url') },
+                // Traducción embebida: evita la descarga del CDN en cada carga
+                // (era la causa de la demora en mostrar la tabla).
                 language: {
-                    url: 'https://cdn.datatables.net/plug-ins/1.13.7/i18n/es-ES.json',
                     emptyTable: 'No hay solicitudes para este filtro.',
+                    info: 'Mostrando _START_ a _END_ de _TOTAL_ registros',
+                    infoEmpty: 'Mostrando 0 registros',
+                    infoFiltered: '(filtrado de _MAX_ registros en total)',
+                    lengthMenu: 'Mostrar _MENU_ registros',
+                    loadingRecords: 'Cargando…',
+                    processing: 'Procesando…',
+                    search: 'Buscar:',
+                    zeroRecords: 'No se encontraron resultados',
+                    paginate: {
+                        first: 'Primero',
+                        last: 'Último',
+                        next: 'Siguiente',
+                        previous: 'Anterior',
+                    },
                 },
                 dom: '<"req-manage-dt-top"lf><"req-manage-table-scroll"t><"req-manage-dt-bottom"ip>',
                 lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
@@ -284,14 +336,20 @@
                 columnDefs: [{ targets: [16], orderable: false, searchable: false }],
             });
 
+            // La estructura ya está montada: se libera el wrapper sin esperar al XHR.
+            revealTable();
+
             // El contador usa el total filtrado del servidor, no las filas visibles.
             api.on('xhr.dt', function (_event, _settings, json) {
-                $table.closest('.data-table-wrap').removeClass('data-table-wrap--booting');
+                revealTable();
                 const el = document.getElementById('mt-gi-11-count');
                 if (el && json && typeof json.recordsFiltered !== 'undefined') {
                     el.textContent = json.recordsFiltered;
                 }
             });
+
+            // Red de seguridad: si el XHR no responde, la tabla se muestra igual.
+            window.setTimeout(revealTable, 4000);
 
             // DataTables inyecta HTML: los eventos se delegan.
             $table.on('click', '.js-mt-gi-11-delete', function () {
@@ -302,6 +360,33 @@
                     },
                 }));
             });
+        });
+
+        // Import masivo: el input real está oculto y se dispara desde la etiqueta.
+        // Al elegir archivo se muestra el nombre y se habilita el botón de importar.
+        document.addEventListener('change', function (event) {
+            const input = event.target;
+
+            if (! input.matches('[data-mt-gi-11-import-file]')) {
+                return;
+            }
+
+            const form = input.closest('[data-mt-gi-11-import-form]');
+            if (! form) {
+                return;
+            }
+
+            const nameEl = form.querySelector('[data-mt-gi-11-import-name]');
+            const submitEl = form.querySelector('[data-mt-gi-11-import-submit]');
+            const file = input.files && input.files[0];
+
+            if (nameEl) {
+                nameEl.textContent = file ? file.name : 'Sin archivo seleccionado';
+            }
+
+            if (submitEl) {
+                submitEl.disabled = ! file;
+            }
         });
     </script>
 </x-app-layout>

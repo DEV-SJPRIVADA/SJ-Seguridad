@@ -84,7 +84,16 @@
     gap: 1.25rem;
 }
 
-/* Campos que ocupan el ancho completo de la rejilla de 2 columnas. */
+/* Nota bajo un valor de metadatos (ej. fecha asignada automáticamente). */
+.req-form__meta-hint {
+    display: block;
+    margin-top: 0.1rem;
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #64748b;
+}
+
+/* Campo que ocupa el ancho completo de la rejilla de 2 columnas. */
 .mt-gi-11-form-page__field--wide,
 .mt-gi-11-form-page__field--full {
     grid-column: 1 / -1;
@@ -98,6 +107,7 @@
 
 /* Zona de carga de adjuntos: label clicable + input oculto. */
 .mt-gi-11-form-page__upload {
+    position: relative;
     display: flex;
     flex-direction: column;
     gap: 0.45rem;
@@ -107,11 +117,18 @@
     background: #fff;
 }
 
+/* Fila: botón estilizado + nombre de los archivos elegidos. */
+.mt-gi-11-form-page__upload-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+}
+
 .mt-gi-11-form-page__upload-label {
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    align-self: flex-start;
     padding: 0.5rem 0.9rem;
     border: 1px solid var(--color-border, #e2e8f0);
     border-radius: 0.55rem;
@@ -129,9 +146,33 @@
     border-color: var(--brand-blue, #0e4a6e);
 }
 
+/* El input nativo no se muestra: el control visible es la etiqueta. */
 .mt-gi-11-form-page__upload-input {
-    font-size: 0.82rem;
-    color: #475569;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Accesibilidad: si el input recibe foco por teclado, se resalta la etiqueta. */
+.mt-gi-11-form-page__upload-input:focus-visible + .mt-gi-11-form-page__upload-row .mt-gi-11-form-page__upload-label {
+    outline: 2px solid var(--brand-blue, #0e4a6e);
+    outline-offset: 2px;
+}
+
+.mt-gi-11-form-page__upload-file {
+    min-width: 0;
+    font-size: 0.8rem;
+    color: #64748b;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .mt-gi-11-form-page__upload-hint {
@@ -196,6 +237,68 @@
     margin: 0;
     font-size: 0.78rem;
     color: #64748b;
+}
+
+/* ---------------------------------------------------------------------------
+   Listado: chrome del DataTable
+   DataTables usa float en length/filter; sin flex el contenedor colapsa y el
+   borde inferior atraviesa el buscador.
+--------------------------------------------------------------------------- */
+
+.mt-gi-11-matriz-page .req-manage-dt-top {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.15rem 0 0.55rem;
+    margin-bottom: 0.1rem;
+    background: #fff;
+}
+
+.mt-gi-11-matriz-page .req-manage-dt-top .dataTables_length,
+.mt-gi-11-matriz-page .req-manage-dt-top .dataTables_filter {
+    float: none !important;
+    margin: 0 !important;
+    text-align: left !important;
+}
+
+.mt-gi-11-matriz-page .req-manage-dt-top .dataTables_filter label,
+.mt-gi-11-matriz-page .req-manage-dt-top .dataTables_length label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0;
+    white-space: nowrap;
+}
+
+.mt-gi-11-matriz-page .req-manage-dt-top .dataTables_filter input {
+    margin-left: 0 !important;
+    min-width: 13rem !important;
+    max-width: 18rem;
+}
+
+.mt-gi-11-matriz-page .req-manage-dt-bottom {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding-top: 0.55rem;
+}
+
+.mt-gi-11-matriz-page .req-manage-dt-bottom .dataTables_info,
+.mt-gi-11-matriz-page .req-manage-dt-bottom .dataTables_paginate {
+    float: none !important;
+    margin: 0 !important;
+    padding-top: 0 !important;
+}
+
+/* La tabla no debe heredar el min-height del estado de carga una vez visible. */
+.mt-gi-11-matriz-page .data-table-wrap:not(.data-table-wrap--booting) {
+    min-height: 0;
 }
 
 /* ---------------------------------------------------------------------------

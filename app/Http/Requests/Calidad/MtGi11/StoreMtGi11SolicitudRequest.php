@@ -24,6 +24,17 @@ class StoreMtGi11SolicitudRequest extends FormRequest
     }
 
     /**
+     * La fecha de solicitud no se captura en el formulario: el sistema usa la
+     * fecha del día en que se registra. Se inyecta aquí para que la validación
+     * de `fecha_estandarizacion` siga comparando contra una fecha conocida y
+     * para que un valor enviado por el cliente nunca sobrescriba la regla.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge(['fecha_solicitud' => now()->toDateString()]);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function rules(): array

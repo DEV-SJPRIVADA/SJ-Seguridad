@@ -21,7 +21,6 @@ Está en **Calidad → MT-GI-11**, con tres pestañas:
 1. Entra a **MT-GI-11 → Matriz**.
 2. Pulsa el botón **+** (arriba a la derecha del listado).
 3. Completa:
-   - **Fecha de solicitud**: no puede ser futura.
    - **Consecutivo**: el número de la solicitud (ej. `MT-GI-11-001`). Puedes repetirlo si después registras otra versión del mismo documento.
    - **Proceso** y **Tipo de documento**.
    - **Nombre del documento**.
@@ -35,6 +34,8 @@ Está en **Calidad → MT-GI-11**, con tres pestañas:
 5. Pulsa **Guardar solicitud**.
 
 > Todos los textos se guardan en **MAYÚSCULAS** automáticamente; escríbelos como quieras.
+
+> La **fecha de solicitud no se pide**: el sistema la pone con el día en que registras la solicitud. Aparece como dato informativo en la parte superior del formulario.
 
 ## Consultar y editar
 
@@ -98,6 +99,9 @@ Un valor **inactivo** deja de aparecer en los formularios, pero no se borra. Un 
 
 **¿Por qué puedo repetir el consecutivo?**
 Porque un mismo documento puede tener varias solicitudes (versiones). Lo que identifica cada fila es el **ID**, no el consecutivo.
+
+**¿Por qué no puedo cambiar la fecha de solicitud?**
+Porque el sistema la registra automáticamente el día en que haces la solicitud y no debe alterarse después. Al editar se conserva la fecha original.
 
 **¿Puedo borrar una solicitud?**
 Sí, con el permiso de edición y si es tuya. Se borran también sus archivos. Calidad puede borrar cualquiera.

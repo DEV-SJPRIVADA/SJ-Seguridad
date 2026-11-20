@@ -62,7 +62,7 @@ final class MtGi11ImportService
             throw new \RuntimeException('El archivo no tiene encabezados válidos en la fila 1.');
         }
 
-        $required = ['fecha_solicitud', 'proceso', 'consecutivo', 'tipo_documento', 'nombre_documento', 'tipo_solicitud', 'justificacion', 'responsable_proceso', 'cargo_responsable', 'estado'];
+        $required = ['proceso', 'consecutivo', 'tipo_documento', 'nombre_documento', 'tipo_solicitud', 'justificacion', 'responsable_proceso', 'cargo_responsable', 'estado'];
 
         foreach ($required as $key) {
             if (! array_key_exists($key, $headers)) {
@@ -212,10 +212,9 @@ final class MtGi11ImportService
      */
     private function importRow(array $row, array $headers, array $lookups, ?int $estadoDefault, int $userId): void
     {
-        $fechaSolicitud = $this->parseDate($row['fecha_solicitud'] ?? '');
-        if ($fechaSolicitud === null) {
-            throw new \InvalidArgumentException('Fecha de solicitud inválida o vacía.');
-        }
+        // La fecha de solicitud es automática (hoy). El archivo puede traerla
+        // para cargas históricas; si viene vacía se usa la fecha del día.
+        $fechaSolicitud = $this->parseDate($row['fecha_solicitud'] ?? '') ?? now()->toDateString();
 
         $consecutivo = trim((string) ($row['consecutivo'] ?? ''));
         if ($consecutivo === '') {

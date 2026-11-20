@@ -104,7 +104,7 @@
                         <p class="mt-gi-11-form-page__notice-title">Copia de {{ $sourceSolicitud->consecutivo }}</p>
                         <p class="mt-gi-11-form-page__notice-text">
                             Ya se cargaron los datos del documento con el mismo consecutivo y la versión actualizada en {{ $values('version_actualizada') }}.
-                            La justificación y los adjuntos de esta versión los escribe usted.
+                            La fecha de solicitud se asigna con el día de hoy; la justificación y los adjuntos los escribe usted.
                         </p>
                     </div>
                 </div>
@@ -124,11 +124,20 @@
                             @method('PATCH')
                         @endif
 
-                        {{-- Metadatos del formato: contexto rápido sin ocupar campos --}}
+                        {{-- Metadatos del formato: la fecha de solicitud es automática --}}
                         <div class="req-form__meta req-form__meta--edit">
                             <div class="req-form__meta-item">
                                 <span class="req-form__meta-label">Formato</span>
                                 <span class="req-form__meta-value">MT-GI-11</span>
+                            </div>
+                            <div class="req-form__meta-item">
+                                <span class="req-form__meta-label">Fecha de solicitud</span>
+                                <span class="req-form__meta-value">
+                                    {{ $solicitud?->fecha_solicitud ? DisplayDate::date($solicitud->fecha_solicitud) : DisplayDate::date(now()) }}
+                                    @if ($isNew)
+                                        <span class="req-form__meta-hint">Se asigna automáticamente</span>
+                                    @endif
+                                </span>
                             </div>
                             <div class="req-form__meta-item">
                                 <span class="req-form__meta-label">Consecutivo</span>
@@ -233,18 +242,6 @@
                                 </header>
 
                                 <div class="form-grid form-grid--two">
-                                    <div class="form-field">
-                                        <x-input-label for="fecha_solicitud" value="Fecha de solicitud *" />
-                                        <input
-                                            id="fecha_solicitud"
-                                            name="fecha_solicitud"
-                                            type="date"
-                                            class="form-input"
-                                            value="{{ old('fecha_solicitud', $values('fecha_solicitud')) }}"
-                                            max="{{ now()->toDateString() }}"
-                                            required
-                                        >
-                                    </div>
                                     <div class="form-field">
                                         <x-input-label for="consecutivo" value="Consecutivo de solicitud *" />
                                         <input
@@ -403,18 +400,25 @@
                                     </header>
 
                                     <div class="mt-gi-11-form-page__upload">
-                                        <label class="mt-gi-11-form-page__upload-label" for="attachments">
-                                            <x-lucide-paperclip width="18" height="18" aria-hidden="true" />
-                                            <span>Seleccionar archivos</span>
-                                        </label>
+                                        {{-- Input nativo oculto: se dispara desde la etiqueta estilizada. --}}
                                         <input
                                             id="attachments"
                                             name="attachments[]"
                                             type="file"
                                             class="mt-gi-11-form-page__upload-input"
                                             accept=".pdf,.jpg,.jpeg,.png"
+                                            data-mt-gi-11-upload
                                             multiple
                                         >
+                                        <div class="mt-gi-11-form-page__upload-row">
+                                            <label class="mt-gi-11-form-page__upload-label" for="attachments">
+                                                <x-lucide-paperclip width="18" height="18" aria-hidden="true" />
+                                                <span>Seleccionar archivos</span>
+                                            </label>
+                                            <span class="mt-gi-11-form-page__upload-file" data-mt-gi-11-upload-name>
+                                                Sin archivos seleccionados
+                                            </span>
+                                        </div>
                                         <p class="mt-gi-11-form-page__upload-hint">
                                             Puede seleccionar varios a la vez. El límite es por envío, no por solicitud.
                                         </p>
@@ -523,6 +527,7 @@
                         icon="list-checks"
                         :items="[
                             'El proceso y el tipo de documento salen de Catálogos.',
+                            'La fecha de solicitud se asigna automáticamente con el día de hoy.',
                             'El consecutivo puede repetirse: identifica la versión, no la fila.',
                             'La justificación es obligatoria y admite hasta 2000 caracteres.',
                             'La fecha de estandarización no puede ser anterior a la solicitud.',
@@ -564,4 +569,34 @@
             </div>
         </div>
     </div>
+
+    @if ($canEdit)
+        <script>
+            // Muestra el nombre de los archivos elegidos junto al botón estilizado.
+            document.addEventListener('change', function (event) {
+                const input = event.target;
+
+                if (! input.matches('[data-mt-gi-11-upload]')) {
+                    return;
+                }
+
+                const labelEl = document.querySelector('[data-mt-gi-11-upload-name]');
+                if (! labelEl) {
+                    return;
+                }
+
+                const files = Array.from(input.files || []);
+                const total = files.length;
+
+                if (total === 0) {
+                    labelEl.textContent = 'Sin archivos seleccionados';
+
+                    return;
+                }
+
+                const names = files.map((file) => file.name).join(', ');
+                labelEl.textContent = total === 1 ? names : `${total} archivos: ${names}`;
+            });
+        </script>
+    @endif
 </x-app-layout>

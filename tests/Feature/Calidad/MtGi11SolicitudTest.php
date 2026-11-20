@@ -136,12 +136,55 @@ class MtGi11SolicitudTest extends TestCase
 
     public function test_fecha_estandarizacion_cannot_precede_fecha_solicitud(): void
     {
+        // La fecha de solicitud es automática (hoy); una estandarización pasada
+        // debe fallar aunque el cliente intente enviar otra fecha de solicitud.
         $this->actingAs($this->editor)
             ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload([
                 'fecha_solicitud' => '2026-11-10',
                 'fecha_estandarizacion' => '2026-11-01',
             ]))
             ->assertSessionHasErrors('fecha_estandarizacion');
+    }
+
+    public function test_fecha_solicitud_is_assigned_automatically_on_create(): void
+    {
+        // Aunque el cliente no envíe la fecha (o envíe otra), se guarda la de hoy.
+        $payload = $this->payload();
+        unset($payload['fecha_solicitud']);
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $payload)
+            ->assertRedirect();
+
+        $this->assertSame(
+            now()->toDateString(),
+            MtGi11Solicitud::query()->firstOrFail()->fecha_solicitud->toDateString(),
+        );
+    }
+
+    public function test_fecha_solicitud_sent_by_client_is_ignored(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload([
+                'fecha_solicitud' => '2020-01-01',
+            ]))
+            ->assertRedirect();
+
+        $this->assertSame(
+            now()->toDateString(),
+            MtGi11Solicitud::query()->firstOrFail()->fecha_solicitud->toDateString(),
+        );
+    }
+
+    public function test_create_form_does_not_ask_for_fecha_solicitud(): void
+    {
+        $response = $this->actingAs($this->editor)->get(route('calidad.mt-gi-11.matriz.create'));
+
+        $response->assertOk();
+        // Ya no hay input de fecha de solicitud; solo se informa en los metadatos.
+        $response->assertDontSee('name="fecha_solicitud"', false);
+        $response->assertSee('Fecha de solicitud');
+        $response->assertSee('Se asigna automáticamente');
     }
 
     public function test_update_changes_the_record(): void
@@ -158,6 +201,27 @@ class MtGi11SolicitudTest extends TestCase
             ->assertRedirect(route('calidad.mt-gi-11.matriz.show', $solicitud));
 
         $this->assertSame('DOCUMENTO ACTUALIZADO', $solicitud->refresh()->nombre_documento);
+    }
+
+    public function test_update_keeps_the_original_fecha_solicitud(): void
+    {
+        // Registro creado hace días: la edición no debe mover su fecha de solicitud.
+        $solicitud = MtGi11Solicitud::query()->create($this->payload([
+            'fecha_solicitud' => '2026-03-05',
+        ]) + [
+            'created_by' => $this->editor->id,
+            'justificacion' => 'TEXTO',
+        ]);
+
+        $this->actingAs($this->editor)
+            ->patch(route('calidad.mt-gi-11.matriz.update', $solicitud), $this->payload([
+                'fecha_solicitud' => '2026-11-20',
+                'nombre_documento' => 'cambio posterior',
+            ]))
+            ->assertRedirect();
+
+        $this->assertSame('2026-03-05', $solicitud->refresh()->fecha_solicitud->toDateString());
+        $this->assertSame('CAMBIO POSTERIOR', $solicitud->nombre_documento);
     }
 
     public function test_delete_removes_record_and_soft_deletes(): void

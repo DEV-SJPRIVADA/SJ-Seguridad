@@ -56,7 +56,7 @@ El alcance aplica a listado, dashboard, export, adjuntos y validación del formu
 
 | Campo | Tipo | Obligatorio |
 | --- | --- | --- |
-| `fecha_solicitud` | date | Sí (no futura) |
+| `fecha_solicitud` | date | **Automática**: la asigna el sistema con el día del registro |
 | `created_by` | fk users | Sí (autor) |
 | `proceso_id` | fk catálogo | Sí |
 | `consecutivo` | string(60) | Sí — **no único** |
@@ -76,6 +76,19 @@ El alcance aplica a listado, dashboard, export, adjuntos y validación del formu
 ### Consecutivo e identificador
 
 El `consecutivo` **no es único** por decisión de negocio: el mismo documento puede tener varias solicitudes/versiones. Toda operación (consultar, editar, eliminar, adjuntos) usa el **`id`**. El filtro por consecutivo es coincidencia parcial (`LIKE`). El export incluye una columna `ID` como primera columna.
+
+## Fecha de solicitud
+
+La fecha **no se captura** en el formulario: la asigna el sistema.
+
+| Momento | Valor |
+| --- | --- |
+| Alta | `now()->toDateString()` al registrar |
+| Edición | Se **conserva** la fecha original del registro (no se mueve) |
+| Nueva versión | Fecha del día en que se registra la versión |
+| Import | La fecha del archivo si viene; si está vacía, la del día |
+
+Se inyecta en `prepareForValidation()` del Form Request, de modo que un valor enviado por el cliente **no** puede sobrescribirla. La regla `fecha_estandarizacion >= fecha_solicitud` sigue comparando contra esa fecha. En el formulario se muestra como dato informativo en la barra de metadatos («Se asigna automáticamente»).
 
 ## «Nueva versión»
 
@@ -165,3 +178,7 @@ php artisan test --compact --filter=MtGi11
 | 2026-11-20 | Creación del tablero MT-GI-11 con Dashboard, Matriz, Catálogos, adjuntos, nueva versión, import/export y auditoría (FEAT-053). |
 | 2026-11-20 | Corrección: agregaciones del dashboard sobre query limpia para cumplir `only_full_group_by` de MySQL; test de regresión del SQL. |
 | 2026-11-20 | Rediseño del formulario de alta/edición con el shell canónico `req-form-layout`: 5 secciones numeradas, metadatos, guía lateral (`x-form-aside-guide`), zona de adjuntos y barra de acciones. |
+| 2026-11-20 | Ajuste del listado: chrome del DataTable con flex (el buscador ya no se solapa con el borde), traducción embebida sin CDN y liberación inmediata del estado de carga para que la tabla aparezca sin demora. |
+| 2026-11-20 | Corrección del modal Masivos: el input de archivo quedaba oculto sin control visible. Se agregó la etiqueta «Elegir archivo», el nombre del archivo seleccionado y el botón de importar habilitado solo con archivo. |
+| 2026-11-20 | La fecha de solicitud deja de capturarse: el sistema la asigna con el día del registro en el alta y la conserva en la edición. El import la toma del archivo o usa la fecha del día si viene vacía. |
+| 2026-11-20 | Zona de adjuntos del formulario: el input nativo de archivo queda oculto y el único control visible es la etiqueta estilizada, con el nombre de los archivos elegidos. |

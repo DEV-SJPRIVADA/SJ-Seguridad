@@ -25,7 +25,7 @@ class MtGi11ImportTemplateExport
     public static function columns(): array
     {
         return [
-            'fecha_solicitud' => 'Fecha de solicitud (AAAA-MM-DD)',
+            'fecha_solicitud' => 'Fecha de solicitud (AAAA-MM-DD, opcional: vacío = hoy)',
             'proceso' => 'Proceso',
             'consecutivo' => 'Consecutivo de solicitud',
             'tipo_documento' => 'Tipo de documento',
