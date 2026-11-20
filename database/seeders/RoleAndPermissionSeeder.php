@@ -42,6 +42,11 @@ class RoleAndPermissionSeeder extends Seeder
                 'planeacion.captura.edit',
                 'planeacion.estrategia.view',
                 'planeacion.estrategia.edit',
+                'view.board.calidad.mt_gi_11',
+                'mt_gi_11.matriz.view',
+                'mt_gi_11.matriz.edit',
+                'mt_gi_11.view_all',
+                'mt_gi_11.parameters.edit',
                 'matrices.manage',
             ],
             'director' => [

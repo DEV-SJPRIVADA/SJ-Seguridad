@@ -63,6 +63,10 @@ return [
         'planeacion.captura.edit' => 'Planeación: Capturar',
         'planeacion.estrategia.view' => 'Planeación: Ver estrategia',
         'planeacion.estrategia.edit' => 'Planeación: Editar estrategia',
+        'mt_gi_11.matriz.view' => 'MT-GI-11: Ver matriz',
+        'mt_gi_11.matriz.edit' => 'MT-GI-11: Editar matriz',
+        'mt_gi_11.view_all' => 'MT-GI-11: Ver todas las solicitudes (Calidad)',
+        'mt_gi_11.parameters.edit' => 'MT-GI-11: Catálogos',
         'acreditaciones.view' => 'Acreditaciones: Ver shell, Acreditados, export y placeholders',
         'acreditaciones.edit' => 'Acreditaciones: CRUD Acreditados, import y Catálogo',
         'reportes_novedades.vacaciones.view' => 'Vacaciones: Ver',
@@ -181,6 +185,10 @@ return [
         'planeacion.captura.edit' => 'Permite guardar o reemplazar la captura propia de un indicador asignado.',
         'planeacion.estrategia.view' => 'Permite ver el DOFA, los objetivos y las estrategias de Planeación estratégica.',
         'planeacion.estrategia.edit' => 'Permite crear, editar y archivar DOFA, objetivos y estrategias. Incluye la consulta de la pestaña.',
+        'mt_gi_11.matriz.view' => 'Permite ver el dashboard y la matriz MT-GI-11, filtrar y exportar a Excel. Sin edición solo ve sus propias solicitudes.',
+        'mt_gi_11.matriz.edit' => 'Permite crear, editar y eliminar solicitudes MT-GI-11 y administrar sus adjuntos. Incluye la consulta de la matriz.',
+        'mt_gi_11.view_all' => 'Amplía el alcance de MT-GI-11 a todas las solicitudes del tablero, no solo las propias. Uso previsto: Calidad y administración.',
+        'mt_gi_11.parameters.edit' => 'Permite administrar los catálogos de MT-GI-11: procesos, tipos de documento, tipos de solicitud, cargos y estados.',
         'acreditaciones.view' => 'Permite ver Acreditados y exportar la información, además de mostrar los módulos del área.',
         'acreditaciones.edit' => 'Permite crear, editar y eliminar acreditados, importar información y administrar el catálogo.',
 
@@ -277,6 +285,7 @@ return [
         'cartas_notificacion' => 'Cartas Notificación',
         'inasistencias' => 'Inasistencias',
         'documentos' => 'Biblioteca Calidad',
+        'mt_gi_11' => 'MT-GI-11',
         'matrices' => 'Matrices',
     ],
 
@@ -380,6 +389,10 @@ return [
             'home' => 'calidad',
             'base_area_tab' => false,
         ],
+        'mt_gi_11' => [
+            'home' => 'calidad',
+            'base_area_tab' => false,
+        ],
         'indicadores' => [
             'home' => 'operaciones',
             'base_area_tab' => false,
@@ -450,6 +463,12 @@ return [
         'indicadores' => 'Indicadores',
         'captura' => 'Mis indicadores',
         'estrategia' => 'Estrategia',
+    ],
+
+    'mt_gi_11_tabs' => [
+        'dashboard' => 'Dashboard',
+        'matriz' => 'Matriz',
+        'catalogos' => 'Catálogos',
     ],
 
     'cliente_interno_tabs' => [
@@ -852,6 +871,7 @@ return [
                             'view.board.calidad.dashboard',
                             'view.board.calidad.servicio_cliente',
                             'view.board.calidad.planeacion_estrategica',
+                            'view.board.calidad.mt_gi_11',
                         ],
                     ],
                     'servicio_cliente' => [
@@ -872,6 +892,15 @@ return [
                             'planeacion.captura.edit',
                             'planeacion.estrategia.view',
                             'planeacion.estrategia.edit',
+                        ],
+                    ],
+                    'mt_gi_11' => [
+                        'label' => 'MT-GI-11 (funciones)',
+                        'permissions' => [
+                            'mt_gi_11.matriz.view',
+                            'mt_gi_11.matriz.edit',
+                            'mt_gi_11.view_all',
+                            'mt_gi_11.parameters.edit',
                         ],
                     ],
                     'area' => [

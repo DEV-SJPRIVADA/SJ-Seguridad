@@ -43,6 +43,10 @@ return [
             'label' => 'Servicio al cliente',
             'area' => 'calidad',
         ],
+        'mt_gi_11' => [
+            'label' => 'MT-GI-11 Matrices',
+            'area' => 'calidad',
+        ],
         'planeacion_estrategica' => [
             'label' => 'Planeación estratégica',
             'area' => 'calidad',

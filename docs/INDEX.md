@@ -61,6 +61,7 @@ Guias operativas en [`docs/user/`](c:/laragon/www/SJSEGURIDAD/docs/user/). Matri
 | Integraciones (LegalSuite) | [`modules/integraciones.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/integraciones.md) | [`user/integraciones.md`](c:/laragon/www/SJSEGURIDAD/docs/user/integraciones.md) |
 | Matriz comercial | [`modules/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matriz-clientes.md) | [`user/matriz-clientes.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matriz-clientes.md) |
 | Matrices dinámicas | [`modules/matrices.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matrices.md) | [`user/matrices.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matrices.md) |
+| MT-GI-11 Matrices (Calidad) | [`modules/matrices-mt-gi-11.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/matrices-mt-gi-11.md) | [`user/matrices-mt-gi-11.md`](c:/laragon/www/SJSEGURIDAD/docs/user/matrices-mt-gi-11.md) |
 | Branding | [`modules/branding.md`](c:/laragon/www/SJSEGURIDAD/docs/modules/branding.md) | — |
 
 ## Informes

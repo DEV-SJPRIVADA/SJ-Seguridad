@@ -1,0 +1,275 @@
+/* 123 Calidad / MT-GI-11 — formulario, listado y dashboard */
+
+/* ---------------------------------------------------------------------------
+   Formulario (alta / edición / nueva versión)
+   Usa el shell canónico req-form-layout + req-form__section; aquí solo van
+   los detalles propios de MT-GI-11.
+--------------------------------------------------------------------------- */
+
+.mt-gi-11-form-page__head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.15rem;
+}
+
+.mt-gi-11-form-page__heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    min-width: 0;
+}
+
+.mt-gi-11-form-page__heading .page-title {
+    margin-bottom: 0.15rem;
+    word-break: break-word;
+}
+
+.mt-gi-11-form-page__pills {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+}
+
+/* Aviso de «nueva versión»: explica qué se copió y qué no. */
+.mt-gi-11-form-page__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 1.15rem;
+    padding: 0.85rem 1rem;
+    border: 1px solid #bfdbfe;
+    border-radius: var(--radius-lg, 0.75rem);
+    background: #eff6ff;
+}
+
+.mt-gi-11-form-page__notice-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: #dbeafe;
+    color: #0369a1;
+}
+
+.mt-gi-11-form-page__notice-title {
+    margin: 0;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.mt-gi-11-form-page__notice-text {
+    margin: 0.15rem 0 0;
+    font-size: 0.84rem;
+    line-height: 1.45;
+    color: #475569;
+}
+
+/* Fieldset del formulario: agrupa campos y permite el estado solo lectura.
+   No usa display:contents para no romper la rejilla de req-form. */
+.req-form__fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+/* Campos que ocupan el ancho completo de la rejilla de 2 columnas. */
+.mt-gi-11-form-page__field--wide,
+.mt-gi-11-form-page__field--full {
+    grid-column: 1 / -1;
+}
+
+.mt-gi-11-form-page__textarea {
+    resize: vertical;
+    min-height: 7.5rem;
+    line-height: 1.5;
+}
+
+/* Zona de carga de adjuntos: label clicable + input oculto. */
+.mt-gi-11-form-page__upload {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1rem;
+    border: 1px dashed #c9d6e5;
+    border-radius: var(--radius-lg, 0.75rem);
+    background: #fff;
+}
+
+.mt-gi-11-form-page__upload-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    align-self: flex-start;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 0.55rem;
+    background: #f8fafc;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #0f172a;
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.mt-gi-11-form-page__upload-label:hover,
+.mt-gi-11-form-page__upload-label:focus-within {
+    background: #eef6fd;
+    border-color: var(--brand-blue, #0e4a6e);
+}
+
+.mt-gi-11-form-page__upload-input {
+    font-size: 0.82rem;
+    color: #475569;
+}
+
+.mt-gi-11-form-page__upload-hint {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #64748b;
+    line-height: 1.4;
+}
+
+/* Listado de adjuntos del registro */
+.mt-gi-11-form-page__attachments {
+    margin-top: 1.5rem;
+}
+
+.mt-gi-11-form-page__attachments-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.mt-gi-11-form-page__attachment {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 0.75rem;
+    border: 1px solid var(--color-border, #e2e8f0);
+    border-radius: 0.6rem;
+    background: #f8fafc;
+}
+
+.mt-gi-11-form-page__attachment-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    background: #e8f1fa;
+    color: #0369a1;
+}
+
+.mt-gi-11-form-page__attachment-meta {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.mt-gi-11-form-page__attachment-name {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #0f172a;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mt-gi-11-form-page__attachment-sub {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #64748b;
+}
+
+/* ---------------------------------------------------------------------------
+   Listado: filtro por botón de estado y aviso de alcance
+--------------------------------------------------------------------------- */
+
+.mt-gi-11-page__estado-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.6rem;
+}
+
+.mt-gi-11-page__estado-pill {
+    border-width: 1px;
+    border-style: solid;
+}
+
+.mt-gi-11-page__estado-pill.status-pill--warning { border-color: #ca8a04; }
+.mt-gi-11-page__estado-pill.status-pill--info { border-color: #0369a1; }
+.mt-gi-11-page__estado-pill.status-pill--success { border-color: #15803d; }
+.mt-gi-11-page__estado-pill.status-pill--danger { border-color: #be123c; }
+.mt-gi-11-page__estado-pill.status-pill--muted { border-color: #94a3b8; }
+
+.mt-gi-11-page__scope {
+    margin-left: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--color-text-soft, #64748b);
+}
+
+/* ---------------------------------------------------------------------------
+   Dashboard
+--------------------------------------------------------------------------- */
+
+.mt-gi-11-dashboard-page__charts-row--two {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+/* Halo blanco bajo las etiquetas numéricas de Apex. */
+.mt-gi-11-dashboard-page .apexcharts-datalabels text {
+    paint-order: stroke;
+    stroke: #ffffff;
+    stroke-width: 3px;
+    stroke-linejoin: round;
+}
+
+/* ---------------------------------------------------------------------------
+   Responsive
+--------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+    .mt-gi-11-form-page__field--wide,
+    .mt-gi-11-form-page__field--full {
+        grid-column: 1 / -1;
+    }
+
+    .mt-gi-11-dashboard-page__charts-row--two {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .mt-gi-11-form-page__head {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .mt-gi-11-form-page__attachment {
+        flex-wrap: wrap;
+    }
+
+    .mt-gi-11-form-page__attachment-meta {
+        flex-basis: 100%;
+    }
+}

@@ -214,6 +214,24 @@ Cada area puede tener tableros internos definidos en `config/access.php`. Los ta
 - En area `calidad`, tablero de area unica:
   - `servicio_cliente` — **Servicio al cliente** (`view.board.calidad.servicio_cliente` + `servicio_cliente.fo_gi_22.view` / `edit` + `servicio_cliente.parameters.edit`). El dashboard no tiene permiso propio: lo abre quien puede ver FO-GI-22. `edit` implica `view`. El rol `administrador` recibe el paquete en el seeder; no hay permiso legado.
   - `planeacion_estrategica` — **Planeación estratégica** (`view.board.calidad.planeacion_estrategica` + `planeacion.dashboard.view` + `planeacion.indicadores.view` / `edit` + `planeacion.captura.view` / `edit`). `edit` implica `view` en `PlaneacionEstrategicaAccessService`. El dashboard **tiene permiso propio** y **no** se deriva de `indicadores.view`. Al compartir un indicador con usuarios o áreas, el sistema otorga el mínimo (tablero + captura; si hay consulta, también `indicadores.view` y `dashboard.view`). Quien tiene `planeacion.indicadores.edit` no pierde permisos al quitarse de un indicador. El rol `administrador` recibe el paquete en el seeder; no hay permiso legado que migrar. El rol Spatie `director` de Compras no se usa.
+  - `mt_gi_11` — **MT-GI-11** (`view.board.calidad.mt_gi_11` + `mt_gi_11.matriz.view` / `edit` + `mt_gi_11.view_all` + `mt_gi_11.parameters.edit`). Tablero **distinto** del módulo genérico `matrices` (FEAT-052). `edit` implica `view` en `MtGi11AccessService`. El dashboard **no** tiene permiso propio: se abre con `mt_gi_11.matriz.view`. Sin `view_all` el usuario solo ve y edita sus propias solicitudes; `view_all` amplía el alcance a todas. Ver [`modules/matrices-mt-gi-11.md`](modules/matrices-mt-gi-11.md).
+
+### MT-GI-11 Matrices (Calidad)
+
+Tablero **MT-GI-11** con pestañas **Dashboard** | **Matriz** | **Catálogos**.
+
+| Permiso | Uso |
+| --- | --- |
+| `view.board.calidad.mt_gi_11` | Ver tablero en sidebar Calidad |
+| `mt_gi_11.matriz.view` | Dashboard y matriz en consulta; solo solicitudes propias |
+| `mt_gi_11.matriz.edit` | CRUD de solicitudes, adjuntos, nueva versión e import; implica `view` |
+| `mt_gi_11.view_all` | Ver todas las solicitudes del tablero (Calidad / administración) |
+| `mt_gi_11.parameters.edit` | Catálogos: procesos, tipos de documento, tipos de solicitud, cargos y estados |
+
+- El alcance por registro se resuelve en `MtGi11AccessService::canManageSolicitud()` y `MtGi11Solicitud::scopeVisibleTo()`.
+- Aplica igual a listado, dashboard, export, adjuntos y validación de edición.
+- El consecutivo **no es único**: la llave operativa es el `id` (permite versiones del mismo documento).
+- El rol `administrador` recibe el paquete en el seeder. `manage.users` omite las comprobaciones.
 
 ### Planeación estratégica (Calidad)
 

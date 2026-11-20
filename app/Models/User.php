@@ -14,6 +14,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MatrixAccessService;
+use App\Services\Access\MtGi11AccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -624,6 +625,27 @@ class User extends Authenticatable
             'indicadores' => route('calidad.planeacion.indicadores'),
             'captura' => route('calidad.planeacion.captura'),
             'estrategia' => route('calidad.planeacion.estrategia'),
+            default => route('dashboard', ['module' => 'calidad']),
+        };
+    }
+
+    /**
+     * @return Collection<int, string>
+     */
+    public function mtGi11BoardTabsFor(): Collection
+    {
+        return collect(app(MtGi11AccessService::class)->visibleTabsFor($this));
+    }
+
+    public function defaultMtGi11BoardUrl(): string
+    {
+        $tabs = $this->mtGi11BoardTabsFor();
+        $firstTab = $tabs->first();
+
+        return match ($firstTab) {
+            'dashboard' => route('calidad.mt-gi-11.dashboard'),
+            'matriz' => route('calidad.mt-gi-11.matriz'),
+            'catalogos' => route('calidad.mt-gi-11.catalogos'),
             default => route('dashboard', ['module' => 'calidad']),
         };
     }

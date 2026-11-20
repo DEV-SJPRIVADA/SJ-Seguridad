@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Calidad\MtGi11Controller;
 use App\Http\Controllers\Calidad\PlaneacionEstrategiaController;
 use App\Http\Controllers\Calidad\PlaneacionEstrategicaController;
 use App\Http\Controllers\Calidad\ServicioClienteController;
@@ -77,4 +78,56 @@ Route::middleware(['password.changed'])
         Route::post('/estrategia/objetivos/{objective}/estrategias', [PlaneacionEstrategiaController::class, 'storeStrategy'])->name('estrategia.strategies.store')->whereNumber('objective');
         Route::patch('/estrategia/estrategias/{strategy}', [PlaneacionEstrategiaController::class, 'updateStrategy'])->name('estrategia.strategies.update')->whereNumber('strategy');
         Route::delete('/estrategia/estrategias/{strategy}', [PlaneacionEstrategiaController::class, 'destroyStrategy'])->name('estrategia.strategies.destroy')->whereNumber('strategy');
+    });
+
+/*
+| MT-GI-11 (Calidad): tablero de solicitudes de estandarización documental.
+| Las operaciones por registro usan el `id` de la solicitud, nunca el consecutivo.
+*/
+Route::middleware(['password.changed'])
+    ->prefix('calidad/mt-gi-11')
+    ->name('calidad.mt-gi-11.')
+    ->group(function (): void {
+        Route::get('/', [MtGi11Controller::class, 'index'])->name('index');
+
+        // Dashboard
+        Route::get('/dashboard', [MtGi11Controller::class, 'dashboard'])->name('dashboard');
+
+        // Matriz: listado, datatable y export
+        Route::get('/matriz', [MtGi11Controller::class, 'matriz'])->name('matriz');
+        Route::get('/matriz/datatable', [MtGi11Controller::class, 'datatable'])->name('matriz.datatable');
+        Route::get('/matriz/exportar', [MtGi11Controller::class, 'export'])->name('matriz.export');
+
+        // Masivos: plantilla e importación
+        Route::get('/matriz/plantilla', [MtGi11Controller::class, 'importTemplate'])->name('matriz.plantilla');
+        Route::post('/matriz/importar', [MtGi11Controller::class, 'import'])->name('matriz.import');
+
+        // Alta
+        Route::get('/matriz/crear', [MtGi11Controller::class, 'create'])->name('matriz.create');
+        Route::post('/matriz', [MtGi11Controller::class, 'store'])->name('matriz.store');
+
+        // «Nueva versión»: formulario precargado desde una solicitud existente
+        Route::get('/matriz/{solicitud}/nueva-version', [MtGi11Controller::class, 'nuevaVersion'])
+            ->name('matriz.nueva-version')->whereNumber('solicitud');
+
+        // Registro por id
+        Route::get('/matriz/{solicitud}', [MtGi11Controller::class, 'show'])->name('matriz.show')->whereNumber('solicitud');
+        Route::patch('/matriz/{solicitud}', [MtGi11Controller::class, 'update'])->name('matriz.update')->whereNumber('solicitud');
+        Route::delete('/matriz/{solicitud}', [MtGi11Controller::class, 'destroy'])->name('matriz.destroy')->whereNumber('solicitud');
+
+        // Adjuntos
+        Route::post('/matriz/{solicitud}/adjuntos', [MtGi11Controller::class, 'storeAdjuntos'])
+            ->name('matriz.adjuntos.store')->whereNumber('solicitud');
+        Route::get('/matriz/{solicitud}/adjuntos/{adjunto}/ver', [MtGi11Controller::class, 'previewAdjunto'])
+            ->name('matriz.adjuntos.preview')->whereNumber(['solicitud', 'adjunto']);
+        Route::get('/matriz/{solicitud}/adjuntos/{adjunto}/descargar', [MtGi11Controller::class, 'downloadAdjunto'])
+            ->name('matriz.adjuntos.download')->whereNumber(['solicitud', 'adjunto']);
+        Route::delete('/matriz/{solicitud}/adjuntos/{adjunto}', [MtGi11Controller::class, 'destroyAdjunto'])
+            ->name('matriz.adjuntos.destroy')->whereNumber(['solicitud', 'adjunto']);
+
+        // Catálogos
+        Route::get('/catalogos', [MtGi11Controller::class, 'catalogos'])->name('catalogos');
+        Route::post('/catalogos/{type}', [MtGi11Controller::class, 'storeCatalog'])->name('catalogos.store');
+        Route::patch('/catalogos/{type}/{item}', [MtGi11Controller::class, 'updateCatalog'])->name('catalogos.update')->whereNumber('item');
+        Route::delete('/catalogos/{type}/{item}', [MtGi11Controller::class, 'destroyCatalog'])->name('catalogos.destroy')->whereNumber('item');
     });

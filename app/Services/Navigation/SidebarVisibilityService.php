@@ -16,6 +16,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MatrixAccessService;
+use App\Services\Access\MtGi11AccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -48,6 +49,7 @@ class SidebarVisibilityService
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly ServicioClienteAccessService $servicioClienteAccess,
         private readonly PlaneacionEstrategicaAccessService $planeacionAccess,
+        private readonly MtGi11AccessService $mtGi11Access,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly MatrixAccessService $matrixAccess,
@@ -91,6 +93,7 @@ class SidebarVisibilityService
             'reportes_novedades' => $this->shouldShowReportesNovedadesBoard($user, $areaKey),
             'servicio_cliente' => $this->shouldShowServicioClienteBoard($user, $areaKey),
             'planeacion_estrategica' => $this->shouldShowPlaneacionBoard($user, $areaKey),
+            'mt_gi_11' => $this->shouldShowMtGi11Board($user, $areaKey),
             'indicadores' => $this->shouldShowIndicadoresBoard($user, $areaKey),
             'gestion_clientes' => $this->shouldShowGestionClientesBoard($user, $areaKey),
             'dashboard' => $this->shouldShowDashboardBoard($user, $areaKey),
@@ -329,6 +332,15 @@ class SidebarVisibilityService
         }
 
         return $this->planeacionAccess->canViewBoard($user);
+    }
+
+    private function shouldShowMtGi11Board(User $user, string $areaKey): bool
+    {
+        if ($areaKey !== 'calidad') {
+            return false;
+        }
+
+        return $this->mtGi11Access->canViewBoard($user);
     }
 
     private function shouldShowAcreditacionesBoard(User $user, string $areaKey): bool

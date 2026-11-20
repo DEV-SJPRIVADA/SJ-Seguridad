@@ -16,6 +16,7 @@ use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
 use App\Services\Access\MatrixAccessService;
+use App\Services\Access\MtGi11AccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -50,6 +51,7 @@ class NavigationResolver
         private readonly ReportesNovedadesAccessService $reportesNovedadesAccess,
         private readonly ServicioClienteAccessService $servicioClienteAccess,
         private readonly PlaneacionEstrategicaAccessService $planeacionAccess,
+        private readonly MtGi11AccessService $mtGi11Access,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
@@ -459,6 +461,23 @@ class NavigationResolver
                             ];
                         }
 
+                        if ($boardKey === 'mt_gi_11') {
+                            if ($key !== 'calidad') {
+                                return null;
+                            }
+
+                            if (! $this->mtGi11Access->canViewBoard($user)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'calidad.mt-gi-11.dashboard',
+                                'url' => $user->defaultMtGi11BoardUrl(),
+                                'active' => str_starts_with((string) $routeName, 'calidad.mt-gi-11.'),
+                            ];
+                        }
+
                         if ($boardKey === 'requisiciones') {
                             if (! $this->requisitionAccess->canViewRequisitionsBoard($user, $key)) {
                                 return null;
@@ -740,6 +759,8 @@ class NavigationResolver
                     str_starts_with((string) $routeName, 'gestion-humana.acreditaciones.') && $key === 'gestion_humana'
                 ) || (
                     str_starts_with((string) $routeName, 'gestion-humana.reportes-novedades.') && $key === 'gestion_humana'
+                ) || (
+                    str_starts_with((string) $routeName, 'calidad.mt-gi-11.') && $key === 'calidad'
                 );
 
                 return [

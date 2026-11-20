@@ -252,3 +252,5 @@
 @import './areas/compras/121-compras-autorizaciones-barra.css';
 /* 122 Matrices dinámicas */
 @import './modules/matrices/122-matrices.css';
+/* 123 Calidad / MT-GI-11 Matrices */
+@import './areas/calidad/123-calidad-mt-gi-11.css';

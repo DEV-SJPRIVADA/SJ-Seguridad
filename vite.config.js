@@ -18,6 +18,7 @@ export default defineConfig({
                 'resources/js/seleccion-dashboard-charts.js',
                 'resources/js/acreditaciones-dashboard-charts.js',
                 'resources/js/mt-st-04-dashboard-charts.js',
+                'resources/js/mt-gi-11-dashboard-charts.js',
                 'resources/js/requisitions-dashboard-charts.js',
                 'resources/js/indicadores-capture.js',
                 'resources/js/planeacion-ficha-charts.js',
