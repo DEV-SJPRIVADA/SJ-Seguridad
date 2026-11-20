@@ -27,6 +27,8 @@ class QualityPlanningDofa extends Model
         'ends_on',
         'status',
         'summary',
+        'mission',
+        'vision',
         'created_by_user_id',
         'archived_at',
     ];

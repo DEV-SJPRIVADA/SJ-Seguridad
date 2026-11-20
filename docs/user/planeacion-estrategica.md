@@ -68,12 +68,16 @@ Tablero **Planeación estratégica** en el área **Calidad**, con tres pestañas
 ### Estrategia (DOFA, objetivos y estrategias)
 
 1. Abra la pestaña **Estrategia** del tablero Planeación estratégica.
-2. Pulse el ícono **+** para crear un DOFA: título, **periodo libre** (por ejemplo `2026`, `T1 2026` o `2026-2028`) y fechas desde/hasta.
-3. Escriba las líneas de cada cuadrante (fortalezas, oportunidades, debilidades y amenazas). Puede agregar o quitar líneas.
-4. Guarde y abra el DOFA: verá la matriz y el bloque **Objetivos y estrategias**.
-5. Agregue objetivos al DOFA y, dentro de cada objetivo, sus estrategias con responsable y avance.
+2. Pulse el ícono **+** para crear un DOFA: título, **periodo libre** (por ejemplo `2026`, `T1 2026` o `2026-2028`), estado, fechas desde/hasta, **misión**, **visión** y **resumen**. El formulario ya no pide los cuadrantes.
+3. Al abrirlo, en la subpestaña **DOFA** cada cuadrante (fortalezas, oportunidades, debilidades y amenazas) tiene su propio botón **+**: se abre un área de escritura amplia donde puede usar **Enter** para separar varias ideas; confirme con el check. Cada línea registrada muestra el ícono de **eliminar** a la derecha y conserva los saltos de línea.
+4. Para cambiar título, periodo, estado, **misión**, **visión** o **resumen**, use **Datos del DOFA**. Ese formulario no toca las líneas ya registradas. La misión y la visión se muestran bajo la cabecera del DOFA.
+4. Guarde y abra el DOFA. La cabecera muestra el estado, el periodo y cuatro cifras: líneas DOFA, objetivos, estrategias y avance promedio.
+5. Trabaje por **subpestañas** (cada una conserva su propia información):
+   - **DOFA** — la matriz 2×2 de fortalezas, oportunidades, debilidades y amenazas.
+   - **Objetivos** — los objetivos del DOFA con sus fechas y el avance que le aportan sus estrategias. Use **Nuevo objetivo** para agregar.
+   - **Estrategias** — cada objetivo con sus estrategias, responsable, fechas y avance. El botón **+** del objetivo agrega una estrategia; arriba verá el avance total del DOFA.
 6. Con **Vigente** marca el DOFA activo; con **Archivar** lo saca del listado (sus objetivos y estrategias se conservan y se ven en el filtro **Archivados**).
-7. Quien solo tiene permiso de **Ver estrategia** consulta la matriz y el árbol, pero no ve botones de alta, edición ni archivo.
+7. Quien solo tiene permiso de **Ver estrategia** consulta las tres subpestañas, pero no ve botones de alta, edición ni archivo.
 
 ### Archivar y restablecer
 

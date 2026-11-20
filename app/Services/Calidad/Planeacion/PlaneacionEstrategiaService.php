@@ -34,6 +34,8 @@ class PlaneacionEstrategiaService
                 'ends_on' => $data['ends_on'],
                 'status' => (string) ($data['status'] ?? QualityPlanningDofa::STATUS_DRAFT),
                 'summary' => $this->nullableUppercase($data['summary'] ?? null),
+                'mission' => $this->nullableUppercase($data['mission'] ?? null),
+                'vision' => $this->nullableUppercase($data['vision'] ?? null),
                 'created_by_user_id' => $actor->id,
             ]);
 
@@ -54,9 +56,9 @@ class PlaneacionEstrategiaService
 
     /**
      * @param  array<string, mixed>  $data
-     * @param  array<string, list<string>>  $quadrants
+     * @param  array<string, list<string>>|null  $quadrants  Solo se reemplazan si llegan (el modal ya no edita cuadrantes).
      */
-    public function updateDofa(User $actor, QualityPlanningDofa $dofa, array $data, array $quadrants): QualityPlanningDofa
+    public function updateDofa(User $actor, QualityPlanningDofa $dofa, array $data, ?array $quadrants = null): QualityPlanningDofa
     {
         return DB::transaction(function () use ($actor, $dofa, $data, $quadrants): QualityPlanningDofa {
             $before = $this->dofaSnapshot($dofa);
@@ -68,9 +70,14 @@ class PlaneacionEstrategiaService
                 'ends_on' => $data['ends_on'],
                 'status' => (string) ($data['status'] ?? $dofa->status),
                 'summary' => $this->nullableUppercase($data['summary'] ?? null),
+                'mission' => $this->nullableUppercase($data['mission'] ?? null),
+                'vision' => $this->nullableUppercase($data['vision'] ?? null),
             ])->save();
 
-            $this->replaceItems($dofa, $quadrants);
+            // Los cuadrantes se gestionan línea por línea desde la matriz.
+            if ($quadrants !== null) {
+                $this->replaceItems($dofa, $quadrants);
+            }
 
             $this->audit->logModelChange(
                 eventType: 'strategy',
@@ -260,6 +267,51 @@ class PlaneacionEstrategiaService
     }
 
     /**
+     * Agrega una línea a un cuadrante del DOFA (botón + de la matriz).
+     */
+    public function createDofaItem(User $actor, QualityPlanningDofa $dofa, string $quadrant, string $description): QualityPlanningDofaItem
+    {
+        $sort = ((int) $dofa->items()->where('quadrant', $quadrant)->max('sort')) + 1;
+
+        $item = $dofa->items()->create([
+            'quadrant' => $quadrant,
+            'description' => UppercaseFormText::uppercaseString($description),
+            'sort' => $sort,
+        ]);
+
+        $this->audit->logModelChange(
+            eventType: 'strategy',
+            action: 'dofa_item_create',
+            model: $item,
+            before: null,
+            after: $item->only(['id', 'dofa_id', 'quadrant', 'description']),
+            userId: $actor->id,
+        );
+
+        return $item;
+    }
+
+    /**
+     * Elimina una sola línea de cuadrante sin tocar el resto de la matriz.
+     */
+    public function deleteDofaItem(User $actor, QualityPlanningDofaItem $item): void
+    {
+        $before = $item->only(['id', 'dofa_id', 'quadrant', 'description']);
+
+        $dofaId = (int) $item->dofa_id;
+        $item->delete();
+
+        $this->audit->logModelChange(
+            eventType: 'strategy',
+            action: 'dofa_item_delete',
+            model: null,
+            before: $before,
+            after: ['dofa_id' => $dofaId],
+            userId: $actor->id,
+        );
+    }
+
+    /**
      * @param  array<string, list<string>>  $quadrants
      */
     private function replaceItems(QualityPlanningDofa $dofa, array $quadrants): void
@@ -297,6 +349,8 @@ class PlaneacionEstrategiaService
             'ends_on' => $dofa->ends_on?->toDateString(),
             'status' => $dofa->status,
             'summary' => $dofa->summary,
+            'mission' => $dofa->mission,
+            'vision' => $dofa->vision,
             'items' => $dofa->items->map(fn (QualityPlanningDofaItem $item): array => [
                 'quadrant' => $item->quadrant,
                 'description' => $item->description,

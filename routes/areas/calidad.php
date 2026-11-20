@@ -67,6 +67,8 @@ Route::middleware(['password.changed'])
         Route::post('/estrategia', [PlaneacionEstrategiaController::class, 'storeDofa'])->name('estrategia.store');
         Route::get('/estrategia/{dofa}', [PlaneacionEstrategiaController::class, 'show'])->name('estrategia.show')->whereNumber('dofa');
         Route::patch('/estrategia/{dofa}', [PlaneacionEstrategiaController::class, 'updateDofa'])->name('estrategia.update')->whereNumber('dofa');
+        Route::post('/estrategia/{dofa}/lineas', [PlaneacionEstrategiaController::class, 'storeDofaItem'])->name('estrategia.items.store')->whereNumber('dofa');
+        Route::delete('/estrategia/lineas/{item}', [PlaneacionEstrategiaController::class, 'destroyDofaItem'])->name('estrategia.items.destroy')->whereNumber('item');
         Route::post('/estrategia/{dofa}/activar', [PlaneacionEstrategiaController::class, 'activateDofa'])->name('estrategia.activate')->whereNumber('dofa');
         Route::post('/estrategia/{dofa}/archivar', [PlaneacionEstrategiaController::class, 'archiveDofa'])->name('estrategia.archive')->whereNumber('dofa');
         Route::post('/estrategia/{dofa}/objetivos', [PlaneacionEstrategiaController::class, 'storeObjective'])->name('estrategia.objectives.store')->whereNumber('dofa');

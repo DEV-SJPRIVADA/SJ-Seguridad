@@ -1,14 +1,14 @@
-<x-app-layout>
-    @php
-        $hasActiveFilters = ($status ?? '') !== '';
-    @endphp
+@php
+    $hasActiveFilters = ($status ?? '') !== '';
+@endphp
 
+<x-app-layout>
     <x-slot name="header">
         @include('areas.calidad.planeacion.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    {{-- Listado de DOFA: filtro por estado y acceso al detalle con objetivos y estrategias. --}}
-    <div class="page-section planeacion-page req-manage-page">
+    {{-- Listado de DOFA: filtro por estado y acceso al detalle con subpestañas DOFA / Objetivos / Estrategias. --}}
+    <div class="page-section planeacion-page planeacion-estrategia-page req-manage-page">
         <div class="app-container">
             @if (session('status'))
                 <div class="alert alert--success">{{ session('status') }}</div>
@@ -79,23 +79,41 @@
                                 <tr>
                                     <th>Título</th>
                                     <th>Periodo</th>
-                                    <th>Rango</th>
-                                    <th>Objetivos</th>
-                                    <th>Análisis</th>
+                                    <th>Vigencia</th>
+                                    <th class="planeacion-estrategia__num">Líneas</th>
+                                    <th class="planeacion-estrategia__num">Objetivos</th>
+                                    <th class="planeacion-estrategia__num">Estrategias</th>
+                                    <th>Avance</th>
                                     <th>Estado</th>
                                     <th></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse ($dofas as $dofa)
+                                    @php
+                                        // Avance del DOFA: promedio del avance declarado en sus estrategias.
+                                        $strategies = $dofa->objectives->flatMap(fn ($objective) => $objective->strategies);
+                                        $progress = $strategies->isEmpty() ? 0 : (int) round($strategies->avg('progress'));
+                                    @endphp
                                     <tr>
-                                        <td>{{ $dofa->title }}</td>
+                                        <td>
+                                            <a href="{{ route('calidad.planeacion.estrategia.show', $dofa) }}" class="planeacion-estrategia__link">{{ $dofa->title }}</a>
+                                        </td>
                                         <td>{{ $dofa->period_label }}</td>
                                         <td class="planeacion-estrategia__nowrap">
                                             {{ $dofa->starts_on?->format('d/m/Y') }} — {{ $dofa->ends_on?->format('d/m/Y') }}
                                         </td>
-                                        <td>{{ $dofa->objectives_count }}</td>
-                                        <td>{{ $dofa->items_count }}</td>
+                                        <td class="planeacion-estrategia__num">{{ $dofa->items_count }}</td>
+                                        <td class="planeacion-estrategia__num">{{ $dofa->objectives_count }}</td>
+                                        <td class="planeacion-estrategia__num">{{ $strategies->count() }}</td>
+                                        <td>
+                                            <div class="planeacion-estrategia-progress planeacion-estrategia-progress--cell">
+                                                <div class="planeacion-estrategia-progress__track">
+                                                    <span class="planeacion-estrategia-progress__bar" style="width: {{ $progress }}%"></span>
+                                                </div>
+                                                <span class="planeacion-estrategia-progress__value">{{ $progress }}%</span>
+                                            </div>
+                                        </td>
                                         <td>
                                             <span class="status-pill {{ $dofa->status === 'active' ? 'status-pill--success' : ($dofa->isArchived() ? 'status-pill--muted' : 'status-pill--warning') }}">
                                                 {{ $dofa->statusLabel() }}
@@ -111,7 +129,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="7">Aún no hay DOFA registrados.</td>
+                                        <td colspan="9">Aún no hay DOFA registrados.</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -125,6 +143,6 @@
     @if ($canEdit)
         @include('areas.calidad.planeacion.estrategia.partials.dofa-modal', [
             'dofa' => null,
-            'quadrants' => \App\Models\QualityPlanning\QualityPlanningDofaItem::QUADRANTS,
-        ])    @endif
+        ])
+    @endif
 </x-app-layout>

@@ -27,6 +27,8 @@ class StorePlaneacionDofaRequest extends FormRequest
             'starts_on' => ['required', 'date'],
             'ends_on' => ['required', 'date', 'after_or_equal:starts_on'],
             'summary' => ['nullable', 'string', 'max:3000'],
+            'mission' => ['nullable', 'string', 'max:2000'],
+            'vision' => ['nullable', 'string', 'max:2000'],
             'status' => ['sometimes', Rule::in([
                 QualityPlanningDofa::STATUS_DRAFT,
                 QualityPlanningDofa::STATUS_ACTIVE,

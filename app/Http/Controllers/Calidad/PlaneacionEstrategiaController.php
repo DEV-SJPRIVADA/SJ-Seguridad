@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Calidad;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Calidad\Planeacion\StorePlaneacionDofaItemRequest;
 use App\Http\Requests\Calidad\Planeacion\StorePlaneacionDofaRequest;
 use App\Http\Requests\Calidad\Planeacion\StorePlaneacionObjectiveRequest;
 use App\Http\Requests\Calidad\Planeacion\StorePlaneacionStrategyRequest;
@@ -25,6 +26,13 @@ class PlaneacionEstrategiaController extends Controller
 {
     use HasPlaneacionTabs;
 
+    /**
+     * Subpestañas del detalle de un DOFA: matriz, objetivos y estrategias.
+     *
+     * @var list<string>
+     */
+    private const SHOW_TABS = ['dofa', 'objetivos', 'estrategias'];
+
     public function __construct(
         private readonly PlaneacionEstrategicaAccessService $access,
         private readonly PlaneacionEstrategiaService $estrategia,
@@ -38,6 +46,7 @@ class PlaneacionEstrategiaController extends Controller
 
         $query = QualityPlanningDofa::query()
             ->withCount(['objectives', 'items'])
+            ->with(['objectives.strategies'])
             ->orderByDesc('starts_on')
             ->orderByDesc('id');
 
@@ -73,11 +82,11 @@ class PlaneacionEstrategiaController extends Controller
         );
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $dofa)
-            ->with('status', 'DOFA creado. Agregue objetivos y estrategias.');
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa'])
+            ->with('status', 'DOFA creado. Agregue las líneas de cada cuadrante en la matriz.');
     }
 
-    public function show(QualityPlanningDofa $dofa): View
+    public function show(Request $request, QualityPlanningDofa $dofa): View
     {
         $this->authorizeView();
 
@@ -86,11 +95,20 @@ class PlaneacionEstrategiaController extends Controller
             'objectives.strategies',
         ]);
 
+        // Subpestaña activa del detalle; se conserva en la URL para recargas y enlaces.
+        $requestedTab = (string) $request->string('tab')->toString();
+        $activeTab = in_array($requestedTab, self::SHOW_TABS, true) ? $requestedTab : 'dofa';
+
+        $strategiesCount = $dofa->objectives->sum(fn (QualityPlanningObjective $objective): int => $objective->strategies->count());
+
         return view('areas.calidad.planeacion.estrategia.show', [
             'subTabs' => $this->getPlaneacionSubTabs('estrategia'),
             'dofa' => $dofa,
             'itemsByQuadrant' => $dofa->itemsByQuadrant(),
             'quadrants' => QualityPlanningDofaItem::QUADRANTS,
+            'activeTab' => $activeTab,
+            'objectivesCount' => $dofa->objectives->count(),
+            'strategiesCount' => $strategiesCount,
             'canEdit' => $this->access->canEditEstrategia($this->actor()) && ! $dofa->isArchived(),
         ]);
     }
@@ -99,11 +117,41 @@ class PlaneacionEstrategiaController extends Controller
     {
         abort_if($dofa->isArchived(), 403);
 
-        $this->estrategia->updateDofa($request->user(), $dofa, $request->validated(), $request->quadrants());
+        // Los cuadrantes ya no se editan en el modal: se gestionan desde la matriz.
+        $this->estrategia->updateDofa($request->user(), $dofa, $request->validated());
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $dofa)
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa'])
             ->with('status', 'DOFA actualizado.');
+    }
+
+    public function storeDofaItem(StorePlaneacionDofaItemRequest $request, QualityPlanningDofa $dofa): RedirectResponse
+    {
+        abort_if($dofa->isArchived(), 403);
+
+        $this->estrategia->createDofaItem(
+            $this->actor(),
+            $dofa,
+            (string) $request->validated('quadrant'),
+            (string) $request->validated('description'),
+        );
+
+        return redirect()
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa'])
+            ->with('status', 'Línea agregada a la matriz.');
+    }
+
+    public function destroyDofaItem(QualityPlanningDofaItem $item): RedirectResponse
+    {
+        $this->authorizeEdit();
+        abort_if($item->dofa?->isArchived(), 403);
+
+        $dofaId = (int) $item->dofa_id;
+        $this->estrategia->deleteDofaItem($this->actor(), $item);
+
+        return redirect()
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $dofaId, 'tab' => 'dofa'])
+            ->with('status', 'Línea eliminada de la matriz.');
     }
 
     public function activateDofa(QualityPlanningDofa $dofa): RedirectResponse
@@ -137,7 +185,7 @@ class PlaneacionEstrategiaController extends Controller
         $this->estrategia->createObjective($request->user(), $dofa, $request->validated());
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $dofa)
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'objetivos'])
             ->with('status', 'Objetivo agregado.');
     }
 
@@ -148,7 +196,7 @@ class PlaneacionEstrategiaController extends Controller
         $this->estrategia->updateObjective($request->user(), $objective, $request->validated());
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $objective->dofa_id)
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $objective->dofa_id, 'tab' => 'objetivos'])
             ->with('status', 'Objetivo actualizado.');
     }
 
@@ -161,7 +209,7 @@ class PlaneacionEstrategiaController extends Controller
         $this->estrategia->deleteObjective($this->actor(), $objective);
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $dofaId)
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $dofaId, 'tab' => 'objetivos'])
             ->with('status', 'Objetivo eliminado junto con sus estrategias.');
     }
 
@@ -172,7 +220,7 @@ class PlaneacionEstrategiaController extends Controller
         $this->estrategia->createStrategy($request->user(), $objective, $request->validated());
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $objective->dofa_id)
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $objective->dofa_id, 'tab' => 'estrategias'])
             ->with('status', 'Estrategia agregada.');
     }
 
@@ -183,7 +231,7 @@ class PlaneacionEstrategiaController extends Controller
         $this->estrategia->updateStrategy($request->user(), $strategy, $request->validated());
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $strategy->objective?->dofa_id)
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $strategy->objective?->dofa_id, 'tab' => 'estrategias'])
             ->with('status', 'Estrategia actualizada.');
     }
 
@@ -196,7 +244,7 @@ class PlaneacionEstrategiaController extends Controller
         $this->estrategia->deleteStrategy($this->actor(), $strategy);
 
         return redirect()
-            ->route('calidad.planeacion.estrategia.show', $dofaId)
+            ->route('calidad.planeacion.estrategia.show', ['dofa' => $dofaId, 'tab' => 'estrategias'])
             ->with('status', 'Estrategia eliminada.');
     }
 

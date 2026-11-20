@@ -166,11 +166,206 @@ class PlaneacionEstrategiaTest extends TestCase
         $this->assertSame('CALIDAD', $strategy->responsible);
         $this->assertSame(25, (int) $strategy->progress);
 
+        // Las subpestañas separan matriz, objetivos y estrategias: cada texto vive en la suya.
         $this->actingAs($this->editor)
-            ->get(route('calidad.planeacion.estrategia.show', $dofa))
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'objetivos']))
             ->assertOk()
-            ->assertSee('MEJORAR LA EFICACIA')
+            ->assertSee('MEJORAR LA EFICACIA');
+
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'estrategias']))
+            ->assertOk()
             ->assertSee('AUDITORÍAS INTERNAS');
+    }
+
+    public function test_show_splits_content_into_dofa_objectives_and_strategies_tabs(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.store'), $this->dofaPayload([
+                'quadrants' => ['fortaleza' => ['equipo certificado']],
+            ]))
+            ->assertRedirect();
+
+        $dofa = QualityPlanningDofa::query()->firstOrFail();
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.objectives.store', $dofa), ['title' => 'objetivo del tab'])
+            ->assertRedirect(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'objetivos']));
+
+        $objective = QualityPlanningObjective::query()->firstOrFail();
+
+        // La matriz solo aparece en la subpestaña DOFA.
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa']))
+            ->assertOk()
+            ->assertSee('EQUIPO CERTIFICADO')
+            ->assertSee('planeacion-estrategia-matrix__cell', false)
+            ->assertSee('Agregar línea en Fortalezas')
+            ->assertSee('js-confirm-delete', false)
+            ->assertDontSee('planeacion-estrategia-group', false);
+
+        // Objetivos y estrategias viven en pestañas separadas: sin la matriz de cuadrantes.
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'objetivos']))
+            ->assertOk()
+            ->assertSee('OBJETIVO DEL TAB')
+            ->assertDontSee('planeacion-estrategia-matrix__cell', false)
+            ->assertDontSee('planeacion-estrategia-group', false);
+
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'estrategias']))
+            ->assertOk()
+            ->assertSee('OBJETIVO DEL TAB')
+            ->assertSee('Sin estrategias todavía');
+
+        // Un valor inválido de tab cae en DOFA en lugar de fallar.
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'inventado']))
+            ->assertOk()
+            ->assertSee('EQUIPO CERTIFICADO');
+
+        $this->assertSame($dofa->id, (int) $objective->dofa_id);
+    }
+
+    public function test_dofa_lines_are_added_and_removed_from_the_matrix(): void
+    {
+        // El modal ya no envía cuadrantes: el DOFA nace sin líneas.
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.store'), $this->dofaPayload([
+                'quadrants' => [],
+            ]))
+            ->assertRedirect();
+
+        $dofa = QualityPlanningDofa::query()->firstOrFail();
+        $this->assertSame(0, QualityPlanningDofaItem::query()->count());
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.items.store', $dofa), [
+                'quadrant' => 'debilidad',
+                'description' => 'rotación de personal',
+            ])
+            ->assertRedirect(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa']));
+
+        $item = QualityPlanningDofaItem::query()->firstOrFail();
+        $this->assertSame('DEBILIDAD', mb_strtoupper($item->quadrant));
+        $this->assertSame('ROTACIÓN DE PERSONAL', $item->description);
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.items.store', $dofa), [
+                'quadrant' => 'fortaleza',
+                'description' => 'equipo certificado',
+            ])
+            ->assertRedirect();
+
+        $this->assertSame(2, QualityPlanningDofaItem::query()->count());
+
+        // Eliminar una línea no toca las demás.
+        $this->actingAs($this->editor)
+            ->delete(route('calidad.planeacion.estrategia.items.destroy', $item))
+            ->assertRedirect(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa']));
+
+        $this->assertSame(1, QualityPlanningDofaItem::query()->count());
+        $this->assertDatabaseHas((new QualityPlanningDofaItem)->getTable(), [
+            'dofa_id' => $dofa->id,
+            'quadrant' => 'fortaleza',
+        ]);
+    }
+
+    public function test_line_requires_a_valid_quadrant_and_description(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.store'), $this->dofaPayload(['quadrants' => []]))
+            ->assertRedirect();
+
+        $dofa = QualityPlanningDofa::query()->firstOrFail();
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.items.store', $dofa), [
+                'quadrant' => 'inventado',
+                'description' => '',
+            ])
+            ->assertSessionHasErrors(['quadrant', 'description']);
+
+        $this->assertSame(0, QualityPlanningDofaItem::query()->count());
+    }
+
+    public function test_line_keeps_line_breaks_written_by_the_user(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.store'), $this->dofaPayload(['quadrants' => []]))
+            ->assertRedirect();
+
+        $dofa = QualityPlanningDofa::query()->firstOrFail();
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.items.store', $dofa), [
+                'quadrant' => 'amenaza',
+                'description' => "competencia con precios bajos\nrotación de personal clave",
+            ])
+            ->assertRedirect();
+
+        $item = QualityPlanningDofaItem::query()->firstOrFail();
+        $this->assertStringContainsString("\n", $item->description);
+        $this->assertSame("COMPETENCIA CON PRECIOS BAJOS\nROTACIÓN DE PERSONAL CLAVE", $item->description);
+
+        // La matriz conserva el salto de línea al renderizar (white-space: pre-line).
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa']))
+            ->assertOk()
+            ->assertSee('COMPETENCIA CON PRECIOS BAJOS')
+            ->assertSee('ROTACIÓN DE PERSONAL CLAVE');
+    }
+
+    public function test_updating_dofa_from_modal_keeps_matrix_lines(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.store'), $this->dofaPayload())
+            ->assertRedirect();
+
+        $dofa = QualityPlanningDofa::query()->firstOrFail();
+        $this->assertSame(4, QualityPlanningDofaItem::query()->count());
+
+        // Edición del modal: solo identificación, periodo, misión, visión y resumen (sin cuadrantes).
+        $this->actingAs($this->editor)
+            ->patch(route('calidad.planeacion.estrategia.update', $dofa), [
+                'title' => 'dofa actualizado',
+                'period_label' => '2026-2027',
+                'starts_on' => '2026-01-01',
+                'ends_on' => '2027-12-31',
+                'status' => QualityPlanningDofa::STATUS_DRAFT,
+                'mission' => 'prestar servicios de seguridad privada',
+                'vision' => 'ser referente nacional en 2028',
+                'summary' => 'resumen ampliado del análisis',
+            ])
+            ->assertRedirect(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa']));
+
+        $dofa->refresh();
+        $this->assertSame('DOFA ACTUALIZADO', $dofa->title);
+        $this->assertSame('PRESTAR SERVICIOS DE SEGURIDAD PRIVADA', $dofa->mission);
+        $this->assertSame('SER REFERENTE NACIONAL EN 2028', $dofa->vision);
+        $this->assertSame('RESUMEN AMPLIADO DEL ANÁLISIS', $dofa->summary);
+        $this->assertSame(4, QualityPlanningDofaItem::query()->count());
+
+        // Misión y visión se muestran en la cabecera del detalle.
+        $this->actingAs($this->editor)
+            ->get(route('calidad.planeacion.estrategia.show', ['dofa' => $dofa, 'tab' => 'dofa']))
+            ->assertOk()
+            ->assertSee('PRESTAR SERVICIOS DE SEGURIDAD PRIVADA')
+            ->assertSee('SER REFERENTE NACIONAL EN 2028');
+    }
+
+    public function test_creates_dofa_with_mission_and_vision(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.planeacion.estrategia.store'), $this->dofaPayload([
+                'mission' => 'proteger personas y bienes',
+                'vision' => 'cobertura nacional en 2030',
+            ]))
+            ->assertRedirect();
+
+        $dofa = QualityPlanningDofa::query()->firstOrFail();
+        $this->assertSame('PROTEGER PERSONAS Y BIENES', $dofa->mission);
+        $this->assertSame('COBERTURA NACIONAL EN 2030', $dofa->vision);
     }
 
     public function test_archiving_dofa_keeps_children_and_hides_it_from_default_list(): void

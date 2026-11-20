@@ -44,8 +44,10 @@ Prefijo `calidad/planeacion`, nombre `calidad.planeacion.*`, middleware `auth`, 
 | DELETE | `/calidad/planeacion/indicadores/{indicator}/suplencias/{substitution}` | `calidad.planeacion.indicadores.substitutions.destroy` | `.edit` |
 | GET | `/calidad/planeacion/estrategia` | `calidad.planeacion.estrategia` | `planeacion.estrategia.view` o `.edit` |
 | POST | `/calidad/planeacion/estrategia` | `calidad.planeacion.estrategia.store` | `planeacion.estrategia.edit` |
-| GET | `/calidad/planeacion/estrategia/{dofa}` | `calidad.planeacion.estrategia.show` | `view` o `.edit` |
+| GET | `/calidad/planeacion/estrategia/{dofa}` | `calidad.planeacion.estrategia.show` | `view` o `.edit` (subpestaña por `?tab=dofa\|objetivos\|estrategias`; por defecto `dofa`) |
 | PATCH | `/calidad/planeacion/estrategia/{dofa}` | `calidad.planeacion.estrategia.update` | `.edit` |
+| POST | `/calidad/planeacion/estrategia/{dofa}/lineas` | `calidad.planeacion.estrategia.items.store` | `planeacion.estrategia.edit` |
+| DELETE | `/calidad/planeacion/estrategia/lineas/{item}` | `calidad.planeacion.estrategia.items.destroy` | `planeacion.estrategia.edit` |
 | POST | `/calidad/planeacion/estrategia/{dofa}/activar` | `calidad.planeacion.estrategia.activate` | `.edit` |
 | POST | `/calidad/planeacion/estrategia/{dofa}/archivar` | `calidad.planeacion.estrategia.archive` | `.edit` |
 | POST | `/calidad/planeacion/estrategia/{dofa}/objetivos` | `calidad.planeacion.estrategia.objectives.store` | `.edit` |
@@ -105,7 +107,8 @@ Suplencias temporales: tabla `quality_planning_indicator_substitutions` (titular
 | --- | --- |
 | `Calidad\PlaneacionEstrategicaController` | Shell, CRUD, publicar, archivar, restablecer, compartir, captura, preview de fórmula, ficha |
 | `Calidad\PlaneacionEstrategiaController` | FEAT-051: pestaña Estrategia (DOFA, objetivos, estrategias) |
-| `StorePlaneacionDofaRequest` | DOFA: título, periodo libre (etiqueta + fechas), resumen, estado y cuadrantes |
+| `StorePlaneacionDofaRequest` | DOFA: título, periodo libre (etiqueta + fechas), resumen, misión y visión, estado |
+| `StorePlaneacionDofaItemRequest` | Línea de un cuadrante desde la matriz: `quadrant` válido y `description` |
 | `StorePlaneacionObjectiveRequest` | Objetivo: título, descripción y fechas opcionales |
 | `StorePlaneacionStrategyRequest` | Estrategia: título, responsable, fechas y avance 0–100 |
 | `StorePlaneacionIndicatorRequest` / `UpdatePlaneacionIndicatorRequest` | Alta/edición; 2–12 campos; clave `^[a-z][a-z0-9_]*$`; fórmula validada |
@@ -132,8 +135,11 @@ Directorio `resources/views/areas/calidad/planeacion/`.
 | `partials/confirm-archive-modal.blade.php` | Confirmar archivo antes de POST `archivar` |
 | `partials/subnav.blade.php` | Pills Dashboard / Indicadores / Captura / Estrategia |
 | `estrategia/index.blade.php` | Listado de DOFA con filtro por estado (FEAT-051) |
-| `estrategia/show.blade.php` | Matriz F/O/D/A + árbol objetivo → estrategias |
-| `estrategia/partials/dofa-modal.blade.php` | Alta/edición del DOFA con cuadrantes dinámicos |
+| `estrategia/show.blade.php` | Detalle del DOFA: cabecera con vigencia + KPIs y subpestañas DOFA / Objetivos / Estrategias |
+| `estrategia/partials/tab-dofa.blade.php` | Subpestaña DOFA: matriz 2×2 F/O/D/A; cada sección agrega (`+`) en un textarea de 5 líneas y elimina sus propias líneas; se conservan los saltos de línea |
+| `estrategia/partials/tab-objectives.blade.php` | Subpestaña Objetivos: tarjetas con fechas, conteo de estrategias y avance promedio |
+| `estrategia/partials/tab-strategies.blade.php` | Subpestaña Estrategias: grupos por objetivo, avance global y alta en línea |
+| `estrategia/partials/dofa-modal.blade.php` | Alta/edición del DOFA: solo identificación, periodo, estado y resumen (los cuadrantes no van aquí) |
 | `partials/capture-metrics.blade.php` | Tarjetas resultado / semáforo / cumple |
 
 ## Modelos y tablas
@@ -146,12 +152,12 @@ Migración `2026_11_10_114549_create_quality_planning_tables.php` (MySQL y sqlit
 | `QualityPlanning\QualityPlanningIndicatorVersion` | `quality_planning_indicator_versions` | Ficha + `formula` + `fields` JSON; `insumos` y `medicion` (texto libre de identidad); estado `draft` / `published` / `superseded`; unique `(indicator_id, version_number)` |
 | `QualityPlanning\QualityPlanningIndicatorAssignee` | `quality_planning_indicator_assignees` | `can_capture`, `can_consult`; unique `(indicator_id, user_id)` |
 | `QualityPlanning\QualityPlanningCapture` | `quality_planning_captures` | `input_data` JSON, `result_value`, `complies`, análisis, mejora; unique `(indicator_version_id, user_id, year, month)` |
-| `QualityPlanning\QualityPlanningDofa` | `quality_planning_dofas` | FEAT-051. `title`, `period_label` libre, `starts_on`/`ends_on`, `status` (`draft`/`active`/`archived`), `summary`, `archived_at` |
+| `QualityPlanning\QualityPlanningDofa` | `quality_planning_dofas` | FEAT-051. `title`, `period_label` libre, `starts_on`/`ends_on`, `status` (`draft`/`active`/`archived`), `summary`, `mission`, `vision`, `archived_at` |
 | `QualityPlanning\QualityPlanningDofaItem` | `quality_planning_dofa_items` | Línea de un cuadrante: `quadrant` (`fortaleza`/`oportunidad`/`debilidad`/`amenaza`), `description`, `sort` |
 | `QualityPlanning\QualityPlanningObjective` | `quality_planning_objectives` | Cuelga del DOFA (`dofa_id`); fechas opcionales; `sort` |
 | `QualityPlanning\QualityPlanningStrategy` | `quality_planning_strategies` | Cuelga del objetivo (`objective_id`); `responsible`, fechas, `progress` 0–100, `sort`. Borrar el objetivo borra sus estrategias |
 
-Migración DOFA: `2026_11_11_160200_create_quality_planning_dofa_tables.php` (MySQL y sqlite).
+Migración DOFA: `2026_11_11_160200_create_quality_planning_dofa_tables.php` (MySQL y sqlite). Misión y visión: `2026_11_20_093000_add_mission_vision_to_quality_planning_dofas.php` (dos `text` nullable).
 
 JSON de cada campo: `{ key, label, decimals (0\|2), required, sort }`.
 
@@ -164,7 +170,7 @@ JSON de cada campo: `{ key, label, decimals (0\|2), required, sort }`.
 | `PlaneacionPeriodService` | Qué versión rige cada mes (cierre del mes de publicación de vN>1) |
 | `PlaneacionCaptureService` | Guardar/reemplazar captura propia; unicidad por persona/mes |
 | `PlaneacionConsolidadoService` | Ficha anual: suma de campos del mes + recálculo; filtro Todos / un capturador. `yearSummary()` alimenta la tabla **Mis indicadores** (1 consulta por página) |
-| `PlaneacionEstrategiaService` | FEAT-051: alta/edición de DOFA con cuadrantes, objetivos y estrategias; auditoría en cada cambio |
+| `PlaneacionEstrategiaService` | FEAT-051: alta/edición de DOFA, líneas de cuadrante (`createDofaItem` / `deleteDofaItem`), objetivos y estrategias; auditoría en cada cambio |
 | `PlaneacionAssignmentService` | Sync de asignados + auto-permisos |
 | `PlaneacionDashboardService` | KPI y series del mes, acotados al perfil |
 | `PlaneacionFichaExportService` | Excel (`PlaneacionFichaExport`) y PDF de la ficha; mismos filtros que la consulta |
@@ -216,7 +222,7 @@ No hay jobs ni correo en V1.
 
 ## JavaScript / assets (si aplica)
 
-- CSS: `resources/css/areas/calidad/117-calidad-planeacion.css`. Captura: hueco vertical de 10px entre secciones.
+- CSS: `resources/css/areas/calidad/117-calidad-planeacion.css`. Captura: hueco vertical de 10px entre secciones. Estrategia: capa `118-calidad-planeacion-estrategia.css` (hero del DOFA, subpestañas, matriz, tarjetas de objetivo/estrategia y barras de avance).
 - Charts: `resources/js/planeacion-dashboard-charts.js`, `resources/js/planeacion-ficha-charts.js` (Apex; entries Vite). El gráfico de ficha usa puntos `{x, y}` por mes (`ENE`…`DIC`), curva recta y **ancho 100%** alineado a la hoja. Etiquetas de **valor** encima de cada barra y de **porcentaje (Resultado)** dentro del grupo de barras; Meta no lleva etiqueta. Cabeceras **GRÁFICOS** y **ANÁLISIS DE RESULTADOS** con fondo `--color-primary` (mismo azul de las pestañas de tablero) y texto blanco; margen vertical 20px alrededor del canvas. En la hoja, `.t-head` en negrita y `.t-body` en peso normal.
 - Selects: `<x-searchable-select>`. Chrome: `.module-tab`, icon-btn canónicos. Listados: DataTables `serverSide`. Compartir: botón `users` en toolbar (ficha) y acciones (edición); el formulario vive en `<x-modal name="planeacion-share">`. Archivar: formularios `.js-confirm-archive` + modal `confirm-archive`. Restablecer: ícono `rotate-ccw` en listado (filtro Archivado) y ficha.
 - Referencia de ficha: captura Operaciones (FT-OP-01). Referencia de dashboard: GH área.
