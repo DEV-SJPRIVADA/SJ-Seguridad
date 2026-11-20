@@ -102,6 +102,9 @@ return [
         'devreq.tab.leader_approval' => 'Solicitudes desarrollo: Aprobación líder',
         'devreq.tab.tic_queue' => 'Solicitudes desarrollo: Bandeja TIC',
         'devreq.tab.view' => 'Solicitudes desarrollo: Consulta',
+
+        // Matrices dinámicas (módulo compartido)
+        'matrices.manage' => 'Matrices: Crear y administrar matrices dinámicas',
     ],
 
     'area_indicador_permissions' => [
@@ -225,6 +228,8 @@ return [
         'comercial.services.view' => 'Permite ver los servicios en Gestión Clientes.',
         'comercial.services.edit' => 'Permite crear y editar servicios.',
         'comercial.parameters.edit' => 'Permite administrar los catálogos comerciales.',
+
+        'matrices.manage' => 'Permite crear matrices dinámicas, definir y versionar sus campos, publicarlas, compartirlas y archivarlas.',
     ],
 
     'areas' => [
@@ -272,6 +277,7 @@ return [
         'cartas_notificacion' => 'Cartas Notificación',
         'inasistencias' => 'Inasistencias',
         'documentos' => 'Biblioteca Calidad',
+        'matrices' => 'Matrices',
     ],
 
     /*
