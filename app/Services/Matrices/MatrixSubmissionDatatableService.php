@@ -34,7 +34,7 @@ final class MatrixSubmissionDatatableService
 
         $recordsTotal = (clone $base)->count();
 
-        $this->filters->apply($base, $this->filters->fromRequest($request), $user->id);
+        $this->filters->apply($base, $this->filters->fromRequest($request));
 
         $recordsFiltered = (clone $base)->count();
 
@@ -48,7 +48,6 @@ final class MatrixSubmissionDatatableService
         $rows = $base
             ->with([
                 'creator:id,name',
-                'assignee:id,name',
                 'values' => fn ($query) => $query->with('field:id,matrix_version_id,field_key,type,options'),
             ])
             ->skip($start)
@@ -82,7 +81,6 @@ final class MatrixSubmissionDatatableService
             '<strong>'.e($submission->folio).'</strong>',
             '<span class="matrices-status matrices-status--'.e($submission->status).'">'.e($submission->statusLabel()).'</span>',
             e($submission->creator?->name ?? '—'),
-            e($submission->assignee?->name ?? '—'),
             $submission->created_at?->format('d/m/Y H:i') ?? '—',
         ];
 
@@ -116,6 +114,21 @@ final class MatrixSubmissionDatatableService
             $html .= '<a href="'.e($editUrl).'" class="matrices-row-actions__btn matrices-row-actions__btn--primary" title="Editar registro">Editar</a>';
         }
 
+        // Archivar por fila: mismo permiso y confirmación que el detalle.
+        if (Gate::forUser($user)->allows('archiveSubmission', [$matrix, $submission])) {
+            $archiveUrl = route('matrices.submissions.archive', [
+                'module' => $module,
+                'matrix' => $matrix->id,
+                'submission' => $submission->id,
+            ]);
+
+            $html .= '<form method="POST" action="'.e($archiveUrl).'" class="matrices-row-actions__form" '
+                .'onsubmit="return confirm('.e(json_encode('¿Archivar el registro '.$submission->folio.'? Se conserva para consulta.', JSON_UNESCAPED_UNICODE)).');">'
+                .csrf_field()
+                .'<button type="submit" class="matrices-row-actions__btn matrices-row-actions__btn--danger" title="Archivar registro">Archivar</button>'
+                .'</form>';
+        }
+
         $html .= '</div>';
 
         return $html;
@@ -139,8 +152,7 @@ final class MatrixSubmissionDatatableService
             0 => $query->orderBy('matrix_submissions.folio', $direction),
             1 => $query->orderBy('matrix_submissions.status', $direction),
             2 => $query->orderByRaw('(select name from users where users.id = matrix_submissions.created_by_user_id) '.$direction),
-            3 => $query->orderByRaw('(select name from users where users.id = matrix_submissions.assigned_to_user_id) '.$direction),
-            4 => $query->orderBy('matrix_submissions.created_at', $direction),
+            3 => $query->orderBy('matrix_submissions.created_at', $direction),
             default => $query->orderByDesc('matrix_submissions.id'),
         };
     }

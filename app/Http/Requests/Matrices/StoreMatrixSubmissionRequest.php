@@ -32,7 +32,6 @@ class StoreMatrixSubmissionRequest extends FormRequest
             'signature_mode.*' => ['nullable', 'in:draw,profile'],
             'signature_canvas' => ['nullable', 'array'],
             'signature_canvas.*' => ['nullable', 'string'],
-            'assigned_to_user_id' => ['nullable', 'integer', 'exists:users,id'],
         ];
     }
 
@@ -43,7 +42,6 @@ class StoreMatrixSubmissionRequest extends FormRequest
     {
         return [
             'files.*.*' => 'archivo adjunto',
-            'assigned_to_user_id' => 'usuario asignado',
         ];
     }
 }

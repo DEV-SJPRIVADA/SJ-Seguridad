@@ -40,16 +40,22 @@ final readonly class MatrixAccess
         );
     }
 
-    public function canViewSubmission(bool $isCreator, bool $isAssignee): bool
+    /**
+     * Alcance de lectura por registro: "Ver todo" (compartir) o solo los propios.
+     */
+    public function canViewSubmission(bool $isCreator): bool
     {
         if (! $this->canView) {
             return false;
         }
 
-        return $this->canViewOthers || $isCreator || $isAssignee;
+        return $this->canViewOthers || $isCreator;
     }
 
-    public function canEditSubmission(bool $isCreator, bool $isAssignee): bool
+    /**
+     * Edición por registro. Sin "Editar todo" solo se editan los propios.
+     */
+    public function canEditSubmission(bool $isCreator): bool
     {
         if (! $this->canView) {
             return false;
@@ -59,7 +65,7 @@ final readonly class MatrixAccess
             return true;
         }
 
-        return $this->canRegister && ($isCreator || $isAssignee);
+        return $this->canRegister && $isCreator;
     }
 
     /**

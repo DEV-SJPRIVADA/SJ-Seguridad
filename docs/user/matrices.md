@@ -35,16 +35,24 @@ El creador siempre ve y edita todos los registros.
 1. Abre la matriz y pulsa **Registrar**.
 2. Diligencia los campos. Los textos se guardan en MAYÚSCULAS automáticamente (salvo que el campo indique conservar mayúsculas/minúsculas).
 3. Adjunta archivos (máx. 10 por campo, 10 MB cada uno) o firma (dibujando o usando tu firma de perfil).
-4. Asigna el registro a un usuario si aplica.
-5. Guarda.
+4. Guarda.
 
 ## Consultar y filtrar
 
-El listado es paginado y filtrable: busca por folio o usuario, filtra por estado, fechas, asignado y por los campos marcados como filtrables. Exporta a Excel con el botón **Excel** (respeta los filtros).
+El listado es paginado y filtrable: busca por folio o por el usuario que registró, filtra por estado, fechas y por los campos marcados como filtrables. Exporta a Excel con el botón **Excel** (respeta los filtros).
+
+## Quién ve cada registro
+
+La visibilidad se define en la pestaña **Compartir**, no en el formulario:
+
+- Si el acceso tiene marcado **Ver todo** (o **Editar todo**), la persona ve todos los registros de la matriz.
+- Si no tiene esas casillas, ve **solo los registros que ella misma creó**.
+
+No hay campo para asignar un registro a otro usuario.
 
 ## Editar y archivar
 
-- Quien puede editar (creador, asignado o con permiso "Editar todo") puede modificar el registro.
+- Quien puede editar (el creador del registro, o quien tenga **Editar todo**) puede modificarlo.
 - Archivar un registro o una matriz no borra los datos: se conservan para consulta histórica.
 
 ## Límites

@@ -11,7 +11,6 @@ use App\Models\Matrices\Matrix;
 use App\Models\Matrices\MatrixSubmission;
 use App\Services\Matrices\MatrixAccessResolver;
 use App\Services\Matrices\MatrixAuditService;
-use App\Services\Matrices\MatrixListingService;
 use App\Services\Matrices\MatrixSubmissionDatatableService;
 use App\Services\Matrices\MatrixSubmissionFilterService;
 use App\Services\Matrices\MatrixSubmissionPresenter;
@@ -32,7 +31,6 @@ class MatrixSubmissionController extends Controller
         private readonly MatrixSubmissionService $submissions,
         private readonly MatrixSubmissionDatatableService $datatable,
         private readonly MatrixSubmissionFilterService $filters,
-        private readonly MatrixListingService $listing,
         private readonly MatrixAccessResolver $accessResolver,
         private readonly MatrixAuditService $audit,
     ) {}
@@ -52,7 +50,6 @@ class MatrixSubmissionController extends Controller
             'tabs' => $this->matrixTabs($matrix, $module, 'records'),
             'tableFields' => $this->presenter->tableFields($matrix),
             'filterFields' => $this->presenter->filterFields($matrix),
-            'assigneeOptions' => $this->listing->userOptions($matrix),
             'filters' => $filters,
             'hasActiveFilters' => $query !== [],
             'canRegister' => $access->canRegister && ! $matrix->isArchived(),
@@ -83,12 +80,9 @@ class MatrixSubmissionController extends Controller
             'matrix' => $matrix,
             'submission' => null,
             'fields' => $fields,
-            'values' => [],
+            // Colección vacía: la vista resuelve valores con `->get(field_id)`.
+            'values' => collect(),
             'attachments' => collect(),
-            'assigneeOptions' => $this->listing->assignableUsers($matrix)
-                ->mapWithKeys(fn ($user): array => [$user->id => $user->name])
-                ->all(),
-            'assignedTo' => null,
             'profileSignatureUri' => app(UserSignatureService::class)->dataUri(auth()->user()),
             'tabs' => $this->matrixTabs($matrix, $module, 'records'),
         ]);
@@ -104,13 +98,10 @@ class MatrixSubmissionController extends Controller
         $submission = $this->submissions->create($user, $matrix, $this->payload($request));
         $this->audit->submission('create', 'matrix_submission_created', $submission);
 
+        // Al guardar se vuelve al listado de registros, no al detalle.
         return redirect()
-            ->route('matrices.submissions.show', [
-                'module' => $module,
-                'matrix' => $matrix->id,
-                'submission' => $submission->id,
-            ])
-            ->with('status', 'Registro guardado.');
+            ->route('matrices.submissions.index', ['module' => $module, 'matrix' => $matrix->id])
+            ->with('status', 'Registro '.$submission->folio.' guardado.');
     }
 
     public function show(string $module, Matrix $matrix, MatrixSubmission $submission): View
@@ -121,7 +112,6 @@ class MatrixSubmissionController extends Controller
         $submission->load([
             'version',
             'creator:id,name',
-            'assignee:id,name',
             'values.field',
             'attachments.field',
         ]);
@@ -157,10 +147,6 @@ class MatrixSubmissionController extends Controller
             'fields' => $fields,
             'values' => $submission->values->keyBy('field_id'),
             'attachments' => $submission->attachments->groupBy('field_id'),
-            'assigneeOptions' => $this->listing->assignableUsers($matrix)
-                ->mapWithKeys(fn ($user): array => [$user->id => $user->name])
-                ->all(),
-            'assignedTo' => $submission->assigned_to_user_id,
             'profileSignatureUri' => app(UserSignatureService::class)->dataUri(auth()->user()),
             'tabs' => $this->matrixTabs($matrix, $module, 'records'),
         ]);
@@ -180,13 +166,10 @@ class MatrixSubmissionController extends Controller
         $this->submissions->update($submission, $this->payload($request), $user);
         $this->audit->submission('update', 'matrix_submission_updated', $submission);
 
+        // Igual que en el alta: se regresa al listado de registros.
         return redirect()
-            ->route('matrices.submissions.show', [
-                'module' => $module,
-                'matrix' => $matrix->id,
-                'submission' => $submission->id,
-            ])
-            ->with('status', 'Registro actualizado.');
+            ->route('matrices.submissions.index', ['module' => $module, 'matrix' => $matrix->id])
+            ->with('status', 'Registro '.$submission->folio.' actualizado.');
     }
 
     public function archive(string $module, Matrix $matrix, MatrixSubmission $submission): RedirectResponse
@@ -212,7 +195,6 @@ class MatrixSubmissionController extends Controller
             'files' => (array) $request->file('files', []),
             'signature_mode' => (array) $request->input('signature_mode', []),
             'signature_canvas' => (array) $request->input('signature_canvas', []),
-            'assigned_to_user_id' => $request->input('assigned_to_user_id'),
         ];
     }
 
@@ -224,7 +206,7 @@ class MatrixSubmissionController extends Controller
     {
         $query = [];
 
-        foreach (['q', 'status', 'from', 'to', 'assignee'] as $key) {
+        foreach (['q', 'status', 'from', 'to'] as $key) {
             $value = $filters[$key] ?? null;
 
             if (is_string($value) && $value !== '') {

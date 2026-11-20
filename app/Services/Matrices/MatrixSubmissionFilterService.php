@@ -21,7 +21,6 @@ final class MatrixSubmissionFilterService
             'status' => $request->string('status')->toString(),
             'from' => $request->string('from')->toString(),
             'to' => $request->string('to')->toString(),
-            'assignee' => $request->string('assignee')->toString(),
             'fields' => $request->input('fields', []),
         ];
     }
@@ -30,7 +29,7 @@ final class MatrixSubmissionFilterService
      * @param  Builder<MatrixSubmission>  $query
      * @param  array<string, mixed>  $filters
      */
-    public function apply(Builder $query, array $filters, int $userId): void
+    public function apply(Builder $query, array $filters): void
     {
         $search = trim((string) ($filters['q'] ?? ''));
 
@@ -39,8 +38,7 @@ final class MatrixSubmissionFilterService
 
             $query->where(function (Builder $inner) use ($like): void {
                 $inner->where('matrix_submissions.folio', 'like', $like)
-                    ->orWhereHas('creator', fn (Builder $creator) => $creator->where('name', 'like', $like))
-                    ->orWhereHas('assignee', fn (Builder $assignee) => $assignee->where('name', 'like', $like));
+                    ->orWhereHas('creator', fn (Builder $creator) => $creator->where('name', 'like', $like));
             });
         }
 
@@ -60,16 +58,6 @@ final class MatrixSubmissionFilterService
 
         if ($to !== '') {
             $query->whereDate('matrix_submissions.created_at', '<=', $to);
-        }
-
-        $assignee = (string) ($filters['assignee'] ?? '');
-
-        if ($assignee === 'me') {
-            $query->where('matrix_submissions.assigned_to_user_id', $userId);
-        } elseif ($assignee === 'none') {
-            $query->whereNull('matrix_submissions.assigned_to_user_id');
-        } elseif ($assignee !== '' && ctype_digit($assignee)) {
-            $query->where('matrix_submissions.assigned_to_user_id', (int) $assignee);
         }
 
         $fieldFilters = $filters['fields'] ?? [];

@@ -11,7 +11,7 @@ Permite a usuarios autorizados (`matrices.manage`) crear matrices con formulario
 - `matrix_fields`: campos de una versión (`field_key` estable, tipo, sección, opciones, reglas JSON).
 - `matrix_user_access`: otorgamientos por usuario (`can_register`, `can_view_others`, `can_edit_others`, `expires_at`).
 - `matrix_area_access`: otorgamientos por área (mismas columnas).
-- `matrix_submissions`: registros (folio, estado, creador, asignado, versión usada).
+- `matrix_submissions`: registros (folio, estado, creador, versión usada). La columna `assigned_to_user_id` existe en la tabla pero ya **no se usa** en la aplicación (la asignación manual se retiró; queda solo por compatibilidad de datos).
 - `matrix_submission_values`: valores por campo (texto, número, fecha, JSON).
 - `matrix_submission_attachments`: adjuntos y firmas (disco privado).
 
@@ -20,7 +20,7 @@ Permite a usuarios autorizados (`matrices.manage`) crear matrices con formulario
 - Un único permiso Spatie: `matrices.manage` (crear, definir, versionar, publicar, compartir, archivar).
 - Las capacidades `ver`, `registrar`, `editar` son columnas en las tablas de acceso, no permisos Spatie.
 - El creador de la matriz tiene todo. `matrices.manage` global también.
-- `can_edit_others ⇒ can_view_others`. "Solo los míos" = creado por mí o asignado a mí.
+- `can_edit_others ⇒ can_view_others`. **"Solo los míos" = únicamente los creados por mí.**
 
 ## Estados
 
@@ -48,6 +48,15 @@ Listado, crear, editar/publicar/archivar, compartir (store/destroy por usuario y
 ## Servicios
 
 `MatrixAccessResolver`, `MatrixDefinitionService`, `MatrixShareService`, `MatrixListingService`, `MatrixSubmissionService`, `MatrixSubmissionValidator`, `MatrixAttachmentService`, `MatrixSubmissionPresenter`, `MatrixSubmissionDatatableService`, `MatrixSubmissionFilterService`, `MatrixAuditService`.
+
+## Alcance de registros
+
+La visibilidad se define **solo** en la pestaña **Compartir** de la matriz:
+
+- Con **Ver todo** (`can_view_others`) o **Editar todo** (`can_edit_others`): ve todos los registros de la matriz.
+- Sin esas casillas: ve únicamente los registros que él mismo creó.
+
+No existe asignación manual de un registro a un usuario: `MatrixSubmission::scopeVisibleTo()` y `MatrixAccess::canViewSubmission()`/`canEditSubmission()` reciben solo `isCreator`.
 
 ## DataTable y export
 

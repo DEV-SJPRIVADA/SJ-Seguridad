@@ -34,7 +34,6 @@ class MatrixSubmission extends Model
         'folio',
         'status',
         'created_by_user_id',
-        'assigned_to_user_id',
         'submitted_at',
         'archived_at',
     ];
@@ -63,11 +62,6 @@ class MatrixSubmission extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
-    }
-
-    public function assignee(): BelongsTo
-    {
-        return $this->belongsTo(User::class, 'assigned_to_user_id');
     }
 
     /**
@@ -117,8 +111,7 @@ class MatrixSubmission extends Model
             return false;
         }
 
-        return (int) $this->created_by_user_id === $userId
-            || (int) $this->assigned_to_user_id === $userId;
+        return (int) $this->created_by_user_id === $userId;
     }
 
     /**
@@ -133,9 +126,6 @@ class MatrixSubmission extends Model
             return $query;
         }
 
-        return $query->where(function (Builder $inner) use ($userId): void {
-            $inner->where('created_by_user_id', $userId)
-                ->orWhere('assigned_to_user_id', $userId);
-        });
+        return $query->where('created_by_user_id', $userId);
     }
 }

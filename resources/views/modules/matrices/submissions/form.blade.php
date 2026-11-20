@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         @include('modules.matrices.partials.subnav', ['tabs' => $tabs, 'label' => $matrix->name])
     </x-slot>
@@ -36,7 +36,7 @@
                     <p class="matrices-hero__eyebrow">{{ $isEdit ? 'Editar registro' : 'Nuevo registro' }}</p>
                     <h1 class="matrices-hero__title">{{ $isEdit ? $submission->folio : $matrix->name }}</h1>
                     <p class="matrices-hero__text">
-                        {{ $isEdit ? 'Actualiza la informaciÃ³n y guarda los cambios.' : 'Diligencia los campos y guarda el registro.' }}
+                        {{ $isEdit ? 'Actualiza la información y guarda los cambios.' : 'Diligencia los campos y guarda el registro.' }}
                     </p>
                 </div>
 
@@ -133,8 +133,8 @@
                                                     :name="$name"
                                                     :options="collect($field->options ?? [])->map(fn ($option) => ['value' => (string) ($option['key'] ?? ''), 'label' => (string) ($option['label'] ?? '')])->values()->all()"
                                                     :value="$current"
-                                                    :placeholder="$field->placeholder ?: 'Selecciona una opciÃ³n'"
-                                                    searchPlaceholder="Buscar opciÃ³nâ€¦"
+                                                    :placeholder="$field->placeholder ?: 'Selecciona una opción'"
+                                                    searchPlaceholder="Buscar opción…"
                                                     :required="$field->required"
                                                     :allowClear="! $field->required"
                                                 />
@@ -201,7 +201,7 @@
                                                                     type="submit"
                                                                     form="attachment-delete-{{ $attachment->id }}"
                                                                     class="matrices-link matrices-link--danger"
-                                                                    onclick="return confirm('Â¿Eliminar el archivo {{ $attachment->original_name }}?');"
+                                                                    onclick="return confirm('¿Eliminar el archivo {{ $attachment->original_name }}?');"
                                                                 >
                                                                     Eliminar
                                                                 </button>
@@ -218,7 +218,7 @@
                                                     multiple
                                                     @if ($field->required && $fieldAttachments->isEmpty()) required @endif
                                                 >
-                                                <p class="matrices-help">MÃ¡ximo 10 archivos por campo, 10 MB por archivo.</p>
+                                                <p class="matrices-help">Máximo 10 archivos por campo, 10 MB por archivo.</p>
                                                 @break
 
                                             @case('signature')
@@ -313,32 +313,6 @@
                         </div>
                     </section>
                 @endforeach
-
-                <section class="panel matrices-form__section">
-                    <div class="panel__header panel__header--compact">
-                        <h2 class="matrices-panel-title">AsignaciÃ³n</h2>
-                    </div>
-                    <div class="panel__body">
-                        <div class="matrices-form-grid">
-                            <div class="form-field matrices-form-grid__col matrices-form-grid__col--12">
-                                <label class="form-label" for="assigned-to">Asignar a un usuario (opcional)</label>
-                                <x-searchable-select
-                                    id="assigned-to"
-                                    name="assigned_to_user_id"
-                                    :options="collect($assigneeOptions)->map(fn ($label, $value) => ['value' => (string) $value, 'label' => $label])->values()->all()"
-                                    :value="(string) old('assigned_to_user_id', $assignedTo ?? '')"
-                                    placeholder="Sin asignar"
-                                    searchPlaceholder="Buscar usuarioâ€¦"
-                                    :allowClear="true"
-                                />
-                                <p class="matrices-help">El usuario asignado puede ver y editar este registro aunque no haya creado la matriz.</p>
-                                @error('assigned_to_user_id')
-                                    <p class="matrices-error">{{ $message }}</p>
-                                @enderror
-                            </div>
-                        </div>
-                    </div>
-                </section>
 
                 <div class="matrices-form__actions">
                     <a href="{{ $isEdit

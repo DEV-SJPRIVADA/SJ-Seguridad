@@ -4,7 +4,9 @@ namespace Tests\Feature\Matrices;
 
 use App\Models\Matrices\Matrix;
 use App\Models\Matrices\MatrixAreaAccess;
+use App\Models\Matrices\MatrixSubmission;
 use App\Models\Matrices\MatrixUserAccess;
+use App\Models\Matrices\MatrixVersion;
 use App\Models\User;
 use App\Services\Matrices\MatrixAccessResolver;
 use Database\Seeders\RoleAndPermissionSeeder;
@@ -230,6 +232,56 @@ class MatrixAccessResolverTest extends TestCase
 
         $this->assertFalse(Gate::forUser($stranger)->allows('view', $matrix));
         $this->assertFalse(Gate::forUser($stranger)->allows('registerSubmission', $matrix));
+    }
+
+    /**
+     * La visibilidad depende solo de "Compartir": sin Ver todo se ven únicamente los propios.
+     */
+    public function test_own_records_scope_shows_only_creator_submissions(): void
+    {
+        $owner = User::factory()->create(['area_key' => 'calidad']);
+        $member = User::factory()->create(['area_key' => 'calidad']);
+        $matrix = $this->makeMatrix($owner);
+        $version = MatrixVersion::create([
+            'matrix_id' => $matrix->id,
+            'version_number' => 1,
+            'status' => MatrixVersion::STATUS_PUBLISHED,
+            'published_at' => now(),
+            'published_by_user_id' => $owner->id,
+        ]);
+
+        MatrixAreaAccess::create([
+            'matrix_id' => $matrix->id,
+            'area_key' => 'calidad',
+            'can_register' => true,
+        ]);
+
+        $own = MatrixSubmission::create([
+            'matrix_id' => $matrix->id,
+            'matrix_version_id' => $version->id,
+            'folio' => 'MX-TEST-0001',
+            'status' => MatrixSubmission::STATUS_SUBMITTED,
+            'created_by_user_id' => $member->id,
+        ]);
+
+        $foreign = MatrixSubmission::create([
+            'matrix_id' => $matrix->id,
+            'matrix_version_id' => $version->id,
+            'folio' => 'MX-TEST-0002',
+            'status' => MatrixSubmission::STATUS_SUBMITTED,
+            'created_by_user_id' => $owner->id,
+        ]);
+
+        $access = $this->resolver->resolve($member, $matrix);
+
+        $visibleIds = MatrixSubmission::query()
+            ->where('matrix_id', $matrix->id)
+            ->visibleTo($access->canViewOthers, $member->id)
+            ->pluck('id')
+            ->all();
+
+        $this->assertSame([$own->id], $visibleIds);
+        $this->assertNotContains($foreign->id, $visibleIds);
     }
 
     private function makeMatrix(User $owner): Matrix

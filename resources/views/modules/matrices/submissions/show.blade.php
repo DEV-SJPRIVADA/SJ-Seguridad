@@ -20,7 +20,6 @@
                     <div class="matrices-detail__meta">
                         <span class="matrices-status matrices-status--{{ $submission->status }}">{{ $submission->statusLabel() }}</span>
                         <span class="matrices-muted">Registrado por {{ $submission->creator?->name ?? '—' }}</span>
-                        <span class="matrices-muted">Asignado a {{ $submission->assignee?->name ?? 'Sin asignar' }}</span>
                         <span class="matrices-muted">{{ $submission->created_at?->format('d/m/Y H:i') }}</span>
                         <span class="matrices-muted">Versión {{ $submission->version?->version_number ?? '—' }}</span>
                     </div>

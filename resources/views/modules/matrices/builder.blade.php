@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         @include('modules.matrices.partials.subnav', ['tabs' => $tabs, 'label' => 'Matrices'])
     </x-slot>
@@ -26,8 +26,8 @@
 
             <header class="matrices-builder__head">
                 <div>
-                    <p class="matrices-hero__eyebrow">{{ $matrix ? 'Editar definiciÃ³n' : 'Nueva matriz' }}</p>
-                    <h1 class="matrices-hero__title">{{ $matrix?->name ?? 'DiseÃ±a tu matriz' }}</h1>
+                    <p class="matrices-hero__eyebrow">{{ $matrix ? 'Editar definición' : 'Nueva matriz' }}</p>
+                    <h1 class="matrices-hero__title">{{ $matrix?->name ?? 'Diseña tu matriz' }}</h1>
                     <p class="matrices-hero__text">
                         Arma el formulario con los campos que necesites. Los cambios se guardan como borrador
                         hasta que publiques la matriz.
@@ -40,7 +40,7 @@
                     </a>
 
                     @if ($matrix && ($matrix->isDraft() || $hasDraft))
-                        <form method="POST" action="{{ route('matrices.publish', ['module' => $module, 'matrix' => $matrix->id]) }}" onsubmit="return confirm('Â¿Publicar la matriz? Los usuarios verÃ¡n esta versiÃ³n del formulario.');">
+                        <form method="POST" action="{{ route('matrices.publish', ['module' => $module, 'matrix' => $matrix->id]) }}" onsubmit="return confirm('¿Publicar la matriz? Los usuarios verán esta versión del formulario.');">
                             @csrf
                             <button type="submit" class="btn btn--info" @disabled($matrix->currentVersion === null && $matrix->isDraft())>
                                 Publicar
@@ -80,32 +80,32 @@
                                             maxlength="160"
                                             required
                                             value="{{ old('name', $matrix?->name) }}"
-                                            placeholder="Ej. Matriz de inspecciÃ³n de extintores"
+                                            placeholder="Ej. Matriz de inspección de extintores"
                                         >
                                     </div>
 
                                     <div class="form-field">
-                                        <label class="form-label" for="matrix-area">Ãrea dueÃ±a</label>
+                                        <label class="form-label" for="matrix-area">Área dueña</label>
                                         <x-searchable-select
                                             id="matrix-area"
                                             name="area_key"
                                             :options="collect($areaOptions)->map(fn ($label, $key) => ['value' => $key, 'label' => $label])->values()->all()"
                                             :value="old('area_key', $defaultArea)"
-                                            placeholder="Selecciona un Ã¡rea"
-                                            searchPlaceholder="Buscar Ã¡reaâ€¦"
+                                            placeholder="Selecciona un área"
+                                            searchPlaceholder="Buscar área…"
                                             :required="true"
                                         />
                                     </div>
 
                                     <div class="form-field matrices-form-grid__full">
-                                        <label class="form-label" for="matrix-description">DescripciÃ³n</label>
+                                        <label class="form-label" for="matrix-description">Descripción</label>
                                         <textarea
                                             id="matrix-description"
                                             class="form-input"
                                             name="description"
                                             rows="3"
                                             maxlength="2000"
-                                            placeholder="Para quÃ© sirve esta matriz y quiÃ©n debe diligenciarla"
+                                            placeholder="Para qué sirve esta matriz y quién debe diligenciarla"
                                         >{{ old('description', $matrix?->description) }}</textarea>
                                     </div>
                                 </div>
@@ -116,7 +116,7 @@
                             <div class="panel__header matrices-builder__fields-head">
                                 <div>
                                     <h2 class="matrices-panel-title">Campos del formulario</h2>
-                                    <p class="matrices-builder__hint" x-text="`${fields.length} campo(s) en esta versiÃ³n`"></p>
+                                    <p class="matrices-builder__hint" x-text="`${fields.length} campo(s) en esta versión`"></p>
                                 </div>
                                 <div class="matrices-builder__fields-tools">
                                     <button type="button" class="btn btn--secondary btn--sm" @click="expandAll()">Expandir</button>
@@ -172,11 +172,11 @@
                                                 <div class="matrices-form-grid">
                                                     <div class="form-field">
                                                         <label class="form-label">Nombre del campo</label>
-                                                        <input type="text" class="form-input" maxlength="160" x-model="field.label" placeholder="Ej. Fecha de inspecciÃ³n">
+                                                        <input type="text" class="form-input" maxlength="160" x-model="field.label" placeholder="Ej. Fecha de inspección">
                                                     </div>
 
                                                     <div class="form-field">
-                                                        <label class="form-label">SecciÃ³n</label>
+                                                        <label class="form-label">Sección</label>
                                                         <input type="text" class="form-input" maxlength="120" x-model="field.section" placeholder="Agrupa campos (opcional)">
                                                     </div>
 
@@ -197,7 +197,7 @@
 
                                                     <div class="form-field">
                                                         <label class="form-label">Texto de ayuda</label>
-                                                        <input type="text" class="form-input" maxlength="255" x-model="field.help" placeholder="InstrucciÃ³n breve para quien diligencia">
+                                                        <input type="text" class="form-input" maxlength="255" x-model="field.help" placeholder="Instrucción breve para quien diligencia">
                                                     </div>
 
                                                     <div class="form-field" x-show="field.type !== 'file' && field.type !== 'signature'">
@@ -228,7 +228,7 @@
                                                         </label>
                                                         <label class="matrices-check">
                                                             <input type="checkbox" x-model="field.show_in_table" :disabled="field.type === 'file' || field.type === 'signature'">
-                                                            <span>Mostrar como columna en el listado (mÃ¡x. 6)</span>
+                                                            <span>Mostrar como columna en el listado (máx. 6)</span>
                                                         </label>
                                                         <label class="matrices-check" x-show="isOptionType(field.type)">
                                                             <input type="checkbox" x-model="field.filterable">
@@ -236,7 +236,7 @@
                                                         </label>
                                                         <label class="matrices-check" x-show="field.type === 'text' || field.type === 'textarea'">
                                                             <input type="checkbox" x-model="field.preserve_case">
-                                                            <span>Conservar mayÃºsculas y minÃºsculas (no forzar MAYÃšSCULAS)</span>
+                                                            <span>Conservar mayúsculas y minúsculas (no forzar MAYÚSCULAS)</span>
                                                         </label>
                                                     </div>
                                                 </div>
@@ -244,13 +244,13 @@
                                                 <div class="matrices-options" x-show="isOptionType(field.type)">
                                                     <div class="matrices-options__head">
                                                         <span class="matrices-options__title">Opciones</span>
-                                                        <button type="button" class="btn btn--secondary btn--sm" @click="addOption(index)">Agregar opciÃ³n</button>
+                                                        <button type="button" class="btn btn--secondary btn--sm" @click="addOption(index)">Agregar opción</button>
                                                     </div>
 
                                                     <template x-for="(option, optionIndex) in field.options" :key="optionIndex">
                                                         <div class="matrices-options__row">
                                                             <span class="matrices-options__index" x-text="optionIndex + 1"></span>
-                                                            <input type="text" class="form-input" maxlength="160" x-model="option.label" placeholder="Texto de la opciÃ³n">
+                                                            <input type="text" class="form-input" maxlength="160" x-model="option.label" placeholder="Texto de la opción">
                                                             <button type="button" class="matrices-icon-btn" title="Subir" @click="moveOption(index, optionIndex, -1)" :disabled="optionIndex === 0">
                                                                 <x-lucide-chevron-up width="16" height="16" />
                                                             </button>
@@ -307,8 +307,8 @@
                                         Guardar borrador
                                     </button>
                                     <p class="matrices-builder__save-note">
-                                        Publicar congela esta versiÃ³n. Si editas una matriz publicada, se crea una
-                                        versiÃ³n nueva sin afectar los registros existentes.
+                                        Publicar congela esta versión. Si editas una matriz publicada, se crea una
+                                        versión nueva sin afectar los registros existentes.
                                     </p>
                                 </div>
                             </div>
@@ -316,11 +316,11 @@
 
                         <section class="panel matrices-builder__tips">
                             <div class="panel__body">
-                                <h3 class="matrices-builder__tips-title">Buenas prÃ¡cticas</h3>
+                                <h3 class="matrices-builder__tips-title">Buenas prácticas</h3>
                                 <ul class="matrices-builder__tips-list">
                                     <li>Usa nombres claros y sin abreviaturas.</li>
                                     <li>Marca solo los campos realmente obligatorios.</li>
-                                    <li>Elige mÃ¡ximo 6 columnas para no saturar el listado.</li>
+                                    <li>Elige máximo 6 columnas para no saturar el listado.</li>
                                     <li>Adjuntos: 10 MB por archivo y 200 MB por matriz.</li>
                                 </ul>
                             </div>

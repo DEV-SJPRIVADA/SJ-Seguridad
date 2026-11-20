@@ -21,7 +21,6 @@ final class MatrixSubmissionService
     public function __construct(
         private readonly MatrixSubmissionValidator $validator,
         private readonly MatrixAttachmentService $attachments,
-        private readonly MatrixListingService $listing,
     ) {}
 
     /**
@@ -48,8 +47,6 @@ final class MatrixSubmissionService
 
             $this->validator->validate($fields, $payload);
 
-            $assignedTo = $this->resolveAssignee($matrix, $payload['assigned_to_user_id'] ?? null);
-
             $locked->increment('submission_counter');
 
             $submission = MatrixSubmission::create([
@@ -58,7 +55,6 @@ final class MatrixSubmissionService
                 'folio' => sprintf('%s-%04d', $locked->code, (int) $locked->submission_counter),
                 'status' => MatrixSubmission::STATUS_SUBMITTED,
                 'created_by_user_id' => $user->id,
-                'assigned_to_user_id' => $assignedTo,
                 'submitted_at' => now(),
             ]);
 
@@ -92,7 +88,6 @@ final class MatrixSubmissionService
             $this->validator->validate($fields, $payload, $state['files'], $state['signatures']);
 
             $submission->forceFill([
-                'assigned_to_user_id' => $this->resolveAssignee($submission->matrix, $payload['assigned_to_user_id'] ?? null),
                 'submitted_at' => $submission->submitted_at ?? now(),
             ])->save();
 
@@ -174,24 +169,5 @@ final class MatrixSubmissionService
         }
 
         return mb_strtoupper($value, 'UTF-8');
-    }
-
-    private function resolveAssignee(Matrix $matrix, mixed $assignedTo): ?int
-    {
-        if ($assignedTo === null || $assignedTo === '') {
-            return null;
-        }
-
-        $assignedTo = (int) $assignedTo;
-
-        $allowed = $this->listing->assignableUsers($matrix)->pluck('id')->map(fn ($id): int => (int) $id);
-
-        if (! $allowed->contains($assignedTo)) {
-            throw ValidationException::withMessages([
-                'assigned_to_user_id' => 'El usuario asignado no tiene acceso a esta matriz.',
-            ]);
-        }
-
-        return $assignedTo;
     }
 }

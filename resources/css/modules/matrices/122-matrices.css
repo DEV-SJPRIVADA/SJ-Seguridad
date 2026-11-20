@@ -836,7 +836,37 @@
 }
 
 .matrices-records__table-wrap {
-    overflow-x: auto;
+    overflow: visible;
+}
+
+/* Chrome del DataTable: separa "longitud" y "buscar" para que no se solapen. */
+.matrices-records__table-wrap .req-manage-dt-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+    padding: 0.35rem 0 0.75rem;
+    margin-bottom: 0.35rem;
+    background: #fff;
+}
+
+.matrices-records__table-wrap .req-manage-dt-top .dataTables_length,
+.matrices-records__table-wrap .req-manage-dt-top .dataTables_filter {
+    float: none !important;
+    margin: 0 !important;
+}
+
+.matrices-records__table-wrap .req-manage-dt-top .dataTables_filter,
+.matrices-records__table-wrap .req-manage-dt-top .dataTables_filter label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    white-space: nowrap;
+}
+
+.matrices-records__table-wrap .dataTables_filter input {
+    margin-left: 0 !important;
 }
 
 .matrices-records__table th {
@@ -847,7 +877,14 @@
 .matrices-row-actions {
     display: flex;
     gap: 0.4rem;
+    align-items: center;
     flex-wrap: wrap;
+}
+
+/* El formulario de Archivar debe comportarse como un botón más de la fila. */
+.matrices-row-actions__form {
+    display: inline-flex;
+    margin: 0;
 }
 
 .matrices-row-actions__btn {
@@ -859,6 +896,8 @@
     color: var(--color-text-soft);
     text-decoration: none;
     background: #fff;
+    cursor: pointer;
+    font-family: inherit;
 }
 
 .matrices-row-actions__btn:hover {
@@ -875,6 +914,17 @@
 .matrices-row-actions__btn--primary:hover {
     background: #1f2937;
     color: #fff;
+}
+
+.matrices-row-actions__btn--danger {
+    color: var(--color-danger);
+    border-color: rgba(185, 28, 28, 0.25);
+}
+
+.matrices-row-actions__btn--danger:hover {
+    background: rgba(185, 28, 28, 0.08);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 /* ===== Form ===== */

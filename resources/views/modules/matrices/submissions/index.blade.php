@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         @include('modules.matrices.partials.subnav', ['tabs' => $tabs, 'label' => $matrix->name])
     </x-slot>
@@ -67,7 +67,7 @@
                                             ]"
                                             :value="$filters['status'] ?? ''"
                                             placeholder="Todos"
-                                            searchPlaceholder="Buscar estadoâ€¦"
+                                            searchPlaceholder="Buscar estado…"
                                             :allowClear="true"
                                         />
                                     </div>
@@ -82,19 +82,6 @@
                                         <input id="filter-to" type="date" class="form-input" name="to" value="{{ $filters['to'] ?? '' }}">
                                     </div>
 
-                                    <div class="form-field">
-                                        <label class="form-label" for="filter-assignee">Asignado a</label>
-                                        <x-searchable-select
-                                            id="filter-assignee"
-                                            name="assignee"
-                                            :options="collect($assigneeOptions)->map(fn ($label, $value) => ['value' => (string) $value, 'label' => $label])->prepend(['value' => 'me', 'label' => 'Solo mis registros'])->prepend(['value' => 'none', 'label' => 'Sin asignar'])->values()->all()"
-                                            :value="$filters['assignee'] ?? ''"
-                                            placeholder="Todos"
-                                            searchPlaceholder="Buscar usuarioâ€¦"
-                                            :allowClear="true"
-                                        />
-                                    </div>
-
                                     @foreach ($filterFields as $field)
                                         <div class="form-field">
                                             <label class="form-label" for="filter-field-{{ $field->field_key }}">{{ $field->label }}</label>
@@ -104,7 +91,7 @@
                                                 :options="collect($field->options ?? [])->map(fn ($option) => ['value' => (string) ($option['key'] ?? ''), 'label' => (string) ($option['label'] ?? '')])->values()->all()"
                                                 :value="$filters['fields'][$field->field_key] ?? ''"
                                                 placeholder="Todos"
-                                                searchPlaceholder="Buscar opciÃ³nâ€¦"
+                                                searchPlaceholder="Buscar opción…"
                                                 :allowClear="true"
                                             />
                                         </div>
@@ -119,14 +106,14 @@
                         </div>
                     </details>
 
-                    <div class="data-table-wrap matrices-records__table-wrap">
-                        <table class="supply-table matrices-records__table js-datatable" style="width:100%" data-dt-responsive="false" data-dt-compact="true" data-dt-url="{{ $datatableUrl }}">
+                    <div class="data-table-wrap req-manage-shell__table matrices-records__table-wrap">
+                        {{-- Clase propia (no `js-datatable`): el layout lo inicializa client-side y aquí necesitamos server-side. --}}
+                        <table class="supply-table matrices-records__table js-matrices-datatable" style="width:100%" data-dt-url="{{ $datatableUrl }}">
                             <thead>
                                 <tr>
                                     <th>Folio</th>
                                     <th>Estado</th>
                                     <th>Registrado por</th>
-                                    <th>Asignado a</th>
                                     <th>Fecha</th>
                                     @foreach ($tableFields as $field)
                                         <th>{{ $field->label }}</th>
@@ -145,13 +132,19 @@
     @push('scripts')
         <script>
             document.addEventListener('DOMContentLoaded', function () {
-                const $table = jQuery('.matrices-records__table');
+                const $table = jQuery('.js-matrices-datatable');
 
                 if (! $table.length || ! jQuery.fn.DataTable) {
                     return;
                 }
 
-                const orderableColumns = {{ 5 + $tableFields->count() }};
+                // Destruye una instancia previa para evitar doble inicialización del chrome.
+                if (jQuery.fn.DataTable.isDataTable($table[0])) {
+                    $table.DataTable().destroy();
+                }
+
+                // Folio, Estado, Registrado por, Fecha + columnas de campos; la última es Acciones.
+                const orderableColumns = {{ 4 + $tableFields->count() }};
 
                 $table.DataTable({
                     processing: true,
@@ -167,7 +160,7 @@
                     lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
                     pageLength: 10,
                     responsive: false,
-                    order: [[4, 'desc']],
+                    order: [[3, 'desc']],
                     columnDefs: [
                         { targets: [orderableColumns], orderable: false, searchable: false },
                     ],

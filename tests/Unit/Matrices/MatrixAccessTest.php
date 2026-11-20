@@ -11,8 +11,8 @@ class MatrixAccessTest extends TestCase
     {
         $access = MatrixAccess::owner();
 
-        $this->assertTrue($access->canViewSubmission(isCreator: false, isAssignee: false));
-        $this->assertTrue($access->canEditSubmission(isCreator: false, isAssignee: false));
+        $this->assertTrue($access->canViewSubmission(isCreator: false));
+        $this->assertTrue($access->canEditSubmission(isCreator: false));
         $this->assertTrue($access->canManageDefinition);
     }
 
@@ -20,8 +20,8 @@ class MatrixAccessTest extends TestCase
     {
         $access = MatrixAccess::none();
 
-        $this->assertFalse($access->canViewSubmission(isCreator: true, isAssignee: true));
-        $this->assertFalse($access->canEditSubmission(isCreator: true, isAssignee: true));
+        $this->assertFalse($access->canViewSubmission(isCreator: true));
+        $this->assertFalse($access->canEditSubmission(isCreator: true));
     }
 
     public function test_view_only_grant_cannot_edit_own_submission(): void
@@ -34,8 +34,8 @@ class MatrixAccessTest extends TestCase
             canManageDefinition: false,
         );
 
-        $this->assertTrue($access->canViewSubmission(isCreator: true, isAssignee: false));
-        $this->assertFalse($access->canEditSubmission(isCreator: true, isAssignee: false));
+        $this->assertTrue($access->canViewSubmission(isCreator: true));
+        $this->assertFalse($access->canEditSubmission(isCreator: true));
     }
 
     public function test_register_grant_can_edit_own_but_not_others(): void
@@ -48,10 +48,9 @@ class MatrixAccessTest extends TestCase
             canManageDefinition: false,
         );
 
-        $this->assertTrue($access->canEditSubmission(isCreator: true, isAssignee: false));
-        $this->assertTrue($access->canEditSubmission(isCreator: false, isAssignee: true));
-        $this->assertFalse($access->canEditSubmission(isCreator: false, isAssignee: false));
-        $this->assertFalse($access->canViewSubmission(isCreator: false, isAssignee: false));
+        $this->assertTrue($access->canEditSubmission(isCreator: true));
+        $this->assertFalse($access->canEditSubmission(isCreator: false));
+        $this->assertFalse($access->canViewSubmission(isCreator: false));
     }
 
     public function test_view_others_grant_can_view_but_not_edit_foreign_submissions(): void
@@ -64,8 +63,8 @@ class MatrixAccessTest extends TestCase
             canManageDefinition: false,
         );
 
-        $this->assertTrue($access->canViewSubmission(isCreator: false, isAssignee: false));
-        $this->assertFalse($access->canEditSubmission(isCreator: false, isAssignee: false));
+        $this->assertTrue($access->canViewSubmission(isCreator: false));
+        $this->assertFalse($access->canEditSubmission(isCreator: false));
     }
 
     public function test_edit_others_grant_can_edit_foreign_submissions(): void
@@ -78,7 +77,7 @@ class MatrixAccessTest extends TestCase
             canManageDefinition: false,
         );
 
-        $this->assertTrue($access->canEditSubmission(isCreator: false, isAssignee: false));
-        $this->assertTrue($access->canViewSubmission(isCreator: false, isAssignee: false));
+        $this->assertTrue($access->canEditSubmission(isCreator: false));
+        $this->assertTrue($access->canViewSubmission(isCreator: false));
     }
 }

@@ -39,12 +39,11 @@ class MatrixExportController extends Controller
             ->visibleTo($access->canViewOthers, $user->id)
             ->with([
                 'creator:id,name',
-                'assignee:id,name',
                 'attachments',
                 'values' => fn ($values) => $values->with('field:id,matrix_version_id,field_key,type,options'),
             ]);
 
-        $this->filters->apply($query, $this->filters->fromRequest($request), $user->id);
+        $this->filters->apply($query, $this->filters->fromRequest($request));
 
         $fields = $this->presenter->fieldsFor($matrix);
 
@@ -52,7 +51,6 @@ class MatrixExportController extends Controller
             ['key' => 'folio', 'label' => 'Folio'],
             ['key' => fn (MatrixSubmission $submission) => $submission->statusLabel(), 'label' => 'Estado'],
             ['key' => fn (MatrixSubmission $submission) => $submission->creator?->name ?? '', 'label' => 'Registrado por'],
-            ['key' => fn (MatrixSubmission $submission) => $submission->assignee?->name ?? '', 'label' => 'Asignado a'],
             ['key' => fn (MatrixSubmission $submission) => $submission->created_at?->format('d/m/Y H:i') ?? '', 'label' => 'Fecha de registro'],
         ];
 

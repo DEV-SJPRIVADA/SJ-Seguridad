@@ -60,7 +60,6 @@ class MatrixPolicy
             ->resolve($user, $matrix)
             ->canViewSubmission(
                 isCreator: (int) $submission->created_by_user_id === (int) $user->id,
-                isAssignee: (int) $submission->assigned_to_user_id === (int) $user->id,
             );
     }
 
@@ -74,7 +73,6 @@ class MatrixPolicy
             ->resolve($user, $matrix)
             ->canEditSubmission(
                 isCreator: (int) $submission->created_by_user_id === (int) $user->id,
-                isAssignee: (int) $submission->assigned_to_user_id === (int) $user->id,
             );
     }
 
@@ -92,7 +90,6 @@ class MatrixPolicy
 
         return $access->canEditSubmission(
             isCreator: (int) $submission->created_by_user_id === (int) $user->id,
-            isAssignee: (int) $submission->assigned_to_user_id === (int) $user->id,
         );
     }
 }
