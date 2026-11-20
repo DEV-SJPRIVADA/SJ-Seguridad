@@ -15,6 +15,7 @@ use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
+use App\Services\Access\MatrixAccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -52,6 +53,7 @@ class NavigationResolver
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
         private readonly SidebarVisibilityService $sidebarVisibility,
+        private readonly MatrixAccessService $matrixAccess,
     ) {}
 
     /**
@@ -150,6 +152,19 @@ class NavigationResolver
                                 'route' => 'quality-documents.library.index',
                                 'url' => $url,
                                 'active' => str_starts_with((string) $routeName, 'quality-documents.') && $requestModule === $key,
+                            ];
+                        }
+
+                        if ($boardKey === 'matrices') {
+                            if (! $this->matrixAccess->canViewBoard($user, $key)) {
+                                return null;
+                            }
+
+                            return [
+                                'label' => $boardLabel,
+                                'route' => 'matrices.index',
+                                'url' => route('matrices.index', ['module' => $key]),
+                                'active' => str_starts_with((string) $routeName, 'matrices.') && $requestModule === $key,
                             ];
                         }
 
@@ -682,6 +697,8 @@ class NavigationResolver
                 ) || (
                     str_starts_with((string) $routeName, 'quality-documents.') && (string) request()->route('module') === $key
                 ) || (
+                    str_starts_with((string) $routeName, 'matrices.') && (string) request()->route('module') === $key
+                ) || (
                     str_starts_with((string) $routeName, 'indicadores.') && $key === 'operaciones'
                 ) || (
                     (
@@ -773,7 +790,8 @@ class NavigationResolver
             || str_starts_with((string) $routeName, 'supplies.')
             || str_starts_with((string) $routeName, 'purchase-requests.')
             || str_starts_with((string) $routeName, 'development-requests.')
-            || str_starts_with((string) $routeName, 'quality-documents.')) {
+            || str_starts_with((string) $routeName, 'quality-documents.')
+            || str_starts_with((string) $routeName, 'matrices.')) {
             return (string) request()->route('module');
         }
 

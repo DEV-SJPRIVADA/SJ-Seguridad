@@ -28,6 +28,14 @@ Route::get('/dashboard', function () {
                         ];
                     }
 
+                    if ($boardKey === 'matrices') {
+                        return [
+                            'key' => $boardKey,
+                            'label' => $boardLabel,
+                            'can_view' => $user->canViewMatricesBoardFor($key),
+                        ];
+                    }
+
                     if ($boardKey === 'indicadores') {
                         return [
                             'key' => $boardKey,
@@ -126,6 +134,10 @@ Route::get('/dashboard', function () {
             return redirect(auth()->user()->defaultQualityDocumentBoardUrl($defaultModule['key']));
         }
 
+        if ($defaultBoard === 'matrices') {
+            return redirect(auth()->user()->defaultMatricesBoardUrl($defaultModule['key']));
+        }
+
         if ($defaultBoard === 'indicadores') {
             return redirect(auth()->user()->defaultIndicadorBoardUrl());
         }
@@ -164,6 +176,10 @@ Route::get('/dashboard', function () {
 
     if ($selectedModule && $selectedBoardKey === 'documentos') {
         return redirect(auth()->user()->defaultQualityDocumentBoardUrl($selectedModule['key']));
+    }
+
+    if ($selectedModule && $selectedBoardKey === 'matrices') {
+        return redirect(auth()->user()->defaultMatricesBoardUrl($selectedModule['key']));
     }
 
     if ($selectedModule && $selectedBoardKey === 'indicadores') {
@@ -236,6 +252,7 @@ Route::middleware(['auth', 'active'])->group(function () {
     require __DIR__.'/modules/purchase-requests.php';
     require __DIR__.'/modules/development_requests.php';
     require __DIR__.'/modules/quality-documents.php';
+    require __DIR__.'/modules/matrices.php';
     require __DIR__.'/areas/operaciones.php';
     require __DIR__.'/areas/comercial.php';
     require __DIR__.'/areas/gestion_humana.php';

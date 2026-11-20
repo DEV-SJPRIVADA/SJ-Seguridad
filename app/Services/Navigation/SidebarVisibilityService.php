@@ -15,6 +15,7 @@ use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
+use App\Services\Access\MatrixAccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -49,6 +50,7 @@ class SidebarVisibilityService
         private readonly PlaneacionEstrategicaAccessService $planeacionAccess,
         private readonly PurchaseAccessService $purchaseAccess,
         private readonly DevelopmentRequestAccessService $developmentRequestAccess,
+        private readonly MatrixAccessService $matrixAccess,
     ) {}
 
     public function shouldShowArea(User $user, string $areaKey): bool
@@ -73,6 +75,7 @@ class SidebarVisibilityService
             'ordenes_compra' => $this->shouldShowOrdersBoard($user, $areaKey),
             'solicitudes_desarrollo' => $this->shouldShowDevelopmentRequestBoard($user, $areaKey),
             'documentos' => $this->shouldShowDocumentsBoard($user, $areaKey),
+            'matrices' => $this->shouldShowMatricesBoard($user, $areaKey),
             'ficha_empleados' => $this->shouldShowFichaEmpleadosBoard($user, $areaKey),
             'archivo' => $this->shouldShowArchivoBoard($user, $areaKey),
             'plantillas_word' => $this->shouldShowPlantillasWordBoard($user, $areaKey),
@@ -204,6 +207,11 @@ class SidebarVisibilityService
     private function shouldShowDocumentsBoard(User $user, string $areaKey): bool
     {
         return $this->boardAccess->canViewDocumentsBoardForSidebar($user, $areaKey);
+    }
+
+    private function shouldShowMatricesBoard(User $user, string $areaKey): bool
+    {
+        return $this->matrixAccess->canViewBoard($user, $areaKey);
     }
 
     private function shouldShowFichaEmpleadosBoard(User $user, string $areaKey): bool

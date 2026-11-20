@@ -13,6 +13,7 @@ use App\Services\Access\DevelopmentRequestAccessService;
 use App\Services\Access\FichaEmpleadosAccessService;
 use App\Services\Access\FormacionAccessService;
 use App\Services\Access\InasistenciasAccessService;
+use App\Services\Access\MatrixAccessService;
 use App\Services\Access\MtSt04AccessService;
 use App\Services\Access\PlaneacionEstrategicaAccessService;
 use App\Services\Access\PurchaseAccessService;
@@ -330,6 +331,16 @@ class User extends Authenticatable
     public function canViewDocumentsBoardFor(string $areaKey): bool
     {
         return app(BoardAccessService::class)->canViewDocumentsBoard($this, $areaKey);
+    }
+
+    public function canViewMatricesBoardFor(string $areaKey): bool
+    {
+        return app(MatrixAccessService::class)->canViewBoard($this, $areaKey);
+    }
+
+    public function defaultMatricesBoardUrl(string $areaKey): string
+    {
+        return route('matrices.index', ['module' => $areaKey]);
     }
 
     /**

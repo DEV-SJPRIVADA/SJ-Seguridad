@@ -250,3 +250,5 @@
 @import './base/120-base.css';
 /* 121 Compras / Autorizaciones compras — barra Vista de las 4 subpestañas */
 @import './areas/compras/121-compras-autorizaciones-barra.css';
+/* 122 Matrices dinámicas */
+@import './modules/matrices/122-matrices.css';

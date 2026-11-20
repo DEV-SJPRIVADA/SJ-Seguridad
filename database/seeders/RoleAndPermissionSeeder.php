@@ -42,6 +42,7 @@ class RoleAndPermissionSeeder extends Seeder
                 'planeacion.captura.edit',
                 'planeacion.estrategia.view',
                 'planeacion.estrategia.edit',
+                'matrices.manage',
             ],
             'director' => [
                 'view.dashboard',

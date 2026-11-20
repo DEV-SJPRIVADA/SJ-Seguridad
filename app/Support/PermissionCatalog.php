@@ -34,6 +34,11 @@ class PermissionCatalog
                                 return true;
                             }
 
+                            // Matrices se comparte por matriz (tabla de accesos), no por permiso de tablero.
+                            if ($boardKey === 'matrices') {
+                                return true;
+                            }
+
                             if ($boardKey === 'indicadores' && $areaKey !== 'operaciones') {
                                 return true;
                             }
