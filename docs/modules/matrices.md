@@ -68,8 +68,16 @@ Eventos vía `MatrixAuditService` (wrapper de `SystemAuditService`) con `module 
 
 ## Frontend
 
-- CSS: `resources/css/modules/matrices/122-matrices.css`.
+- CSS: `resources/css/modules/matrices/122-matrices.css` (bloque `Builder`).
 - Alpine: `matrix-builder` (constructor visual) y `matrix-signature-pad` (captura de firma).
+- Vista `modules/matrices/builder.blade.php` (crear y editar, misma plantilla):
+  - Cabecera con franja de acento de marca, estado de la matriz y acciones en una sola fila (Cancelar / Publicar / Guardar borrador; el guardado usa `form="matrix-builder-form"`).
+  - Paso 1 **Datos generales** y paso 2 **Campos del formulario**, con encabezados numerados y acciones de expandir/contraer con `.req-manage-filters__icon-btn`.
+  - Selector de tipo como tarjetas con icono Lucide y descripción corta; dentro de cada campo, selector compacto (`field.type` se evalúa en Alpine y los botones se renderizan con Blade + `@js()`).
+  - Tarjetas de campo con grupos **Contenido** y **Presentación y reglas**; movimiento/duplicado/eliminación con `.cursos-catalogo-page__icon-btn` (no se usan familias `*__icon-btn` propias).
+  - Columna lateral sticky: progreso del borrador (`completionPercent`), métricas, checklist de nombres, salto directo a cada campo (`focusField`) y buenas prácticas con `<x-form-aside-guide>`.
+- Cálculos de resumen en el componente Alpine: `namedFields`, `unnamedFields`, `completionPercent`. El nombre de la matriz se sincroniza con `matrixName` (`x-model`).
+- Las reglas de validación del backend no cambian: `fields.*.label` es obligatorio, por eso la interfaz avisa antes de guardar.
 
 ## Documentación relacionada
 

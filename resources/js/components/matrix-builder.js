@@ -44,6 +44,7 @@ function normalizeField(field) {
         options: Array.isArray(field.options) ? field.options.map(normalizeOption) : [],
         _uid: nextKey(),
         _open: false,
+        _touched: false,
     };
 }
 
@@ -52,6 +53,7 @@ export default function matrixBuilder(config = {}) {
         fields: (config.fields || []).map(normalizeField),
         types: config.types || {},
         typeIcons: config.typeIcons || {},
+        matrixName: config.matrixName || '',
         isPublished: Boolean(config.isPublished),
         openAll: false,
 
@@ -63,6 +65,40 @@ export default function matrixBuilder(config = {}) {
 
         get hasOptionFields() {
             return this.fields.some((field) => this.isOptionType(field.type));
+        },
+
+        /** Campos con nombre definido (el resto bloquea el guardado). */
+        get namedFields() {
+            return this.fields.filter((field) => String(field.label || '').trim() !== '').length;
+        },
+
+        get unnamedFields() {
+            return this.fields.length - this.namedFields;
+        },
+
+        /** Avance del borrador: nombre de la matriz + un punto por cada campo nombrado. */
+        get completionPercent() {
+            const total = this.fields.length + 1;
+            const done = this.namedFields + (String(this.matrixName || '').trim() !== '' ? 1 : 0);
+
+            return total === 0 ? 0 : Math.round((done * 100) / total);
+        },
+
+        /** Abre el campo desde el resumen y lo lleva a la vista. */
+        focusField(index) {
+            const field = this.fields[index];
+
+            if (! field) {
+                return;
+            }
+
+            field._open = true;
+
+            const element = document.getElementById(`matrix-field-${index}`);
+
+            if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         },
 
         get json() {

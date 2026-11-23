@@ -13,12 +13,13 @@ Solo usuarios con el permiso **Matrices: crear y administrar** (administradores)
 1. Entra al tablero **Matrices** de tu área.
 2. Pulsa **Nueva matriz**.
 3. Completa nombre, descripción y área dueña.
-4. Agrega campos con los botones de tipo (Texto, Área de texto, Número, Moneda, Fecha, Selección, Opción única, Selección múltiple, Adjunto, Firma).
-5. En cada campo puedes marcarlo obligatorio, mostrarlo como columna del listado y permitir filtrar por él.
-6. Pulsa **Guardar borrador**.
-7. Revisa y pulsa **Publicar** para que otros puedan usarla.
+4. Agrega campos desde las tarjetas de tipo (Texto, Área de texto, Número, Moneda, Fecha, Selección, Opción única, Selección múltiple, Adjunto, Firma).
+5. En cada campo puedes ajustar su sección, texto de ayuda, ancho, si es obligatorio, si aparece como columna del listado y si permite filtrar.
+6. Sigue el progreso y la lista de campos en el panel **Resumen** de la derecha; pulsa un campo del resumen para saltar a él.
+7. Pulsa **Guardar borrador**.
+8. Revisa y pulsa **Publicar** para que otros puedan usarla.
 
-Editar una matriz publicada crea una versión nueva; los registros existentes conservan la versión con la que se capturaron.
+Cada campo necesita un nombre para poder guardar. Editar una matriz publicada crea una versión nueva; los registros existentes conservan la versión con la que se capturaron.
 
 ## Compartir
 

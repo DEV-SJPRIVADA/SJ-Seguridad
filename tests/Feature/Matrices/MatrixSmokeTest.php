@@ -40,6 +40,42 @@ class MatrixSmokeTest extends TestCase
         $response->assertOk();
     }
 
+    public function test_admin_can_open_the_matrix_builder(): void
+    {
+        $admin = $this->admin();
+
+        $response = $this->actingAs($admin)->get(route('matrices.create', ['module' => 'calidad']));
+
+        $response->assertOk();
+        $response->assertSee('Diseña tu matriz');
+        $response->assertSee('Guardar borrador');
+        $response->assertSee('Agregar campo');
+    }
+
+    public function test_admin_can_open_the_builder_to_edit_a_matrix(): void
+    {
+        $admin = $this->admin();
+
+        $matrix = app(MatrixDefinitionService::class)->create($admin, [
+            'name' => 'Matriz editable',
+            'description' => 'Definición de prueba',
+            'area_key' => 'calidad',
+            'fields' => [
+                ['label' => 'Nombre', 'type' => 'text', 'required' => true, 'col_span' => 6, 'show_in_table' => true],
+            ],
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('matrices.edit', [
+            'module' => 'calidad',
+            'matrix' => $matrix->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('Matriz editable');
+        $response->assertSee('Publicar');
+        $response->assertSee('Estructura del formulario');
+    }
+
     public function test_admin_can_create_and_publish_a_matrix(): void
     {
         $admin = $this->admin();
