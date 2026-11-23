@@ -227,6 +227,90 @@ class MatrixVisibilityTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_mine_page_exposes_search_and_filters(): void
+    {
+        $manager = $this->manager();
+        $this->makeMatrix($manager, 'Matriz visible');
+
+        $response = $this->actingAs($manager)->get(route('matrices.mine', ['module' => 'calidad']));
+
+        $response->assertOk();
+        $response->assertSee('Filtros');
+        $response->assertSee('Buscar');
+        $response->assertSee('Área');
+        $response->assertSee('Creador');
+        $response->assertSee('Estado');
+        $response->assertSee($manager->name);
+    }
+
+    public function test_mine_filters_narrow_the_list(): void
+    {
+        $manager = $this->manager();
+        $alfa = $this->makeMatrix($manager, 'Matriz Alfa');
+
+        // Beta se queda como borrador (el helper publica las matrices).
+        $beta = app(MatrixDefinitionService::class)->create($manager, [
+            'name' => 'Matriz Beta',
+            'description' => null,
+            'area_key' => 'calidad',
+            'fields' => [
+                ['label' => 'Nombre', 'type' => 'text', 'required' => true, 'col_span' => 12, 'show_in_table' => true],
+            ],
+        ]);
+
+        $byName = $this->actingAs($manager)
+            ->get(route('matrices.mine', ['module' => 'calidad', 'q' => 'Alfa']));
+        $byName->assertOk();
+        $byName->assertViewHas('rows', fn ($rows) => $rows->count() === 1 && $rows->first()['matrix']->is($alfa));
+
+        $byStatus = $this->actingAs($manager)
+            ->get(route('matrices.mine', ['module' => 'calidad', 'status' => 'draft']));
+        $byStatus->assertOk();
+        $byStatus->assertViewHas('rows', fn ($rows) => $rows->count() === 1 && $rows->first()['matrix']->is($beta));
+
+        $byArea = $this->actingAs($manager)
+            ->get(route('matrices.mine', ['module' => 'calidad', 'area' => 'calidad']));
+        $byArea->assertOk();
+        $byArea->assertViewHas('rows', fn ($rows) => $rows->count() === 2);
+
+        // Un creador ajeno se ve solo si compartió su matriz con el usuario.
+        $otherOwner = $this->manager();
+        $foreign = $this->makeMatrix($otherOwner, 'Matriz Ajena');
+        MatrixUserAccess::query()->create([
+            'matrix_id' => $foreign->id,
+            'user_id' => $manager->id,
+            'can_register' => false,
+            'granted_by_user_id' => $otherOwner->id,
+        ]);
+
+        $byOwner = $this->actingAs($manager)
+            ->get(route('matrices.mine', ['module' => 'calidad', 'owner' => $otherOwner->id]));
+        $byOwner->assertOk();
+        $byOwner->assertViewHas('rows', fn ($rows) => $rows->count() === 1 && $rows->first()['matrix']->is($foreign));
+    }
+
+    public function test_mine_shows_who_edited_the_matrix_last(): void
+    {
+        $owner = $this->manager();
+        $editor = $this->manager();
+        $matrix = $this->makeMatrix($owner, 'Matriz con historial');
+
+        app(MatrixDefinitionService::class)->update($matrix, [
+            'name' => 'Matriz con historial',
+            'description' => null,
+            'area_key' => 'calidad',
+            'fields' => [
+                ['label' => 'Nombre', 'type' => 'text', 'required' => true, 'col_span' => 12, 'show_in_table' => true],
+            ],
+        ], $editor);
+
+        $response = $this->actingAs($owner)->get(route('matrices.mine', ['module' => 'calidad']));
+
+        $response->assertOk();
+        $response->assertSee($editor->name);
+        $response->assertViewHas('rows', fn ($rows) => $rows->first()['matrix']->updatedBy?->is($editor) === true);
+    }
+
     public function test_archived_matrix_hides_board_when_it_is_the_only_grant(): void
     {
         $manager = $this->manager();

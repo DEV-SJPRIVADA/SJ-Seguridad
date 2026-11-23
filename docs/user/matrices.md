@@ -11,8 +11,20 @@ Solo usuarios con el permiso **Matrices: crear y administrar** (administradores)
 ## Qué ve cada usuario al entrar
 
 - **Administradores** (pueden crear matrices): ven las **tarjetas** de todas las matrices, con sus botones de crear, publicar, compartir y archivar. Arriba tienen, además, una pestaña por cada matriz que crearon o les compartieron.
-- **Quien solo recibió una matriz compartida**: no ve tarjetas. Al entrar a Matrices se abre directamente su primera matriz, y arriba tiene **una pestaña por cada matriz** que le compartieron. La pestaña **Mis matrices** abre una lista simple con filtro para elegir otra.
+- **Quien solo recibió una matriz compartida**: no ve tarjetas. Al entrar a Matrices se abre directamente su primera matriz, y arriba tiene **una pestaña por cada matriz** que le compartieron. La pestaña **Mis matrices** abre el listado con buscador y filtros para elegir otra.
 - **Si no tiene ninguna matriz vigente** (accesos vencidos o matrices archivadas), el tablero Matrices no aparece en el menú lateral.
+
+## Buscar y filtrar en «Mis matrices»
+
+En la pestaña **Mis matrices** encuentras todas las matrices que creaste o te compartieron:
+
+- **Buscar**: escribe parte del nombre o del código (`MX-00001`) y pulsa **Aplicar filtros**.
+- **Área**: limita a las áreas de tus matrices.
+- **Creador**: muestra solo las matrices creadas por una persona (incluye la columna **Creador** con la etiqueta «Tú» cuando eres el creador).
+- **Estado**: borrador o publicada.
+- **Limpiar**: vuelve a la lista completa.
+
+Cada fila muestra el nombre y código, el área, el creador, **quién hizo la última edición** con su fecha, el estado, la versión vigente y si puedes registrar o solo consultar. Pulsa el nombre o la flecha para abrir la matriz.
 
 ## Crear una matriz
 

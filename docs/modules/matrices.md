@@ -6,7 +6,7 @@ Permite a usuarios autorizados (`matrices.manage`) crear matrices con formulario
 
 ## Tablas
 
-- `matrices`: encabezado (código `MX-00001`, nombre, descripción, `area_key`, creador, estado, versión vigente, contador de registros).
+- `matrices`: encabezado (código `MX-00001`, nombre, descripción, `area_key`, creador `owner_user_id`, último editor `updated_by_user_id`, estado, versión vigente, contador de registros).
 - `matrix_versions`: versiones de la definición (borrador / publicada), con `published_at` y `published_by_user_id`.
 - `matrix_fields`: campos de una versión (`field_key` estable, tipo, sección, opciones, reglas JSON).
 - `matrix_user_access`: otorgamientos por usuario (`can_register`, `can_view_others`, `can_edit_others`, `expires_at`).
@@ -71,9 +71,18 @@ Listado server-side (`serverSide: true`) con endpoint JSON. El export reutiliza 
 
 - `MatrixListingService::canSeeAdminCards()` decide si hay tarjetas.
 - `MatrixListingService::tabbedMatrices()` devuelve **solo las matrices creadas por el usuario o compartidas** (por usuario o por área, vigentes y no archivadas). El administrador **no** ve todas las matrices del área como pestañas: el resto queda en las tarjetas.
-- `GET /matrices/{module}/mis-matrices` (`matrices.mine`) es la lista simple con filtro por nombre/código y enlace a cada matriz. La usan los usuarios sin `matrices.manage`.
+- `GET /matrices/{module}/mis-matrices` (`matrices.mine`) es el listado de matrices propias o compartidas con buscador por nombre/código y filtros por área, creador y estado. La usan los usuarios sin `matrices.manage`; un administrador también puede abrirlo por URL.
 - `BuildsMatrixTabs` arma el subnav: «Mis matrices» apunta a `matrices.index` para el administrador y a `matrices.mine` para el resto. El subnav usa scroll horizontal con flechas (`data-module-tabs-scroller`).
 - Si el usuario no tiene ninguna matriz vigente (accesos vencidos o matrices archivadas), `MatrixAccessService::hasAnyAccess()` devuelve `false` y el tablero desaparece del sidebar; el índice responde 403.
+
+## «Mis matrices» (listado con filtros)
+
+- Ruta `matrices.mine`; controlador `MatrixController::mine()`; datos desde `MatrixListingService::mineMatrices()` (mismas reglas de visibilidad que las pestañas: propias o compartidas, vigentes y no archivadas).
+- Filtros por query string, aplicados en SQL: `q` (nombre o código), `area` (`area_key`), `owner` (`owner_user_id`) y `status` (`draft` / `published`).
+- Las opciones de área y creador se construyen **solo con las matrices visibles para el usuario**, no con todo el catálogo del sistema.
+- Columnas: matriz (nombre + código), área, creador (con chip «Tú» si aplica), última edición (`updated_by_user_id` + `updated_at`), estado, versión y acceso.
+- `updated_by_user_id` (migración `2026_11_23_100000_add_updated_by_to_matrices_table`) se actualiza al crear, editar y publicar la definición. `owner_user_id` sigue siendo el creador y no cambia.
+- El listado se renderiza con Blade sobre una consulta filtrada; no requiere endpoint JSON ni DataTables.
 
 ## Auditoría
 

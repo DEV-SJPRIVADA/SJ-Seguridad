@@ -89,7 +89,10 @@ class MatrixBuilderController extends Controller
 
         Gate::authorize('updateDefinition', $matrix);
 
-        $this->definition->update($matrix, $request->matrixData());
+        $user = auth()->user();
+        abort_unless($user !== null, 403);
+
+        $this->definition->update($matrix, $request->matrixData(), $user);
         $this->audit->matrix('update', 'matrix_definition_updated', $matrix);
 
         $message = $matrix->isPublished()

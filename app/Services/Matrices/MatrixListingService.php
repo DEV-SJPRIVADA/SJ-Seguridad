@@ -19,9 +19,9 @@ final class MatrixListingService
     /**
      * @return Collection<int, Matrix>
      */
-    public function visibleMatrices(User $user): Collection
+    public function visibleMatrices(User $user, array $filters = []): Collection
     {
-        return $this->visibleQuery($user)
+        return $this->visibleQuery($user, $filters)
             ->with(['owner:id,name', 'currentVersion', 'areaAccess', 'userAccess'])
             ->withCount(['submissions' => fn (Builder $query) => $query->whereNull('archived_at')])
             ->orderByDesc('updated_at')
@@ -31,15 +31,40 @@ final class MatrixListingService
     /**
      * @return Builder<Matrix>
      */
-    public function visibleQuery(User $user): Builder
+    public function visibleQuery(User $user, array $filters = []): Builder
     {
         $query = Matrix::query()->notArchived();
 
         if ($this->accessResolver->isManager($user)) {
-            return $query;
+            // Los administradores ven todas las matrices del área/sistema.
+        } else {
+            $query = $this->ownedOrGrantedQuery($query, $user);
         }
 
-        return $this->ownedOrGrantedQuery($query, $user);
+        $term = trim((string) ($filters['q'] ?? ''));
+        if ($term !== '') {
+            $query->where(function (Builder $inner) use ($term): void {
+                $inner->where('name', 'like', "%{$term}%")
+                    ->orWhere('code', 'like', "%{$term}%");
+            });
+        }
+
+        $area = trim((string) ($filters['area'] ?? ''));
+        if ($area !== '') {
+            $query->where('area_key', $area);
+        }
+
+        $owner = (int) ($filters['owner'] ?? 0);
+        if ($owner > 0) {
+            $query->where('owner_user_id', $owner);
+        }
+
+        $status = (string) ($filters['status'] ?? '');
+        if (in_array($status, [Matrix::STATUS_DRAFT, Matrix::STATUS_PUBLISHED], true)) {
+            $query->where('status', $status);
+        }
+
+        return $query;
     }
 
     /**
@@ -58,6 +83,35 @@ final class MatrixListingService
             ->with('currentVersion:id,version_number')
             ->orderBy('name')
             ->get(['id', 'code', 'name', 'status', 'area_key', 'owner_user_id', 'current_version_id', 'archived_at']);
+    }
+
+    /**
+     * Matrices propias o compartidas con el usuario, con los filtros de «Mis matrices».
+     *
+     * @param  array{q?: string|null, area?: string|null, owner?: int|string|null, status?: string|null}  $filters
+     * @return Collection<int, Matrix>
+     */
+    public function mineMatrices(User $user, array $filters = []): Collection
+    {
+        $term = trim((string) ($filters['q'] ?? ''));
+        $area = trim((string) ($filters['area'] ?? ''));
+        $owner = (int) ($filters['owner'] ?? 0);
+        $status = (string) ($filters['status'] ?? '');
+
+        return $this->ownedOrGrantedQuery(Matrix::query()->notArchived(), $user)
+            ->with(['currentVersion:id,version_number', 'owner:id,name', 'updatedBy:id,name'])
+            ->when($term !== '', fn (Builder $query) => $query->where(function (Builder $inner) use ($term): void {
+                $inner->where('name', 'like', "%{$term}%")
+                    ->orWhere('code', 'like', "%{$term}%");
+            }))
+            ->when($area !== '', fn (Builder $query) => $query->where('area_key', $area))
+            ->when($owner > 0, fn (Builder $query) => $query->where('owner_user_id', $owner))
+            ->when(
+                in_array($status, [Matrix::STATUS_DRAFT, Matrix::STATUS_PUBLISHED], true),
+                fn (Builder $query) => $query->where('status', $status),
+            )
+            ->orderBy('name')
+            ->get();
     }
 
     /**

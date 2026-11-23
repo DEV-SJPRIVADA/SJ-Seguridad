@@ -47,6 +47,7 @@ final class MatrixDefinitionService
                 'description' => $data['description'] ?? null,
                 'area_key' => $data['area_key'],
                 'owner_user_id' => $user->id,
+                'updated_by_user_id' => $user->id,
                 'status' => Matrix::STATUS_DRAFT,
             ]);
 
@@ -65,13 +66,14 @@ final class MatrixDefinitionService
      *
      * @param  array{name: string, description?: ?string, area_key: string, fields: array<int, array<string, mixed>>}  $data
      */
-    public function update(Matrix $matrix, array $data): Matrix
+    public function update(Matrix $matrix, array $data, User $user): Matrix
     {
-        return DB::transaction(function () use ($matrix, $data): Matrix {
+        return DB::transaction(function () use ($matrix, $data, $user): Matrix {
             $matrix->fill([
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'area_key' => $data['area_key'],
+                'updated_by_user_id' => $user->id,
             ])->save();
 
             $version = $this->draftVersionFor($matrix);
@@ -107,6 +109,7 @@ final class MatrixDefinitionService
             $matrix->forceFill([
                 'status' => Matrix::STATUS_PUBLISHED,
                 'current_version_id' => $version->id,
+                'updated_by_user_id' => $user->id,
                 'archived_at' => null,
             ])->save();
 

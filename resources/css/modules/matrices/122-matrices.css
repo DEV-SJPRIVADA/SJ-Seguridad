@@ -1731,49 +1731,144 @@
     min-width: 0;
 }
 
-/* ===== «Mis matrices»: lista simple para usuarios compartidos ===== */
-.matrices-mine__toolbar {
-    display: flex;
-    align-items: flex-end;
-    justify-content: space-between;
-    gap: 0.75rem 1rem;
-    flex-wrap: wrap;
-    padding-bottom: 0.75rem;
-    margin-bottom: 0.35rem;
-    border-bottom: 1px solid var(--color-border);
+/* ===== «Mis matrices»: listado con buscador y filtros ===== */
+.matrices-mine__filters {
+    margin-bottom: 0.75rem;
 }
 
-.matrices-mine__filter {
-    min-width: 16rem;
-    max-width: 22rem;
+.matrices-mine__meta {
+    margin: 0 0 0.65rem;
+}
+
+.matrices-mine__panel {
+    overflow: hidden;
 }
 
 .matrices-mine__table {
     width: 100%;
+    min-width: 58rem;
 }
 
-.matrices-mine__name {
+.matrices-mine__table th {
+    white-space: nowrap;
+}
+
+.matrices-mine__table td {
+    vertical-align: middle;
+}
+
+.matrices-mine__matrix {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    min-width: 12rem;
+}
+
+.matrices-mine__matrix-name {
+    font-weight: 700;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.matrices-mine__matrix-name:hover,
+.matrices-mine__matrix-name:focus-visible {
+    color: var(--brand-blue);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.matrices-mine__matrix-code {
+    font-size: 0.72rem;
     font-weight: 600;
+    letter-spacing: 0.04em;
+    color: var(--color-text-soft);
+    font-variant-numeric: tabular-nums;
+}
+
+.matrices-mine__person {
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    min-width: 0;
+}
+
+.matrices-mine__person-name {
+    font-size: 0.86rem;
+    color: var(--color-text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.matrices-mine__avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    background: rgba(0, 51, 102, 0.08);
+    color: var(--brand-blue);
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+}
+
+.matrices-mine__date {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.72rem;
+    color: var(--color-text-soft);
+    font-variant-numeric: tabular-nums;
+}
+
+.matrices-mine__muted {
+    font-size: 0.82rem;
+    color: var(--color-text-soft);
+}
+
+.matrices-mine__empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 2.5rem 1rem;
+    text-align: center;
+}
+
+.matrices-mine__empty-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 999px;
+    background: rgba(0, 51, 102, 0.08);
+    color: var(--brand-blue);
+}
+
+.matrices-mine__empty-title {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
     color: var(--color-text);
 }
 
-.matrices-mine__admin-link {
-    display: flex;
-    justify-content: flex-end;
-    padding-top: 1rem;
-    margin-top: 0.5rem;
-    border-top: 1px solid var(--color-border);
+.matrices-mine__empty-text {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-soft);
 }
 
 @media (max-width: 720px) {
-    .matrices-mine__filter {
-        min-width: 100%;
-        max-width: none;
-    }
-
     .module-subnav__inner--scroll {
         flex-direction: column;
         align-items: stretch;
         gap: 0.35rem;
+    }
+
+    .matrices-mine__table {
+        min-width: 52rem;
     }
 }

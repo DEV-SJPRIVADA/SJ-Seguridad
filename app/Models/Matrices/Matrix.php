@@ -35,6 +35,7 @@ class Matrix extends Model
         'description',
         'area_key',
         'owner_user_id',
+        'updated_by_user_id',
         'status',
         'current_version_id',
         'submission_counter',
@@ -55,6 +56,14 @@ class Matrix extends Model
     public function owner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'owner_user_id');
+    }
+
+    /**
+     * Usuario que guardó la última edición de la definición.
+     */
+    public function updatedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'updated_by_user_id');
     }
 
     /**
