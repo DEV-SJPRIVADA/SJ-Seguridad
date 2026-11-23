@@ -32,6 +32,8 @@ El tablero en el menú usa `view.board.calidad.servicio_cliente`. `manage.users`
 | `servicio_cliente_caso_observaciones` | Historial de seguimiento. Alta, edición y eliminación quedan en el log. |
 | `servicio_cliente_caso_adjuntos` | PDF, JPG y PNG en disco `local` |
 
+La columna `proceso` (texto libre, antes `responsable_seguimiento`) guarda el proceso afectado del caso. Se muestra en el listado FO-GI-22, en el formulario y en el Excel; también entra en la búsqueda global del DataTable.
+
 ## Reglas de cálculo
 
 - **Fecha de ejecución** = fecha de recepción. No es editable.
@@ -44,7 +46,7 @@ El tablero en el menú usa `view.board.calidad.servicio_cliente`. `manage.users`
 
 ## UI
 
-- Listado DataTables `serverSide`. Filtros de tipo, tipología, fuente, responsable y rangos de recepción, verificación y plazo. Eficacia en botones.
+- Listado DataTables `serverSide`. Filtros de tipo, tipología, fuente, responsable y rangos de recepción, verificación y plazo. Eficacia en botones. La columna **Proceso** (`proceso`) es ordenable y entra en la búsqueda global.
 - Export `BaseExport`: hoja Casos y hoja Observaciones, con los filtros activos. Tope `servicio_cliente.export.max_rows` (10000).
 - Dashboard con el chrome de Gestión Humana (`gh-area-dashboard-page`): filtros en panel, seis KPI en una fila y gráficos en filas de 3 y 2. JS: `resources/js/servicio-cliente-dashboard-charts.js`.
 - Los KPI Abiertos, En proceso, Cerrados y Vencidos abren FO-GI-22 con ese recorte y conservan tipo, tipología, fuente, responsable y rangos de fecha del dashboard. Vencido es plazo ya cumplido y caso no cerrado (`vencidos=1`).

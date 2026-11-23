@@ -184,9 +184,9 @@
                                         <textarea id="accion_realizar" name="accion_realizar" class="form-input" rows="3" required @disabled(! $canEdit)>{{ $textValue('accion_realizar') }}</textarea>
                                     </div>
                                     <div class="form-field req-form__field-span">
-                                        <x-input-label for="responsable_seguimiento" value="Responsable de seguimiento" />
-                                        <textarea id="responsable_seguimiento" name="responsable_seguimiento" class="form-input" rows="2" @disabled(! $canEdit)>{{ $textValue('responsable_seguimiento') }}</textarea>
-                                        <p class="req-form__hint">Texto libre. No sale del catálogo de responsables.</p>
+                                        <x-input-label for="proceso" value="Proceso" />
+                                        <textarea id="proceso" name="proceso" class="form-input" rows="2" @disabled(! $canEdit)>{{ $textValue('proceso') }}</textarea>
+                                        <p class="req-form__hint">Texto libre: indique el proceso afectado.</p>
                                     </div>
                                     @if ($canEdit)
                                         <div class="form-field req-form__field-span">

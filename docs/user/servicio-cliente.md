@@ -35,6 +35,7 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 | Vencido | El plazo ya pasó y el caso no está cerrado. |
 | Recurrencia | El mismo cliente aparece más de una vez en el periodo (mes, trimestre, semestre o año). |
 | Evidencia | Archivo PDF, JPG o PNG del caso. |
+| Proceso | Texto libre con el proceso afectado por el caso (columna **Proceso** del listado). |
 
 ## Responsabilidades
 
@@ -65,3 +66,4 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 | 2026-11-06 | El formulario no muestra ejecución ni días hábiles; esos datos quedan en el listado. |
 | 2026-11-06 | Al crear un caso se vuelve al listado. Las observaciones se editan y eliminan con registro en el log. |
 | 2026-11-06 | El dashboard sigue el informe de Gestión Humana. Esos cuatro indicadores abren FO-GI-22 filtrado. |
+| 2026-11-23 | La columna «Resp. seguimiento» pasa a llamarse **Proceso** en el listado, el formulario y el Excel. El dato ya capturado se conserva. |

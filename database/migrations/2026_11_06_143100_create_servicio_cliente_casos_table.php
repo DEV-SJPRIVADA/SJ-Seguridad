@@ -27,7 +27,7 @@ return new class extends Migration
             $table->text('accion_realizar');
             $table->foreignId('responsable_id')->constrained('servicio_cliente_responsables')->restrictOnDelete();
             $table->unsignedInteger('dias_habiles')->nullable();
-            $table->text('responsable_seguimiento')->nullable();
+            $table->text('proceso')->nullable();
             $table->string('eficacia', 20)->default('abierto')->index();
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('updated_by')->nullable()->constrained('users')->nullOnDelete();

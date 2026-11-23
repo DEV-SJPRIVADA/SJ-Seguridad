@@ -69,7 +69,7 @@ class ServicioClienteFoGi22Export
             ['key' => fn (ServicioClienteCaso $caso): string => optional($caso->fecha_verificacion)?->format('d-m-Y') ?? '', 'label' => 'Fecha de verificación'],
             ['key' => fn (ServicioClienteCaso $caso): string => optional($caso->fecha_plazo_respuesta)?->format('d-m-Y') ?? '', 'label' => 'Fecha de plazo de respuesta'],
             ['key' => fn (ServicioClienteCaso $caso): string => $caso->dias_habiles === null ? '' : (string) $caso->dias_habiles, 'label' => 'Días'],
-            ['key' => fn (ServicioClienteCaso $caso): string => (string) ($caso->responsable_seguimiento ?? ''), 'label' => 'Responsable de seguimiento'],
+            ['key' => fn (ServicioClienteCaso $caso): string => (string) ($caso->proceso ?? ''), 'label' => 'Proceso'],
             ['key' => fn (ServicioClienteCaso $caso): string => $caso->eficaciaLabel(), 'label' => 'Eficacia del seguimiento'],
         ];
     }

@@ -176,7 +176,7 @@
                                     <th>Verificación</th>
                                     <th>Plazo</th>
                                     <th>Días</th>
-                                    <th>Resp. seguimiento</th>
+                                    <th>Proceso</th>
                                     <th>Obs.</th>
                                     <th>Eficacia</th>
                                     <th></th>

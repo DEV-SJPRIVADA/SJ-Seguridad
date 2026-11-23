@@ -173,7 +173,7 @@ final class ServicioClienteDatatableService
                 ->orWhere('descripcion', 'like', $like)
                 ->orWhere('correccion', 'like', $like)
                 ->orWhere('accion_realizar', 'like', $like)
-                ->orWhere('responsable_seguimiento', 'like', $like)
+                ->orWhere('proceso', 'like', $like)
                 ->orWhere('eficacia', 'like', $like);
 
             if (ctype_digit($search)) {
@@ -212,6 +212,7 @@ final class ServicioClienteDatatableService
             13 => $query->orderBy('fecha_verificacion', $direction),
             14 => $query->orderBy('fecha_plazo_respuesta', $direction),
             15 => $query->orderBy('dias_habiles', $direction),
+            16 => $query->orderBy('proceso', $direction),
             18 => $query->orderBy('eficacia', $direction),
             default => $query->orderByDesc('consecutivo'),
         };
@@ -241,7 +242,7 @@ final class ServicioClienteDatatableService
             e(DisplayDate::date($caso->fecha_verificacion)),
             e(DisplayDate::date($caso->fecha_plazo_respuesta)),
             e($caso->dias_habiles !== null ? (string) $caso->dias_habiles : '—'),
-            e($this->clip((string) ($caso->responsable_seguimiento ?? ''))),
+            e($this->clip((string) ($caso->proceso ?? ''))),
             e((string) $caso->observaciones_count),
             e($caso->eficaciaLabel()),
         ];

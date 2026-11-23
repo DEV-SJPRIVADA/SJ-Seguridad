@@ -268,8 +268,8 @@ class ServicioClienteCasoService
             'accion_realizar' => UppercaseFormText::uppercaseString((string) $data['accion_realizar']),
             'responsable_id' => (int) $data['responsable_id'],
             'dias_habiles' => $this->businessDays->countInclusive($recepcion, $verificacion),
-            'responsable_seguimiento' => filled($data['responsable_seguimiento'] ?? null)
-                ? UppercaseFormText::uppercaseString((string) $data['responsable_seguimiento'])
+            'proceso' => filled($data['proceso'] ?? null)
+                ? UppercaseFormText::uppercaseString((string) $data['proceso'])
                 : null,
             'eficacia' => $data['eficacia'],
         ];
@@ -299,7 +299,7 @@ class ServicioClienteCasoService
             'correccion' => $caso->correccion,
             'accion_realizar' => $caso->accion_realizar,
             'dias_habiles' => $caso->dias_habiles,
-            'responsable_seguimiento' => $caso->responsable_seguimiento,
+            'proceso' => $caso->proceso,
             'eficacia' => $caso->eficacia,
         ];
     }

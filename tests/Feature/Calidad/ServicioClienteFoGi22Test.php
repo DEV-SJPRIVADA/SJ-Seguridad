@@ -86,7 +86,7 @@ class ServicioClienteFoGi22Test extends TestCase
                 'fecha_recepcion' => '2026-11-06',
                 'fecha_verificacion' => '2026-11-20',
                 'descripcion' => 'cliente molesto',
-                'responsable_seguimiento' => 'ana pérez',
+                'proceso' => 'ana pérez',
             ]))
             ->assertRedirect(route('calidad.servicio-cliente.fo-gi-22.index'));
 
@@ -100,7 +100,7 @@ class ServicioClienteFoGi22Test extends TestCase
         $this->assertSame('2026-11-20', $caso->fecha_plazo_respuesta->toDateString());
         $this->assertSame(11, $caso->dias_habiles);
         $this->assertSame('CLIENTE MOLESTO', $caso->descripcion);
-        $this->assertSame('ANA PÉREZ', $caso->responsable_seguimiento);
+        $this->assertSame('ANA PÉREZ', $caso->proceso);
 
         $this->actingAs($this->editor)
             ->post(route('calidad.servicio-cliente.fo-gi-22.store'), $this->payload([
@@ -110,6 +110,26 @@ class ServicioClienteFoGi22Test extends TestCase
             ->assertRedirect();
 
         $this->assertSame(2, ServicioClienteCaso::query()->max('consecutivo'));
+    }
+
+    public function test_listado_y_datatable_usan_la_columna_proceso(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.servicio-cliente.fo-gi-22.store'), $this->payload([
+                'proceso' => 'facturación',
+            ]))
+            ->assertRedirect();
+
+        $this->actingAs($this->editor)
+            ->get(route('calidad.servicio-cliente.fo-gi-22.index'))
+            ->assertOk()
+            ->assertSee('<th>Proceso</th>', false)
+            ->assertDontSee('Resp. seguimiento', false);
+
+        $this->actingAs($this->editor)
+            ->getJson(route('calidad.servicio-cliente.fo-gi-22.datatable', ['draw' => 1]))
+            ->assertOk()
+            ->assertJsonPath('data.0.16', 'FACTURACIÓN');
     }
 
     public function test_externo_requires_commercial_client_and_snapshots_the_name(): void

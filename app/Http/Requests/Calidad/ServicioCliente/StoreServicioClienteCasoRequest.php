@@ -54,7 +54,7 @@ class StoreServicioClienteCasoRequest extends FormRequest
             'correccion' => ['required', 'string', 'max:5000'],
             'accion_realizar' => ['required', 'string', 'max:5000'],
             'responsable_id' => ['required', 'integer', 'exists:servicio_cliente_responsables,id'],
-            'responsable_seguimiento' => ['nullable', 'string', 'max:2000'],
+            'proceso' => ['nullable', 'string', 'max:2000'],
             'eficacia' => ['required', Rule::in(array_keys(config('servicio_cliente.eficacia', [])))],
             'attachments' => ['nullable', 'array', 'max:'.$maxFiles],
             'attachments.*' => ['file', 'max:'.$maxKilobytes, 'mimes:'.$mimes],

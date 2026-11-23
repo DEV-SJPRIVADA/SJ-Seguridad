@@ -36,7 +36,7 @@ class ServicioClienteCaso extends Model
         'accion_realizar',
         'responsable_id',
         'dias_habiles',
-        'responsable_seguimiento',
+        'proceso',
         'eficacia',
         'created_by',
         'updated_by',
