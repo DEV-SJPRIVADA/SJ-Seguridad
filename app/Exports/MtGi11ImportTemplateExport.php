@@ -39,7 +39,7 @@ class MtGi11ImportTemplateExport
             'codigo_estandarizacion' => 'Código de estandarización',
             'fecha_estandarizacion' => 'Fecha de estandarización (AAAA-MM-DD)',
             'version_actualizada' => 'Versión actualizada (número)',
-            'estado' => 'Estado',
+            'estado' => 'Estado (con GESTIONADO se exigen todos los campos)',
         ];
     }
 

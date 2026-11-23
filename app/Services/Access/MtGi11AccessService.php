@@ -12,6 +12,10 @@ use App\Models\User;
  * - El Dashboard no tiene clave propia: se abre con `matriz.view`.
  * - `mt_gi_11.view_all` amplía el alcance a todas las solicitudes (Calidad / admin).
  * - `mt_gi_11.parameters.edit` habilita la pestaña Catálogos.
+ * - `matriz.view` también permite crear solicitudes; editar, eliminar e importar
+ *   siguen reservados a `matriz.edit` (o admin).
+ * - La sección «Estandarización» del formulario solo se muestra con `matriz.edit`
+ *   o `view_all`.
  */
 class MtGi11AccessService
 {
@@ -45,6 +49,27 @@ class MtGi11AccessService
         }
 
         return $user->can('mt_gi_11.matriz.edit');
+    }
+
+    /**
+     * Crear solicitudes: basta con la consulta de la matriz (`matriz.view`).
+     * Editar, eliminar e importar siguen exigiendo `matriz.edit`.
+     */
+    public function canCreate(User $user): bool
+    {
+        return $this->canView($user);
+    }
+
+    /**
+     * Sección «Estandarización» del formulario: solo editores o Calidad (`view_all`).
+     */
+    public function canManageEstandarizacion(User $user): bool
+    {
+        if ($this->isAdminBypass($user)) {
+            return true;
+        }
+
+        return $user->can('mt_gi_11.matriz.edit') || $user->can('mt_gi_11.view_all');
     }
 
     /**

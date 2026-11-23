@@ -274,7 +274,52 @@ class MtGi11SolicitudTest extends TestCase
             ->assertOk();
     }
 
-    public function test_user_without_edit_cannot_create(): void
+    public function test_user_with_view_can_create_but_not_edit(): void
+    {
+        $viewer = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
+        $viewer->givePermissionTo([
+            'view.board.calidad.mt_gi_11',
+            'mt_gi_11.matriz.view',
+        ]);
+
+        // `matriz.view` ya permite crear.
+        $this->actingAs($viewer)
+            ->get(route('calidad.mt-gi-11.matriz.create'))
+            ->assertOk()
+            ->assertSee('Nueva solicitud MT-GI-11');
+
+        $this->actingAs($viewer)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload())
+            ->assertRedirect();
+
+        $solicitud = MtGi11Solicitud::query()->firstOrFail();
+        $this->assertSame($viewer->id, $solicitud->created_by);
+
+        // Editar y eliminar siguen reservados a `matriz.edit`.
+        $this->actingAs($viewer)
+            ->patch(route('calidad.mt-gi-11.matriz.update', $solicitud), $this->payload())
+            ->assertForbidden();
+
+        $this->actingAs($viewer)
+            ->delete(route('calidad.mt-gi-11.matriz.destroy', $solicitud))
+            ->assertForbidden();
+
+        // Importar masivo también sigue con edit.
+        $this->actingAs($viewer)->get(route('calidad.mt-gi-11.matriz.plantilla'))->assertForbidden();
+    }
+
+    public function test_consecutivo_is_optional_and_generated_when_empty(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload(['consecutivo' => '']))
+            ->assertRedirect();
+
+        $solicitud = MtGi11Solicitud::query()->firstOrFail();
+
+        $this->assertSame('MT-GI-11-'.str_pad((string) $solicitud->id, 3, '0', STR_PAD_LEFT), $solicitud->consecutivo);
+    }
+
+    public function test_estandarizacion_section_is_hidden_without_edit_or_view_all(): void
     {
         $viewer = User::factory()->create(['is_active' => true, 'must_change_password' => false]);
         $viewer->givePermissionTo([
@@ -284,6 +329,148 @@ class MtGi11SolicitudTest extends TestCase
 
         $this->actingAs($viewer)
             ->get(route('calidad.mt-gi-11.matriz.create'))
-            ->assertForbidden();
+            ->assertOk()
+            // La sección incluye el estado: sin ella tampoco se elige estado.
+            ->assertDontSee('name="estado_id"', false)
+            ->assertDontSee('name="codigo_estandarizacion"', false)
+            ->assertDontSee('name="fecha_estandarizacion"', false);
+
+        // Aunque el cliente intente enviar la sección (y un estado GESTIONADO),
+        // se descarta y la solicitud queda PENDIENTE.
+        $gestionado = $this->gestionadoEstadoId();
+
+        $this->actingAs($viewer)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload(['estado_id' => $gestionado]))
+            ->assertRedirect();
+
+        $solicitud = MtGi11Solicitud::query()->firstOrFail();
+        $this->assertNull($solicitud->codigo_estandarizacion);
+        $this->assertNull($solicitud->version_actualizada);
+        $this->assertSame(
+            (int) MtGi11Estado::query()->where('code', MtGi11Estado::CODE_PENDIENTE)->value('id'),
+            (int) $solicitud->estado_id,
+        );
+
+        // Con edit la sección sí aparece y el estado vive dentro de ella.
+        $this->actingAs($this->editor)
+            ->get(route('calidad.mt-gi-11.matriz.create'))
+            ->assertOk()
+            ->assertSee('Estandarización')
+            ->assertSeeInOrder(['Estandarización', 'name="estado_id"'], false)
+            ->assertSee('name="codigo_estandarizacion"', false);
+    }
+
+    public function test_gestionado_also_requires_fields_when_editing(): void
+    {
+        $solicitud = MtGi11Solicitud::query()->create($this->payload() + [
+            'created_by' => $this->editor->id,
+        ]);
+
+        $gestionado = $this->gestionadoEstadoId();
+
+        $this->actingAs($this->editor)
+            ->patch(route('calidad.mt-gi-11.matriz.update', $solicitud), $this->payload([
+                'estado_id' => $gestionado,
+                'codigo_actual' => '',
+                'version_actual' => '',
+                'codigo_estandarizacion' => '',
+                'fecha_estandarizacion' => '',
+                'version_actualizada' => '',
+            ]))
+            ->assertSessionHasErrors([
+                'codigo_actual',
+                'version_actual',
+                'codigo_estandarizacion',
+                'fecha_estandarizacion',
+                'version_actualizada',
+            ]);
+
+        // Sin GESTIONADO la misma edición pasa y conserva el estado original.
+        $this->actingAs($this->editor)
+            ->patch(route('calidad.mt-gi-11.matriz.update', $solicitud), $this->payload([
+                'codigo_actual' => '',
+                'version_actual' => '',
+                'codigo_estandarizacion' => '',
+                'fecha_estandarizacion' => '',
+                'version_actualizada' => '',
+                'nombre_documento' => 'documento editado',
+            ]))
+            ->assertRedirect();
+
+        $this->assertSame('DOCUMENTO EDITADO', $solicitud->refresh()->nombre_documento);
+    }
+
+    /**
+     * Renombra APROBADA a GESTIONADO (como en el catálogo real) y devuelve su id.
+     */
+    private function gestionadoEstadoId(): int
+    {
+        $estado = MtGi11Estado::query()->where('code', 'APROBADA')->firstOrFail();
+        $estado->update(['name' => MtGi11Estado::NAME_GESTIONADO]);
+
+        return (int) $estado->id;
+    }
+
+    public function test_gestionado_requires_every_field(): void
+    {
+        $gestionado = $this->gestionadoEstadoId();
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload([
+                'estado_id' => $gestionado,
+                'consecutivo' => '',
+                'codigo_actual' => '',
+                'version_actual' => '',
+                'codigo_estandarizacion' => '',
+                'fecha_estandarizacion' => '',
+                'version_actualizada' => '',
+            ]))
+            ->assertSessionHasErrors([
+                'consecutivo',
+                'codigo_actual',
+                'version_actual',
+                'codigo_estandarizacion',
+                'fecha_estandarizacion',
+                'version_actualizada',
+            ]);
+
+        $this->assertSame(0, MtGi11Solicitud::query()->count());
+    }
+
+    public function test_gestionado_saves_when_every_field_is_complete(): void
+    {
+        $gestionado = $this->gestionadoEstadoId();
+
+        $this->actingAs($this->editor)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload([
+                'estado_id' => $gestionado,
+                'fecha_estandarizacion' => now()->toDateString(),
+            ]))
+            ->assertRedirect();
+
+        $solicitud = MtGi11Solicitud::query()->firstOrFail();
+        $this->assertSame($gestionado, (int) $solicitud->estado_id);
+        $this->assertSame('PR-GI-01-V2', $solicitud->codigo_estandarizacion);
+        $this->assertSame(4, $solicitud->version_actualizada);
+    }
+
+    public function test_optional_fields_stay_optional_without_gestionado(): void
+    {
+        $this->actingAs($this->editor)
+            ->post(route('calidad.mt-gi-11.matriz.store'), $this->payload([
+                'consecutivo' => '',
+                'codigo_actual' => '',
+                'version_actual' => '',
+                'codigo_estandarizacion' => '',
+                'fecha_estandarizacion' => '',
+                'version_actualizada' => '',
+            ]))
+            ->assertRedirect();
+
+        // Sin GESTIONADO el consecutivo se autogenera y el resto queda vacío.
+        $solicitud = MtGi11Solicitud::query()->firstOrFail();
+        $this->assertNotSame('', (string) $solicitud->consecutivo);
+        $this->assertNull($solicitud->codigo_actual);
+        $this->assertNull($solicitud->version_actualizada);
     }
 }

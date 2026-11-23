@@ -16,27 +16,49 @@ Tablero propio del área Calidad, independiente del módulo genérico *Matrices 
 
 `/calidad/mt-gi-11` redirige a la primera pestaña visible.
 
+El **alta** (`/calidad/mt-gi-11/matriz/crear`) requiere `mt_gi_11.matriz.view`; la **edición** de un registro requiere, además del permiso de edición, ser dueño de la solicitud o tener `mt_gi_11.view_all`.
+
 ## Permisos
 
 | Permiso | Uso |
 | --- | --- |
 | `view.board.calidad.mt_gi_11` | Mostrar el tablero en el sidebar de Calidad |
-| `mt_gi_11.matriz.view` | Ver dashboard y matriz (solo solicitudes propias) |
-| `mt_gi_11.matriz.edit` | Crear, editar, eliminar, adjuntar, importar. Implica `view` |
+| `mt_gi_11.matriz.view` | Ver dashboard y matriz y **crear solicitudes** (solo propias) |
+| `mt_gi_11.matriz.edit` | Editar, eliminar, adjuntar, importar y completar Estandarización. Implica `view` |
 | `mt_gi_11.view_all` | Ver todas las solicitudes (Calidad / administración) |
 | `mt_gi_11.parameters.edit` | Administrar los cinco catálogos |
 
 - El **dashboard no tiene permiso propio**: se abre con `mt_gi_11.matriz.view`.
 - `manage.users` (super admin) omite todas las comprobaciones.
 - El rol `administrador` recibe el paquete completo en `RoleAndPermissionSeeder`.
+- **Crear** solo exige `mt_gi_11.matriz.view` (`MtGi11AccessService::canCreate()`); editar, eliminar e importar siguen exigiendo `matriz.edit`.
+- La sección **Estandarización** del formulario (que **incluye el estado**) solo se renderiza con `matriz.edit` o `view_all` (`canManageEstandarizacion()`); si alguien sin permiso envía esos campos, el Form Request los descarta y fuerza `PENDIENTE`.
+
+## Estado GESTIONADO
+
+El estado de cierre se identifica por **código o nombre** `GESTIONADO` (`MtGi11Estado::gestionadoId()` / `isGestionadoId()`), porque el código técnico del catálogo puede diferir del label (en la BD actual: `code = APROBADA`, `name = GESTIONADO`).
+
+Con ese estado la solicitud queda cerrada y **todos los campos de la solicitud son obligatorios**:
+
+| Campo | Sin GESTIONADO | Con GESTIONADO |
+| --- | --- | --- |
+| `consecutivo` | Opcional (se autogenera) | Obligatorio |
+| `codigo_actual` | Opcional | Obligatorio |
+| `version_actual` | Opcional | Obligatorio |
+| `codigo_estandarizacion` | Opcional | Obligatorio |
+| `fecha_estandarizacion` | Opcional | Obligatorio (≥ fecha de solicitud) |
+| `version_actualizada` | Opcional | Obligatorio |
+
+Los adjuntos **no** se exigen. La regla vive en `StoreMtGi11SolicitudRequest::rules()` con `Rule::requiredIf()` y se replica en el import masivo (`MtGi11ImportService::assertGestionadoCompleto()`), que rechaza la fila con el detalle de los campos faltantes. En el formulario, el contenedor expone `data-gestionado-id` / `data-gestionado-inicial` y Alpine marca los asteriscos y pone `required` en cuanto se elige el estado.
 
 ## Alcance de registros
 
-| Situación | Ve | Edita |
-| --- | --- | --- |
-| `matriz.view` sin `view_all` | Solo `created_by = auth()->id()` | Nada |
-| `matriz.view` + `matriz.edit` | Solo propias | Solo propias |
-| `matriz.view` + `matriz.edit` + `view_all` | Todas | Todas |
+| Situación | Ve | Crea | Edita |
+| --- | --- | --- | --- |
+| `matriz.view` sin `view_all` | Solo `created_by = auth()->id()` | Sí (propias) | Nada |
+| `matriz.view` + `matriz.edit` | Solo propias | Sí | Solo propias |
+| `matriz.view` + `matriz.edit` + `view_all` | Todas | Sí | Todas |
+| `matriz.view` + `view_all` (sin edit) | Todas | Sí | Todas (comportamiento previo de Calidad) |
 
 El alcance aplica a listado, dashboard, export, adjuntos y validación del formulario de edición. `MtGi11Solicitud::scopeVisibleTo()` y `MtGi11AccessService::canManageSolicitud()` son el único punto de verdad.
 
@@ -59,23 +81,25 @@ El alcance aplica a listado, dashboard, export, adjuntos y validación del formu
 | `fecha_solicitud` | date | **Automática**: la asigna el sistema con el día del registro |
 | `created_by` | fk users | Sí (autor) |
 | `proceso_id` | fk catálogo | Sí |
-| `consecutivo` | string(60) | Sí — **no único** |
+| `consecutivo` | string(60) | No — **no único**; si va vacío se genera `MT-GI-11-{id}` (sí con GESTIONADO) |
 | `tipo_documento_id` | fk catálogo | Sí |
 | `nombre_documento` | string(255) | Sí |
 | `tipo_solicitud_id` | fk catálogo | Sí |
-| `codigo_actual` | string(60) | No |
-| `version_actual` | string(30) | No |
+| `codigo_actual` | string(60) | No (sí con GESTIONADO) |
+| `version_actual` | string(30) | No (sí con GESTIONADO) |
 | `justificacion` | text (máx. 2000 validado) | Sí |
 | `responsable_proceso` | string(255) | Sí |
 | `cargo_responsable_id` | fk catálogo | Sí |
-| `codigo_estandarizacion` | string(60) | No |
-| `fecha_estandarizacion` | date (≥ fecha solicitud) | No |
-| `version_actualizada` | unsigned int | No |
-| `estado_id` | fk catálogo | Sí (default PENDIENTE) |
+| `codigo_estandarizacion` | string(60) | No (sí con estado GESTIONADO) |
+| `fecha_estandarizacion` | date (≥ fecha solicitud) | No (sí con estado GESTIONADO) |
+| `version_actualizada` | unsigned int | No (sí con estado GESTIONADO) |
+| `estado_id` | fk catálogo (se elige dentro de Estandarización) | Sí (default PENDIENTE) |
 
 ### Consecutivo e identificador
 
 El `consecutivo` **no es único** por decisión de negocio: el mismo documento puede tener varias solicitudes/versiones. Toda operación (consultar, editar, eliminar, adjuntos) usa el **`id`**. El filtro por consecutivo es coincidencia parcial (`LIKE`). El export incluye una columna `ID` como primera columna.
+
+En el **alta** el consecutivo es **opcional**: si llega vacío, `MtGi11Service::create()` guarda `MT-GI-11-{id}` como valor provisional (se calcula después del insert porque depende del `id`). En **edición** un consecutivo vacío se ignora y se conserva el anterior. El import masivo sigue exigiendo la columna con valor.
 
 ## Fecha de solicitud
 
@@ -116,8 +140,8 @@ Se inyecta en `prepareForValidation()` del Form Request, de modo que un valor en
 
 - La plantilla lleva **claves internas en la fila 1** (oculta) y **etiquetas en la fila 2**. El importador detecta si la fila 2 es de etiquetas y salta a la 3.
 - Los catálogos se capturan **por nombre** (sin distinguir mayúsculas).
-- **El consecutivo puede repetirse** dentro del archivo y contra la base.
-- Errores por fila (catálogo inexistente, fecha inválida, justificación vacía, fecha de estandarización anterior) se reportan y **no** se guardan; el resto sí se importa.
+- **El consecutivo puede repetirse** dentro del archivo y contra la base. En la importación **sí es obligatorio** (a diferencia del alta manual).
+- Errores por fila (catálogo inexistente, fecha inválida, justificación vacía, fecha de estandarización anterior, GESTIONADO con campos vacíos) se reportan y **no** se guardan; el resto sí se importa.
 - Límite: `mt_gi_11.import.max_rows` (5000).
 
 ## Adjuntos
@@ -165,7 +189,7 @@ php artisan test --compact --filter=MtGi11
 | Archivo | Cubre |
 | --- | --- |
 | `MtGi11BoardAccessTest` | Permisos, catálogo sembrado, bypass admin, redirección de pestaña |
-| `MtGi11SolicitudTest` | CRUD, mayúsculas, consecutivo repetido, validaciones, nueva versión, adjuntos |
+| `MtGi11SolicitudTest` | CRUD, mayúsculas, consecutivo repetido y opcional, validaciones, nueva versión, adjuntos, crear con `matriz.view` y Estandarización oculta |
 | `MtGi11VisibilityTest` | Alcance propio vs `view_all` en listado, detalle, dashboard y export |
 | `MtGi11DatatableTest` | Buscador global, filtros, tope de filas, orden, series del dashboard |
 | `MtGi11ImportTest` | Import con catálogos por nombre, consecutivos repetidos y errores por fila |
@@ -182,3 +206,5 @@ php artisan test --compact --filter=MtGi11
 | 2026-11-20 | Corrección del modal Masivos: el input de archivo quedaba oculto sin control visible. Se agregó la etiqueta «Elegir archivo», el nombre del archivo seleccionado y el botón de importar habilitado solo con archivo. |
 | 2026-11-20 | La fecha de solicitud deja de capturarse: el sistema la asigna con el día del registro en el alta y la conserva en la edición. El import la toma del archivo o usa la fecha del día si viene vacía. |
 | 2026-11-20 | Zona de adjuntos del formulario: el input nativo de archivo queda oculto y el único control visible es la etiqueta estilizada, con el nombre de los archivos elegidos. |
+| 2026-11-23 | `mt_gi_11.matriz.view` habilita **crear** solicitudes (`canCreate`); editar, eliminar, importar y nueva versión siguen con `matriz.edit`. El consecutivo del alta pasa a ser **opcional** (se autogenera `MT-GI-11-{id}` si va vacío) y la sección **Estandarización** solo se muestra con `matriz.edit` o `view_all`. |
+| 2026-11-23 | El campo **Estado** se mueve dentro de la sección **Estandarización**. Con el estado **GESTIONADO** (detectado por código o nombre) todos los campos de la solicitud pasan a obligatorios en alta, edición e import; los adjuntos siguen opcionales. |

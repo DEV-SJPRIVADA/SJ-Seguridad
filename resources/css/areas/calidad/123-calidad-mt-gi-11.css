@@ -58,6 +58,18 @@
     color: #0369a1;
 }
 
+/* Variante de advertencia: se usa cuando el estado elige reglas más estrictas
+   (GESTIONADO obliga todos los campos). */
+.mt-gi-11-form-page__notice--warning {
+    border-color: #fcd38b;
+    background: #fffbeb;
+}
+
+.mt-gi-11-form-page__notice--warning .mt-gi-11-form-page__notice-icon {
+    background: #fef3c7;
+    color: #b45309;
+}
+
 .mt-gi-11-form-page__notice-title {
     margin: 0;
     font-size: 0.88rem;
@@ -97,6 +109,13 @@
 .mt-gi-11-form-page__field--wide,
 .mt-gi-11-form-page__field--full {
     grid-column: 1 / -1;
+}
+
+/* Asterisco de obligatorio que aparece solo cuando el estado es GESTIONADO.
+   Replica el `*` rojo de x-input-label para los campos que pasan a requeridos. */
+.req-form__required-mark {
+    color: #dc2626;
+    font-weight: 700;
 }
 
 .mt-gi-11-form-page__textarea {

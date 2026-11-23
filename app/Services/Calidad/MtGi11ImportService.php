@@ -235,6 +235,12 @@ final class MtGi11ImportService
             throw new \InvalidArgumentException('No hay estado PENDIENTE en el catálogo; indique el estado en la fila.');
         }
 
+        // Con estado GESTIONADO la solicitud queda cerrada: la misma regla del
+        // formulario exige también los campos de Estandarización.
+        if (MtGi11Estado::isGestionadoId($estadoId)) {
+            $this->assertGestionadoCompleto($row);
+        }
+
         $nombreDocumento = trim((string) ($row['nombre_documento'] ?? ''));
         if ($nombreDocumento === '') {
             throw new \InvalidArgumentException('El nombre del documento es obligatorio.');
@@ -355,7 +361,40 @@ final class MtGi11ImportService
         return mb_strtoupper($value, 'UTF-8');
     }
 
+    /**
+     * Con estado GESTIONADO todos los campos de la solicitud son obligatorios:
+     * en el import se valida antes de crear la fila para no guardarla a medias.
+     *
+     * @param  array<string, string>  $row
+     */
+    private function assertGestionadoCompleto(array $row): void
+    {
+        $required = [
+            'consecutivo' => 'El consecutivo',
+            'codigo_actual' => 'El código actual',
+            'version_actual' => 'La versión actual',
+            'codigo_estandarizacion' => 'El código de estandarización',
+            'fecha_estandarizacion' => 'La fecha de estandarización',
+            'version_actualizada' => 'La versión actualizada',
+        ];
+
+        $faltantes = [];
+
+        foreach ($required as $key => $label) {
+            if (trim((string) ($row[$key] ?? '')) === '') {
+                $faltantes[] = $label;
+            }
+        }
+
+        if ($faltantes !== []) {
+            throw new \InvalidArgumentException(
+                'Con estado GESTIONADO son obligatorios: '.implode(', ', $faltantes).'.'
+            );
+        }
+    }
+
     private function parseDate(string $value): ?string
+
     {
         $value = trim($value);
 

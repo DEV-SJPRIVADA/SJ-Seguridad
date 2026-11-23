@@ -32,7 +32,16 @@ final class MtGi11Service
             $payload['created_by'] = $userId;
             $payload['updated_by'] = $userId;
 
+            // El consecutivo es opcional: si viene vacío se guarda un valor
+            // temporal y, ya con el id, se reemplaza por uno provisional.
+            $sinConsecutivo = trim((string) ($payload['consecutivo'] ?? '')) === '';
+            $payload['consecutivo'] = $sinConsecutivo ? '' : $payload['consecutivo'];
+
             $solicitud = MtGi11Solicitud::query()->create($payload);
+
+            if ($sinConsecutivo) {
+                $solicitud->forceFill(['consecutivo' => $this->consecutivoProvisional($solicitud)])->save();
+            }
 
             if ($files !== []) {
                 $this->adjuntos->storeMany($solicitud, $files, $userId);
@@ -47,6 +56,15 @@ final class MtGi11Service
     }
 
     /**
+     * Consecutivo provisional para altas sin consecutivo: MT-GI-11-{id}.
+     * Quien tenga permiso de edición puede reemplazarlo después.
+     */
+    public function consecutivoProvisional(MtGi11Solicitud $solicitud): string
+    {
+        return 'MT-GI-11-'.str_pad((string) $solicitud->id, 3, '0', STR_PAD_LEFT);
+    }
+
+    /**
      * @param  array<string, mixed>  $data
      * @param  list<UploadedFile>  $files
      */
@@ -57,6 +75,12 @@ final class MtGi11Service
         DB::transaction(function () use ($solicitud, $data, $files, $userId): void {
             $payload = Arr::only($data, $this->fillableKeys());
             $payload['updated_by'] = $userId;
+
+            // El consecutivo es opcional en el alta, pero la columna no acepta
+            // vacío: al editar sin consecutivo se conserva el que ya tenía.
+            if (array_key_exists('consecutivo', $payload) && trim((string) $payload['consecutivo']) === '') {
+                unset($payload['consecutivo']);
+            }
 
             $solicitud->update($payload);
 

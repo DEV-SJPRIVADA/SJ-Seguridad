@@ -4,6 +4,7 @@
     Variables:
     - $solicitud: MtGi11Solicitud|null — null en alta y en nueva versión.
     - $canEdit: bool — habilita los campos.
+    - $canEstandarizacion: bool — muestra la sección 4 «Estandarización» (solo edit o view_all).
     - $formOptions: opciones de los cinco catálogos.
     - $defaults: valores iniciales (defaults del alta o precarga de nueva versión).
     - $action: URL de envío (store o update).
@@ -13,6 +14,7 @@
     secciones numeradas y guía lateral (x-form-aside-guide).
 --}}
 @php
+    use App\Models\Calidad\MtGi11Estado;
     use App\Support\DisplayDate;
 
     $isNew = $solicitud === null;
@@ -41,6 +43,18 @@
         : 'Registrada por '.$solicitud->solicitanteLabel().' el '.DisplayDate::dateTime($solicitud->created_at).'.';
 
     $totalAdjuntos = $solicitud?->adjuntos->count() ?? 0;
+
+    // Por seguridad: si la vista se reutiliza sin la variable, se cae al permiso de edición.
+    $canEstandarizacion = $canEstandarizacion ?? $canEdit;
+
+    // Los pasos se numeran según lo que realmente ve el usuario: la sección de
+    // adjuntos toma el 4 cuando Estandarización está oculta.
+    $adjuntosStep = $canEstandarizacion ? 5 : 4;
+
+    // Estado GESTIONADO: al elegirlo, todos los campos de la solicitud se vuelven
+    // obligatorios (misma regla que valida StoreMtGi11SolicitudRequest).
+    $gestionadoEstadoId = (string) (MtGi11Estado::gestionadoId() ?? '');
+    $esGestionado = MtGi11Estado::isGestionadoId(old('estado_id', $values('estado_id')));
 @endphp
 
 <x-app-layout>
@@ -48,7 +62,28 @@
         @include('areas.calidad.mt_gi_11.partials.subnav', ['subTabs' => $subTabs])
     </x-slot>
 
-    <div class="page-section mt-gi-11-page mt-gi-11-form-page">
+    {{-- gestionado: se activa al elegir el estado GESTIONADO y vuelve obligatorios
+         los campos que normalmente son opcionales. El id del estado y el valor
+         inicial viajan en data-* para no romper el atributo x-data. --}}
+    <div
+        class="page-section mt-gi-11-page mt-gi-11-form-page"
+        data-gestionado-id="{{ $gestionadoEstadoId }}"
+        data-gestionado-inicial="{{ $esGestionado ? '1' : '0' }}"
+        x-data="{
+            gestionado: false,
+            gestionadoId: '',
+            init() {
+                this.gestionadoId = this.$el.dataset.gestionadoId || '';
+                this.gestionado = this.$el.dataset.gestionadoInicial === '1';
+            },
+            // El cambio llega como CustomEvent del searchable-select (detail.value)
+            // o como evento nativo del input oculto (target.value).
+            syncGestionado(event) {
+                const raw = event?.detail?.value ?? event?.target?.value ?? '';
+                this.gestionado = this.gestionadoId !== '' && String(raw) === String(this.gestionadoId);
+            },
+        }"
+    >
         <div class="app-container">
             {{-- Barra superior: volver + título + estado del registro --}}
             <div class="mt-gi-11-form-page__head">
@@ -203,7 +238,10 @@
                                         >
                                     </div>
                                     <div class="form-field">
-                                        <x-input-label for="codigo_actual" value="Código actual" />
+                                        <x-input-label for="codigo_actual">
+                                            Código actual
+                                            <span class="req-form__required-mark" x-show="gestionado" x-cloak>*</span>
+                                        </x-input-label>
                                         <input
                                             id="codigo_actual"
                                             name="codigo_actual"
@@ -213,10 +251,14 @@
                                             value="{{ old('codigo_actual', $values('codigo_actual')) }}"
                                             placeholder="Ej. PR-GI-01"
                                             autocomplete="off"
+                                            :required="gestionado"
                                         >
                                     </div>
                                     <div class="form-field">
-                                        <x-input-label for="version_actual" value="Versión actual" />
+                                        <x-input-label for="version_actual">
+                                            Versión actual
+                                            <span class="req-form__required-mark" x-show="gestionado" x-cloak>*</span>
+                                        </x-input-label>
                                         <input
                                             id="version_actual"
                                             name="version_actual"
@@ -226,6 +268,7 @@
                                             value="{{ old('version_actual', $values('version_actual')) }}"
                                             placeholder="Ej. 03"
                                             autocomplete="off"
+                                            :required="gestionado"
                                         >
                                     </div>
                                 </div>
@@ -243,7 +286,10 @@
 
                                 <div class="form-grid form-grid--two">
                                     <div class="form-field">
-                                        <x-input-label for="consecutivo" value="Consecutivo de solicitud *" />
+                                        <x-input-label for="consecutivo">
+                                            Consecutivo de solicitud
+                                            <span class="req-form__required-mark" x-show="gestionado" x-cloak>*</span>
+                                        </x-input-label>
                                         <input
                                             id="consecutivo"
                                             name="consecutivo"
@@ -251,10 +297,12 @@
                                             class="form-input"
                                             maxlength="60"
                                             value="{{ old('consecutivo', $values('consecutivo')) }}"
-                                            placeholder="Ej. MT-GI-11-001"
-                                            required
+                                            placeholder="Opcional: si lo deja vacío se asigna uno provisional"
                                             autocomplete="off"
+                                            :required="gestionado"
                                         >
+                                        <p class="req-form__hint" x-show="! gestionado">Opcional. Si lo deja vacío, el sistema asigna un consecutivo provisional.</p>
+                                        <p class="req-form__hint" x-show="gestionado" x-cloak>Obligatorio con estado GESTIONADO.</p>
                                     </div>
                                     <div class="form-field">
                                         <x-input-label for="tipo_solicitud_id" value="Tipo de solicitud *" />
@@ -264,18 +312,6 @@
                                             :options="$formOptions['tipos_solicitud']"
                                             :value="old('tipo_solicitud_id', $values('tipo_solicitud_id'))"
                                             placeholder="Seleccione el tipo…"
-                                            :required="true"
-                                            :disabled="! $canEdit"
-                                        />
-                                    </div>
-                                    <div class="form-field">
-                                        <x-input-label for="estado_id" value="Estado *" />
-                                        <x-searchable-select
-                                            id="estado_id"
-                                            name="estado_id"
-                                            :options="$formOptions['estados']"
-                                            :value="old('estado_id', $values('estado_id'))"
-                                            placeholder="Seleccione el estado…"
                                             :required="true"
                                             :disabled="! $canEdit"
                                         />
@@ -337,62 +373,102 @@
                                 </div>
                             </section>
 
-                            {{-- 4. Estandarización: se puede completar después --}}
-                            <section class="req-form__section">
-                                <header class="req-form__section-head">
-                                    <span class="req-form__section-step">4</span>
-                                    <div>
-                                        <h4 class="req-form__section-title">Estandarización</h4>
-                                        <p class="req-form__section-desc">Opcional al crear. Se completa cuando Calidad estandariza el documento.</p>
-                                    </div>
-                                </header>
+                            {{-- 4. Estandarización: solo editores y Calidad (view_all).
+                                 Incluye el estado: al elegir GESTIONADO se exigen todos los campos. --}}
+                            @if ($canEstandarizacion)
+                                <section class="req-form__section">
+                                    <header class="req-form__section-head">
+                                        <span class="req-form__section-step">4</span>
+                                        <div>
+                                            <h4 class="req-form__section-title">Estandarización</h4>
+                                            <p class="req-form__section-desc">Opcional al crear, salvo que el estado sea GESTIONADO: ahí se exige todo.</p>
+                                        </div>
+                                    </header>
 
-                                <div class="form-grid form-grid--three">
-                                    <div class="form-field">
-                                        <x-input-label for="codigo_estandarizacion" value="Código de estandarización" />
-                                        <input
-                                            id="codigo_estandarizacion"
-                                            name="codigo_estandarizacion"
-                                            type="text"
-                                            class="form-input"
-                                            maxlength="60"
-                                            value="{{ old('codigo_estandarizacion', $values('codigo_estandarizacion')) }}"
-                                            placeholder="Ej. PR-GI-01-V2"
-                                            autocomplete="off"
-                                        >
+                                    {{-- Aviso dinámico: el usuario ve por qué se marcan los campos. --}}
+                                    <div class="mt-gi-11-form-page__notice mt-gi-11-form-page__notice--warning" x-show="gestionado" x-cloak>
+                                        <span class="mt-gi-11-form-page__notice-icon" aria-hidden="true">
+                                            <x-lucide-triangle-alert width="18" height="18" />
+                                        </span>
+                                        <div>
+                                            <p class="mt-gi-11-form-page__notice-title">Solicitud GESTIONADA</p>
+                                            <p class="mt-gi-11-form-page__notice-text">
+                                                Con este estado la solicitud queda cerrada: consecutivo, código y versión actual, código, fecha y versión de estandarización son obligatorios.
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div class="form-field">
-                                        <x-input-label for="fecha_estandarizacion" value="Fecha de estandarización" />
-                                        <input
-                                            id="fecha_estandarizacion"
-                                            name="fecha_estandarizacion"
-                                            type="date"
-                                            class="form-input"
-                                            value="{{ old('fecha_estandarizacion', $values('fecha_estandarizacion')) }}"
-                                        >
+
+                                    <div class="form-grid form-grid--two">
+                                        <div class="form-field" @change="syncGestionado($event)">
+                                            <x-input-label for="estado_id" value="Estado *" />
+                                            <x-searchable-select
+                                                id="estado_id"
+                                                name="estado_id"
+                                                :options="$formOptions['estados']"
+                                                :value="old('estado_id', $values('estado_id'))"
+                                                placeholder="Seleccione el estado…"
+                                                :required="true"
+                                                :disabled="! $canEdit"
+                                            />
+                                        </div>
+                                        <div class="form-field">
+                                            <x-input-label for="fecha_estandarizacion">
+                                                Fecha de estandarización
+                                                <span class="req-form__required-mark" x-show="gestionado" x-cloak>*</span>
+                                            </x-input-label>
+                                            <input
+                                                id="fecha_estandarizacion"
+                                                name="fecha_estandarizacion"
+                                                type="date"
+                                                class="form-input"
+                                                value="{{ old('fecha_estandarizacion', $values('fecha_estandarizacion')) }}"
+                                                :required="gestionado"
+                                            >
+                                        </div>
+                                        <div class="form-field">
+                                            <x-input-label for="codigo_estandarizacion">
+                                                Código de estandarización
+                                                <span class="req-form__required-mark" x-show="gestionado" x-cloak>*</span>
+                                            </x-input-label>
+                                            <input
+                                                id="codigo_estandarizacion"
+                                                name="codigo_estandarizacion"
+                                                type="text"
+                                                class="form-input"
+                                                maxlength="60"
+                                                value="{{ old('codigo_estandarizacion', $values('codigo_estandarizacion')) }}"
+                                                placeholder="Ej. PR-GI-01-V2"
+                                                autocomplete="off"
+                                                :required="gestionado"
+                                            >
+                                        </div>
+                                        <div class="form-field">
+                                            <x-input-label for="version_actualizada">
+                                                Versión actualizada
+                                                <span class="req-form__required-mark" x-show="gestionado" x-cloak>*</span>
+                                            </x-input-label>
+                                            <input
+                                                id="version_actualizada"
+                                                name="version_actualizada"
+                                                type="number"
+                                                min="0"
+                                                max="9999"
+                                                step="1"
+                                                class="form-input"
+                                                value="{{ old('version_actualizada', $values('version_actualizada')) }}"
+                                                placeholder="Ej. 4"
+                                                :required="gestionado"
+                                            >
+                                        </div>
                                     </div>
-                                    <div class="form-field">
-                                        <x-input-label for="version_actualizada" value="Versión actualizada" />
-                                        <input
-                                            id="version_actualizada"
-                                            name="version_actualizada"
-                                            type="number"
-                                            min="0"
-                                            max="9999"
-                                            step="1"
-                                            class="form-input"
-                                            value="{{ old('version_actualizada', $values('version_actualizada')) }}"
-                                            placeholder="Ej. 4"
-                                        >
-                                    </div>
-                                </div>
-                            </section>
+                                </section>
+                            @endif
 
                             @if ($canEdit)
                                 {{-- 5. Adjuntos: en alta se suben aquí; en edición se listan aparte --}}
                                 <section class="req-form__section">
                                     <header class="req-form__section-head">
-                                        <span class="req-form__section-step">5</span>
+                                        <span class="req-form__section-step">{{ $adjuntosStep }}</span>
                                         <div>
                                             <h4 class="req-form__section-title">Datos adjuntos</h4>
                                             <p class="req-form__section-desc">PDF, JPG o PNG. Máximo 10 archivos de 10 MB por envío.</p>
@@ -520,19 +596,27 @@
                 </div>
 
                 {{-- Guía lateral: checklist y efecto del guardado --}}
+                @php
+                    $guiaItems = [
+                        'El proceso y el tipo de documento salen de Catálogos.',
+                        'La fecha de solicitud se asigna automáticamente con el día de hoy.',
+                        'El consecutivo es opcional: si lo deja vacío el sistema asigna uno provisional.',
+                        'La justificación es obligatoria y admite hasta 2000 caracteres.',
+                    ];
+
+                    if ($canEstandarizacion) {
+                        $guiaItems[] = 'Con estado GESTIONADO todos los campos son obligatorios.';
+                        $guiaItems[] = 'La fecha de estandarización no puede ser anterior a la solicitud.';
+                    }
+
+                    $guiaItems[] = 'Adjuntos: PDF, JPG o PNG, máximo 10 por envío.';
+                @endphp
                 <aside class="req-form-aside">
                     <x-form-aside-guide
                         :title="$isNew ? 'Antes de crear' : 'Antes de guardar'"
                         subtitle="Revise estos puntos para evitar devoluciones."
                         icon="list-checks"
-                        :items="[
-                            'El proceso y el tipo de documento salen de Catálogos.',
-                            'La fecha de solicitud se asigna automáticamente con el día de hoy.',
-                            'El consecutivo puede repetirse: identifica la versión, no la fila.',
-                            'La justificación es obligatoria y admite hasta 2000 caracteres.',
-                            'La fecha de estandarización no puede ser anterior a la solicitud.',
-                            'Adjuntos: PDF, JPG o PNG, máximo 10 por envío.',
-                        ]"
+                        :items="$guiaItems"
                     />
 
                     <x-form-aside-guide title="Qué pasa después" icon="route">

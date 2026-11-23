@@ -15,23 +15,27 @@ Está en **Calidad → MT-GI-11**, con tres pestañas:
 - **Ves tus propias solicitudes**: las que registraste tú.
 - **Calidad ve todas** las solicitudes del tablero.
 - Nadie más puede abrir, editar ni descargar los adjuntos de una solicitud ajena.
+- **Puedes crear** solicitudes con solo el permiso de consulta de la matriz. Editar, eliminar e importar requieren el permiso de edición.
 
 ## Registrar una solicitud
 
 1. Entra a **MT-GI-11 → Matriz**.
 2. Pulsa el botón **+** (arriba a la derecha del listado).
 3. Completa:
-   - **Consecutivo**: el número de la solicitud (ej. `MT-GI-11-001`). Puedes repetirlo si después registras otra versión del mismo documento.
+   - **Consecutivo**: el número de la solicitud (ej. `MT-GI-11-001`). Es **opcional**: si lo dejas vacío el sistema asigna uno provisional. Puedes repetirlo si después registras otra versión del mismo documento.
    - **Proceso** y **Tipo de documento**.
    - **Nombre del documento**.
    - **Tipo de solicitud** (creación, actualización, eliminación, estandarización…).
    - **Código actual** y **Versión actual** (los que tiene hoy el documento).
    - **Justificación**: explica por qué se solicita. Es obligatoria.
    - **Nombre y cargo del responsable del proceso**.
-   - **Código de estandarización**, **fecha de estandarización** y **versión actualizada**: se pueden completar ahora o después.
-   - **Estado**: por defecto queda en *Pendiente*.
+   - **Estado**: está dentro de la sección **Estandarización**; por defecto queda en *Pendiente*.
 4. Puedes **adjuntar archivos** (PDF, JPG o PNG, hasta 10 de 10 MB).
 5. Pulsa **Guardar solicitud**.
+
+> La sección **Estandarización** (estado, código y fecha de estandarización y versión actualizada) **solo aparece** si tienes permiso de edición o eres de Calidad. Si solo consultas, la solicitud se crea en estado *Pendiente* y Calidad la completa después.
+
+> **Si eliges el estado GESTIONADO** la solicitud queda cerrada y **todos los campos son obligatorios**: consecutivo, código y versión actual, código, fecha y versión de estandarización. Los adjuntos siguen siendo opcionales.
 
 > Todos los textos se guardan en **MAYÚSCULAS** automáticamente; escríbelos como quieras.
 
@@ -96,6 +100,18 @@ Si administras los catálogos, en la pestaña **Catálogos** puedes crear, renom
 Un valor **inactivo** deja de aparecer en los formularios, pero no se borra. Un valor **en uso** no se puede eliminar: desactívalo.
 
 ## Preguntas frecuentes
+
+**¿Puedo crear una solicitud si solo tengo permiso de consulta?**
+Sí. El botón **+** aparece con el permiso de consulta de la matriz. Para editar, eliminar o importar necesitas el permiso de edición.
+
+**¿Qué pasa si dejo el consecutivo vacío?**
+El sistema asigna uno provisional (`MT-GI-11-` y el número interno del registro). Quien tenga permiso de edición puede reemplazarlo después.
+
+**¿Por qué no veo la sección Estandarización al crear?**
+Porque esa sección es de Calidad y de quien tiene permiso de edición (ahí también se elige el estado). La solicitud se crea en estado *Pendiente* y Calidad la completa al estandarizar el documento.
+
+**¿Qué pasa si elijo el estado GESTIONADO?**
+La solicitud queda cerrada: el sistema exige consecutivo, código y versión actual, código, fecha y versión de estandarización. Si falta alguno, no deja guardar y señala cuáles. Los adjuntos siguen siendo opcionales.
 
 **¿Por qué puedo repetir el consecutivo?**
 Porque un mismo documento puede tener varias solicitudes (versiones). Lo que identifica cada fila es el **ID**, no el consecutivo.

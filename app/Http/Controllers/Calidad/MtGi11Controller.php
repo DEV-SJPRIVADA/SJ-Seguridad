@@ -97,6 +97,7 @@ class MtGi11Controller extends Controller
             'subTabs' => $this->getMtGi11SubTabs('matriz'),
             'filters' => $filters,
             'canEdit' => $canEdit,
+            'canCreate' => $this->access->canCreate($user),
             'viewAll' => $this->access->canViewAll($user),
             'options' => $this->filterOptions(),
             'estados' => $this->estadosWithColor(),
@@ -191,12 +192,13 @@ class MtGi11Controller extends Controller
     public function create(): View
     {
         $user = auth()->user();
-        abort_unless($user !== null && $this->access->canEdit($user), 403);
+        abort_unless($user !== null && $this->access->canCreate($user), 403);
 
         return view('areas.calidad.mt_gi_11.form', [
             'subTabs' => $this->getMtGi11SubTabs('matriz'),
             'solicitud' => null,
             'canEdit' => true,
+            'canEstandarizacion' => $this->access->canManageEstandarizacion($user),
             'viewAll' => $this->access->canViewAll($user),
             'formOptions' => $this->formOptions(),
             'defaults' => $this->defaultFormValues(),
@@ -231,6 +233,7 @@ class MtGi11Controller extends Controller
             'subTabs' => $this->getMtGi11SubTabs('matriz'),
             'solicitud' => null,
             'canEdit' => true,
+            'canEstandarizacion' => $this->access->canManageEstandarizacion($user),
             'viewAll' => $this->access->canViewAll($user),
             'formOptions' => $this->formOptions(),
             'defaults' => $this->solicitudes->nuevaVersionDefaults($solicitud),
@@ -253,6 +256,7 @@ class MtGi11Controller extends Controller
             'subTabs' => $this->getMtGi11SubTabs('matriz'),
             'solicitud' => $solicitud,
             'canEdit' => $this->access->canManageSolicitud($user, (int) $solicitud->created_by),
+            'canEstandarizacion' => $this->access->canManageEstandarizacion($user),
             'viewAll' => $this->access->canViewAll($user),
             'formOptions' => $this->formOptions($solicitud),
             'defaults' => [],

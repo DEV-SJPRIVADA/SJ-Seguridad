@@ -113,6 +113,11 @@
                                 title="Exportar a Excel (respeta filtros)"
                                 aria-label="Exportar a Excel"
                             />
+                            @if ($canCreate)
+                                <a href="{{ route('calidad.mt-gi-11.matriz.create') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Agregar solicitud" aria-label="Agregar solicitud">
+                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
+                                </a>
+                            @endif
                             @if ($canEdit)
                                 <button
                                     type="button"
@@ -123,9 +128,6 @@
                                 >
                                     <x-lucide-upload width="18" height="18" aria-hidden="true" />
                                 </button>
-                                <a href="{{ route('calidad.mt-gi-11.matriz.create') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Agregar solicitud" aria-label="Agregar solicitud">
-                                    <x-lucide-plus width="18" height="18" aria-hidden="true" />
-                                </a>
                             @endif
                         </div>
                     </div>
