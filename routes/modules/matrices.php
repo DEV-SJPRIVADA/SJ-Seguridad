@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'active', 'password.changed'])->prefix('matrices/{module}')->name('matrices.')->group(function (): void {
     Route::get('/', [MatrixController::class, 'index'])->name('index');
+    Route::get('/mis-matrices', [MatrixController::class, 'mine'])->name('mine');
 
     Route::get('/crear', [MatrixBuilderController::class, 'create'])->name('create');
     Route::post('/', [MatrixBuilderController::class, 'store'])->name('store');

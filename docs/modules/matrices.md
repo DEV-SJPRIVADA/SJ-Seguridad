@@ -39,7 +39,7 @@ Matriz: `draft`, `published`, `archived`. Registro: `draft`, `submitted`, `archi
 
 ## Rutas (prefijo `matrices/{module}`)
 
-Listado, crear, editar/publicar/archivar, compartir (store/destroy por usuario y área), registros (index, datatable, create, store, show, edit, update, archive), exportar, adjuntos (download, preview, destroy).
+Listado (`/`, tarjetas solo con `matrices.manage`), lista simple (`/mis-matrices`), crear, editar/publicar/archivar, compartir (store/destroy por usuario y área), registros (index, datatable, create, store, show, edit, update, archive), exportar, adjuntos (download, preview, destroy).
 
 ## Controladores
 
@@ -61,6 +61,19 @@ No existe asignación manual de un registro a un usuario: `MatrixSubmission::sco
 ## DataTable y export
 
 Listado server-side (`serverSide: true`) con endpoint JSON. El export reutiliza los mismos filtros y alcance vía `MatrixSubmissionFilterService` y `BaseExport::downloadFromQuery`.
+
+## Navegación y visibilidad de matrices
+
+| Quién | Entrada a `/matrices/{module}` | Pestañas |
+| --- | --- | --- |
+| Con `matrices.manage` | Grid de **tarjetas** (crear, publicar, compartir, archivar) | «Mis matrices» + «Nueva matriz» + una pestaña por matriz propia o compartida |
+| Sin `matrices.manage` (solo compartido) | **Redirige** a su primera matriz | «Mis matrices» (lista simple) + una pestaña por matriz asignada |
+
+- `MatrixListingService::canSeeAdminCards()` decide si hay tarjetas.
+- `MatrixListingService::tabbedMatrices()` devuelve **solo las matrices creadas por el usuario o compartidas** (por usuario o por área, vigentes y no archivadas). El administrador **no** ve todas las matrices del área como pestañas: el resto queda en las tarjetas.
+- `GET /matrices/{module}/mis-matrices` (`matrices.mine`) es la lista simple con filtro por nombre/código y enlace a cada matriz. La usan los usuarios sin `matrices.manage`.
+- `BuildsMatrixTabs` arma el subnav: «Mis matrices» apunta a `matrices.index` para el administrador y a `matrices.mine` para el resto. El subnav usa scroll horizontal con flechas (`data-module-tabs-scroller`).
+- Si el usuario no tiene ninguna matriz vigente (accesos vencidos o matrices archivadas), `MatrixAccessService::hasAnyAccess()` devuelve `false` y el tablero desaparece del sidebar; el índice responde 403.
 
 ## Auditoría
 

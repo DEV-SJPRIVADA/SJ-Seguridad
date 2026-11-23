@@ -39,6 +39,35 @@ final class MatrixListingService
             return $query;
         }
 
+        return $this->ownedOrGrantedQuery($query, $user);
+    }
+
+    /**
+     * Matrices que se muestran como pestañas en el subnav.
+     *
+     * Regla de negocio: solo las matrices que el usuario **creó o le compartieron**
+     * (por usuario o por área), incluso si es administrador. El resto de matrices
+     * del área queda accesible desde las tarjetas del índice, no como pestañas,
+     * para que el subnav no crezca sin límite.
+     *
+     * @return Collection<int, Matrix>
+     */
+    public function tabbedMatrices(User $user): Collection
+    {
+        return $this->ownedOrGrantedQuery(Matrix::query()->notArchived(), $user)
+            ->with('currentVersion:id,version_number')
+            ->orderBy('name')
+            ->get(['id', 'code', 'name', 'status', 'area_key', 'owner_user_id', 'current_version_id', 'archived_at']);
+    }
+
+    /**
+     * Filtro de propiedad u otorgamiento vigente, sin el bypass de administrador.
+     *
+     * @param  Builder<Matrix>  $query
+     * @return Builder<Matrix>
+     */
+    private function ownedOrGrantedQuery(Builder $query, User $user): Builder
+    {
         $areaKey = $user->hasAssignedArea() ? $user->area_key : null;
 
         return $query->where(function (Builder $inner) use ($user, $areaKey): void {
@@ -53,6 +82,15 @@ final class MatrixListingService
                     ->active());
             }
         });
+    }
+
+    /**
+     * El listado de tarjetas (administración de matrices) es solo para quien
+     * puede crear matrices.
+     */
+    public function canSeeAdminCards(User $user): bool
+    {
+        return $user->can('matrices.manage') || $this->accessResolver->isManager($user);
     }
 
     /**

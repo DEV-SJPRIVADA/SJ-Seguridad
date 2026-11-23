@@ -1712,7 +1712,68 @@
     word-break: break-word;
 }
 
-/* ===== Subnav override (none needed) ===== */
+/* ===== Subnav: pestañas de matrices con scroll horizontal ===== */
 .matrices-page .module-tabs {
     gap: 0.2rem;
+}
+
+/* El subnav de matrices lleva nombre de área + pestañas en una fila desplazable. */
+.module-subnav__inner--scroll {
+    gap: 1rem;
+    min-width: 0;
+}
+
+.module-subnav__inner--scroll .module-subnav__label {
+    flex: 0 0 auto;
+}
+
+.matrices-subnav__scroller {
+    min-width: 0;
+}
+
+/* ===== «Mis matrices»: lista simple para usuarios compartidos ===== */
+.matrices-mine__toolbar {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1rem;
+    flex-wrap: wrap;
+    padding-bottom: 0.75rem;
+    margin-bottom: 0.35rem;
+    border-bottom: 1px solid var(--color-border);
+}
+
+.matrices-mine__filter {
+    min-width: 16rem;
+    max-width: 22rem;
+}
+
+.matrices-mine__table {
+    width: 100%;
+}
+
+.matrices-mine__name {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.matrices-mine__admin-link {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 1rem;
+    margin-top: 0.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 720px) {
+    .matrices-mine__filter {
+        min-width: 100%;
+        max-width: none;
+    }
+
+    .module-subnav__inner--scroll {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+    }
 }

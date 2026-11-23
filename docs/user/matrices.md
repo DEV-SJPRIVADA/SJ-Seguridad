@@ -8,6 +8,12 @@ Una matriz es un formulario personalizado que creas para registrar información 
 
 Solo usuarios con el permiso **Matrices: crear y administrar** (administradores). Los demás usuarios ven las matrices que se les compartan.
 
+## Qué ve cada usuario al entrar
+
+- **Administradores** (pueden crear matrices): ven las **tarjetas** de todas las matrices, con sus botones de crear, publicar, compartir y archivar. Arriba tienen, además, una pestaña por cada matriz que crearon o les compartieron.
+- **Quien solo recibió una matriz compartida**: no ve tarjetas. Al entrar a Matrices se abre directamente su primera matriz, y arriba tiene **una pestaña por cada matriz** que le compartieron. La pestaña **Mis matrices** abre una lista simple con filtro para elegir otra.
+- **Si no tiene ninguna matriz vigente** (accesos vencidos o matrices archivadas), el tablero Matrices no aparece en el menú lateral.
+
 ## Crear una matriz
 
 1. Entra al tablero **Matrices** de tu área.

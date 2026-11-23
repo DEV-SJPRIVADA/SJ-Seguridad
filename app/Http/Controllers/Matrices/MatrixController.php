@@ -24,9 +24,21 @@ class MatrixController extends Controller
         private readonly MatrixAuditService $audit,
     ) {}
 
-    public function index(string $module): View
+    public function index(string $module): View|RedirectResponse
     {
         $user = $this->authorizeBoard($module);
+
+        // Quien no administra matrices no ve tarjetas: entra directo a la primera
+        // matriz que tenga como pestaña.
+        if (! $this->listing->canSeeAdminCards($user)) {
+            $first = $this->listing->tabbedMatrices($user)->first();
+            abort_if($first === null, 403);
+
+            return redirect()->route('matrices.submissions.index', [
+                'module' => $module,
+                'matrix' => $first->id,
+            ]);
+        }
 
         $rows = $this->listing->visibleMatrices($user)
             ->map(function (Matrix $matrix) use ($user): array {
@@ -47,6 +59,30 @@ class MatrixController extends Controller
             'rows' => $rows,
             'canCreate' => $user->can('matrices.manage'),
             'tabs' => $this->indexTabs($module),
+        ]);
+    }
+
+    /**
+     * Lista simple de las matrices del usuario (propias y compartidas), con
+     * filtro y acceso a cada una. Reemplaza el grid de tarjetas para quien no
+     * administra matrices.
+     */
+    public function mine(string $module): View
+    {
+        $user = $this->authorizeBoard($module);
+
+        $rows = $this->listing->tabbedMatrices($user)
+            ->map(fn (Matrix $matrix): array => [
+                'matrix' => $matrix,
+                'access' => $this->accessResolver->resolve($user, $matrix),
+            ])
+            ->values();
+
+        return view('modules.matrices.mine', [
+            'module' => $module,
+            'rows' => $rows,
+            'canCreate' => $this->listing->canSeeAdminCards($user),
+            'tabs' => $this->indexTabs($module, 'mine'),
         ]);
     }
 
