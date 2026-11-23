@@ -36,7 +36,7 @@ class ServicioClienteCaso extends Model
         'accion_realizar',
         'responsable_id',
         'dias_habiles',
-        'proceso',
+        'proceso_id',
         'eficacia',
         'created_by',
         'updated_by',
@@ -75,6 +75,14 @@ class ServicioClienteCaso extends Model
     public function responsable(): BelongsTo
     {
         return $this->belongsTo(ServicioClienteResponsable::class, 'responsable_id');
+    }
+
+    /**
+     * Proceso afectado del caso (catálogo).
+     */
+    public function proceso(): BelongsTo
+    {
+        return $this->belongsTo(ServicioClienteProceso::class, 'proceso_id');
     }
 
     public function cliente(): BelongsTo

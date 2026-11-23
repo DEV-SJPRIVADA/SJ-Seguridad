@@ -6,7 +6,8 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * FO-GI-22: la columna «RESP. SEGUIMIENTO» del listado pasa a llamarse «PROCESO».
- * Se renombra la columna para conservar los datos ya capturados.
+ * Solo renombra; la columna de texto se elimina en la migración siguiente, cuando
+ * «Proceso» pasa a ser catálogo (`2026_11_23_130000_...`).
  * Funciona en MySQL y en sqlite (comprobando columnas antes de renombrar).
  */
 return new class extends Migration

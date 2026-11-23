@@ -26,7 +26,7 @@ Registrar y seguir casos FO-GI-22 (peticiones, quejas, reclamos y sugerencias) d
 | 3 | Dashboard | Lo ve quien tenga `servicio_cliente.fo_gi_22.view` (edit implica view). Sin permiso KPI propio. Estilo del dashboard de área de Gestión Humana. |
 | 4 | Catálogos | Pestaña con `servicio_cliente.parameters.edit`: tipología, fuente, responsable y categoría. |
 | 5 | Siembra de roles | `super-admin` recibe todo el catálogo. El rol `administrador` también recibe el paquete del tablero (no hay permiso legado que migrar). |
-| 6 | Dos responsables | 1) catálogo. 2) texto libre (`proceso`, antes `responsable_seguimiento`), sin catálogo. |
+| 6 | Dos responsables | 1) catálogo. 2) `proceso_id` al catálogo de Procesos (nació como texto libre `responsable_seguimiento`). |
 | 7 | Cliente interno | Nombre fijo **SJSEGURIDAD**. No se elige cliente comercial. |
 | 8 | Cliente externo | Select de clientes de Comercial. |
 | 9 | Categoría | Catálogo (selector), no texto largo. |

@@ -9,6 +9,7 @@ use App\Models\ServicioClienteCaso;
 use App\Models\ServicioClienteCasoAdjunto;
 use App\Models\ServicioClienteCategoria;
 use App\Models\ServicioClienteFuente;
+use App\Models\ServicioClienteProceso;
 use App\Models\ServicioClienteResponsable;
 use App\Models\ServicioClienteTipologia;
 use App\Models\User;
@@ -33,6 +34,8 @@ class ServicioClienteFoGi22Test extends TestCase
     private ServicioClienteCategoria $categoria;
 
     private ServicioClienteResponsable $responsable;
+
+    private ServicioClienteProceso $proceso;
 
     protected function setUp(): void
     {
@@ -62,6 +65,10 @@ class ServicioClienteFoGi22Test extends TestCase
             'is_active' => true,
             'sort_order' => 1,
         ]);
+        // El catálogo de procesos ya viene sembrado desde los procesos del sistema.
+        $this->proceso = ServicioClienteProceso::query()
+            ->where('code', 'GESTION_HUMANA')
+            ->firstOrFail();
     }
 
     public function test_create_page_uses_the_requisition_form_shell(): void
@@ -86,7 +93,7 @@ class ServicioClienteFoGi22Test extends TestCase
                 'fecha_recepcion' => '2026-11-06',
                 'fecha_verificacion' => '2026-11-20',
                 'descripcion' => 'cliente molesto',
-                'proceso' => 'ana pérez',
+                'proceso_id' => $this->proceso->id,
             ]))
             ->assertRedirect(route('calidad.servicio-cliente.fo-gi-22.index'));
 
@@ -100,7 +107,7 @@ class ServicioClienteFoGi22Test extends TestCase
         $this->assertSame('2026-11-20', $caso->fecha_plazo_respuesta->toDateString());
         $this->assertSame(11, $caso->dias_habiles);
         $this->assertSame('CLIENTE MOLESTO', $caso->descripcion);
-        $this->assertSame('ANA PÉREZ', $caso->proceso);
+        $this->assertSame($this->proceso->id, (int) $caso->proceso_id);
 
         $this->actingAs($this->editor)
             ->post(route('calidad.servicio-cliente.fo-gi-22.store'), $this->payload([
@@ -112,24 +119,53 @@ class ServicioClienteFoGi22Test extends TestCase
         $this->assertSame(2, ServicioClienteCaso::query()->max('consecutivo'));
     }
 
-    public function test_listado_y_datatable_usan_la_columna_proceso(): void
+    public function test_proceso_is_a_catalog_select_with_filter_and_column(): void
     {
         $this->actingAs($this->editor)
             ->post(route('calidad.servicio-cliente.fo-gi-22.store'), $this->payload([
-                'proceso' => 'facturación',
+                'proceso_id' => $this->proceso->id,
             ]))
             ->assertRedirect();
 
+        // El listado trae el encabezado Proceso y el selector de filtro por catálogo.
         $this->actingAs($this->editor)
             ->get(route('calidad.servicio-cliente.fo-gi-22.index'))
             ->assertOk()
             ->assertSee('<th>Proceso</th>', false)
-            ->assertDontSee('Resp. seguimiento', false);
+            ->assertDontSee('Resp. seguimiento', false)
+            ->assertSee('name="proceso_id"', false);
 
+        // La celda 16 del DataTable muestra el nombre del catálogo.
         $this->actingAs($this->editor)
             ->getJson(route('calidad.servicio-cliente.fo-gi-22.datatable', ['draw' => 1]))
             ->assertOk()
-            ->assertJsonPath('data.0.16', 'FACTURACIÓN');
+            ->assertJsonPath('data.0.16', 'GESTIÓN HUMANA');
+
+        // El filtro por proceso acota el listado.
+        $this->actingAs($this->editor)
+            ->getJson(route('calidad.servicio-cliente.fo-gi-22.datatable', [
+                'draw' => 1,
+                'proceso_id' => $this->proceso->id,
+            ]))
+            ->assertOk()
+            ->assertJsonPath('recordsFiltered', 1);
+
+        // El formulario de edición trae el proceso seleccionado.
+        $this->actingAs($this->editor)
+            ->get(route('calidad.servicio-cliente.fo-gi-22.show', ServicioClienteCaso::query()->firstOrFail()))
+            ->assertOk()
+            ->assertSee('Proceso', false);
+    }
+
+    public function test_proceso_must_exist_in_catalog(): void
+    {
+        $this->actingAs($this->editor)
+            ->from(route('calidad.servicio-cliente.fo-gi-22.create'))
+            ->post(route('calidad.servicio-cliente.fo-gi-22.store'), $this->payload([
+                'proceso_id' => 999999,
+            ]))
+            ->assertRedirect(route('calidad.servicio-cliente.fo-gi-22.create'))
+            ->assertSessionHasErrors('proceso_id');
     }
 
     public function test_externo_requires_commercial_client_and_snapshots_the_name(): void

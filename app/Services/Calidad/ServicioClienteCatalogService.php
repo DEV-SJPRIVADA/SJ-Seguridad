@@ -5,6 +5,7 @@ namespace App\Services\Calidad;
 use App\Models\ServicioClienteCaso;
 use App\Models\ServicioClienteCategoria;
 use App\Models\ServicioClienteFuente;
+use App\Models\ServicioClienteProceso;
 use App\Models\ServicioClienteResponsable;
 use App\Models\ServicioClienteTipologia;
 use Illuminate\Database\Eloquent\Model;
@@ -22,6 +23,7 @@ class ServicioClienteCatalogService
         return [
             'tipologias' => ServicioClienteTipologia::class,
             'fuentes' => ServicioClienteFuente::class,
+            'procesos' => ServicioClienteProceso::class,
             'responsables' => ServicioClienteResponsable::class,
             'categorias' => ServicioClienteCategoria::class,
         ];
@@ -67,6 +69,7 @@ class ServicioClienteCatalogService
         return match ($type) {
             'tipologias' => 'Tipología',
             'fuentes' => 'Fuente',
+            'procesos' => 'Proceso',
             'responsables' => 'Responsable',
             'categorias' => 'Categoría',
             default => $type,
@@ -98,6 +101,7 @@ class ServicioClienteCatalogService
         $column = match ($type) {
             'tipologias' => 'tipologia_id',
             'fuentes' => 'fuente_id',
+            'procesos' => 'proceso_id',
             'responsables' => 'responsable_id',
             'categorias' => 'categoria_id',
             default => null,

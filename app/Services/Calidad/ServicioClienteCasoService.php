@@ -7,6 +7,7 @@ use App\Models\ServicioClienteCaso;
 use App\Models\ServicioClienteCasoObservacion;
 use App\Models\ServicioClienteCategoria;
 use App\Models\ServicioClienteFuente;
+use App\Models\ServicioClienteProceso;
 use App\Models\ServicioClienteResponsable;
 use App\Models\ServicioClienteTipologia;
 use App\Support\UppercaseFormText;
@@ -212,12 +213,19 @@ class ServicioClienteCasoService
             'fuente_id' => [ServicioClienteFuente::class, $current?->fuente_id],
             'categoria_id' => [ServicioClienteCategoria::class, $current?->categoria_id],
             'responsable_id' => [ServicioClienteResponsable::class, $current?->responsable_id],
+            'proceso_id' => [ServicioClienteProceso::class, $current?->proceso_id],
         ];
 
         $errors = [];
 
         foreach ($checks as $key => [$class, $previous]) {
             $id = (int) ($data[$key] ?? 0);
+
+            // Proceso es opcional: si no se envía, no se valida contra el catálogo.
+            if ($key === 'proceso_id' && $id === 0) {
+                continue;
+            }
+
             $item = $class::query()->find($id);
 
             if ($item === null || (! $item->is_active && (int) $previous !== $id)) {
@@ -268,9 +276,7 @@ class ServicioClienteCasoService
             'accion_realizar' => UppercaseFormText::uppercaseString((string) $data['accion_realizar']),
             'responsable_id' => (int) $data['responsable_id'],
             'dias_habiles' => $this->businessDays->countInclusive($recepcion, $verificacion),
-            'proceso' => filled($data['proceso'] ?? null)
-                ? UppercaseFormText::uppercaseString((string) $data['proceso'])
-                : null,
+            'proceso_id' => filled($data['proceso_id'] ?? null) ? (int) $data['proceso_id'] : null,
             'eficacia' => $data['eficacia'],
         ];
     }
@@ -299,7 +305,7 @@ class ServicioClienteCasoService
             'correccion' => $caso->correccion,
             'accion_realizar' => $caso->accion_realizar,
             'dias_habiles' => $caso->dias_habiles,
-            'proceso' => $caso->proceso,
+            'proceso_id' => $caso->proceso_id,
             'eficacia' => $caso->eficacia,
         ];
     }

@@ -26,13 +26,14 @@ El tablero en el menú usa `view.board.calidad.servicio_cliente`. `manage.users`
 | --- | --- |
 | `servicio_cliente_tipologias` | Semilla: Petición, Queja, Reclamo, Sugerencia |
 | `servicio_cliente_fuentes` | Semilla: Correo electrónico, Encuesta, Página web, Telefónica, WhatsApp |
+| `servicio_cliente_procesos` | Proceso afectado del caso. Nace con los procesos del sistema (`calidad_mt_gi_11_procesos`); editable en Catálogos |
 | `servicio_cliente_responsables` | Vacío al instalar |
 | `servicio_cliente_categorias` | Vacío al instalar |
 | `servicio_cliente_casos` | Caso. Consecutivo global. Ciudad = `requisition_cities`. Cliente externo = `commercial_clients` |
 | `servicio_cliente_caso_observaciones` | Historial de seguimiento. Alta, edición y eliminación quedan en el log. |
 | `servicio_cliente_caso_adjuntos` | PDF, JPG y PNG en disco `local` |
 
-La columna `proceso` (texto libre, antes `responsable_seguimiento`) guarda el proceso afectado del caso. Se muestra en el listado FO-GI-22, en el formulario y en el Excel; también entra en la búsqueda global del DataTable.
+La columna `proceso_id` enlaza cada caso con el catálogo `servicio_cliente_procesos`. Se muestra como columna **Proceso** en el listado FO-GI-22, como selector en el formulario y en el dashboard, y como columna en el Excel. El catálogo nace con los procesos del sistema y se mantiene en la pestaña Catálogos. El filtro por proceso aplica en el listado y en el dashboard.
 
 ## Reglas de cálculo
 
@@ -46,10 +47,10 @@ La columna `proceso` (texto libre, antes `responsable_seguimiento`) guarda el pr
 
 ## UI
 
-- Listado DataTables `serverSide`. Filtros de tipo, tipología, fuente, responsable y rangos de recepción, verificación y plazo. Eficacia en botones. La columna **Proceso** (`proceso`) es ordenable y entra en la búsqueda global.
+- Listado DataTables `serverSide`. Filtros de tipo, tipología, fuente, proceso, responsable y rangos de recepción, verificación y plazo. Eficacia en botones. La columna **Proceso** (`proceso_id`) es ordenable y entra en la búsqueda global.
 - Export `BaseExport`: hoja Casos y hoja Observaciones, con los filtros activos. Tope `servicio_cliente.export.max_rows` (10000).
 - Dashboard con el chrome de Gestión Humana (`gh-area-dashboard-page`): filtros en panel, seis KPI en una fila y gráficos en filas de 3 y 2. JS: `resources/js/servicio-cliente-dashboard-charts.js`.
-- Los KPI Abiertos, En proceso, Cerrados y Vencidos abren FO-GI-22 con ese recorte y conservan tipo, tipología, fuente, responsable y rangos de fecha del dashboard. Vencido es plazo ya cumplido y caso no cerrado (`vencidos=1`).
+- Los KPI Abiertos, En proceso, Cerrados y Vencidos abren FO-GI-22 con ese recorte y conservan tipo, tipología, fuente, proceso, responsable y rangos de fecha del dashboard. Vencido es plazo ya cumplido y caso no cerrado (`vencidos=1`).
 - Recurrencia: clientes con 2 o más casos, agrupados por mes, trimestre, semestre o año.
 
 ## Roles

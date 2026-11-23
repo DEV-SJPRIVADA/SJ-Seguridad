@@ -75,6 +75,10 @@
                                         <x-searchable-select id="filter_fuente_id" name="fuente_id" :options="$options['fuentes']" :value="$filters['fuente_id']" placeholder="Todas" :allow-clear="true" />
                                     </div>
                                     <div class="form-field">
+                                        <label class="form-label" for="filter_proceso_id">Proceso</label>
+                                        <x-searchable-select id="filter_proceso_id" name="proceso_id" :options="$options['procesos']" :value="$filters['proceso_id']" placeholder="Todos" :allow-clear="true" />
+                                    </div>
+                                    <div class="form-field">
                                         <label class="form-label" for="filter_responsable_id">Responsable</label>
                                         <x-searchable-select id="filter_responsable_id" name="responsable_id" :options="$options['responsables']" :value="$filters['responsable_id']" placeholder="Todos" :allow-clear="true" />
                                     </div>

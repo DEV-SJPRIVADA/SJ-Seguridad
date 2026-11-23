@@ -21,6 +21,7 @@ final class ServicioClienteDatatableService
             'fuente:id,name',
             'categoria:id,name',
             'responsable:id,name',
+            'proceso:id,name',
             'ciudad:id,name',
         ])->withCount('observaciones');
 
@@ -42,6 +43,7 @@ final class ServicioClienteDatatableService
             'tipo_cliente' => $request->string('tipo_cliente')->toString(),
             'tipologia_id' => $request->string('tipologia_id')->toString(),
             'fuente_id' => $request->string('fuente_id')->toString(),
+            'proceso_id' => $request->string('proceso_id')->toString(),
             'responsable_id' => $request->string('responsable_id')->toString(),
             'eficacia' => $request->string('eficacia')->toString(),
             'recepcion_desde' => $request->string('recepcion_desde')->toString(),
@@ -84,6 +86,7 @@ final class ServicioClienteDatatableService
         foreach ([
             'tipologia_id' => 'tipologia_id',
             'fuente_id' => 'fuente_id',
+            'proceso_id' => 'proceso_id',
             'responsable_id' => 'responsable_id',
         ] as $key => $column) {
             $value = $filters[$key] ?? '';
@@ -173,7 +176,6 @@ final class ServicioClienteDatatableService
                 ->orWhere('descripcion', 'like', $like)
                 ->orWhere('correccion', 'like', $like)
                 ->orWhere('accion_realizar', 'like', $like)
-                ->orWhere('proceso', 'like', $like)
                 ->orWhere('eficacia', 'like', $like);
 
             if (ctype_digit($search)) {
@@ -184,6 +186,7 @@ final class ServicioClienteDatatableService
                 ->orWhereHas('fuente', fn (Builder $rel) => $rel->where('name', 'like', $like))
                 ->orWhereHas('categoria', fn (Builder $rel) => $rel->where('name', 'like', $like))
                 ->orWhereHas('responsable', fn (Builder $rel) => $rel->where('name', 'like', $like))
+                ->orWhereHas('proceso', fn (Builder $rel) => $rel->where('name', 'like', $like))
                 ->orWhereHas('ciudad', fn (Builder $rel) => $rel->where('name', 'like', $like))
                 ->orWhereHas('observaciones', fn (Builder $rel) => $rel->where('texto', 'like', $like));
         });
@@ -212,7 +215,10 @@ final class ServicioClienteDatatableService
             13 => $query->orderBy('fecha_verificacion', $direction),
             14 => $query->orderBy('fecha_plazo_respuesta', $direction),
             15 => $query->orderBy('dias_habiles', $direction),
-            16 => $query->orderBy('proceso', $direction),
+            // Ordena por el nombre del catálogo, no por el id.
+            16 => $query->orderByRaw(
+                '(select name from servicio_cliente_procesos where servicio_cliente_procesos.id = servicio_cliente_casos.proceso_id) '.$direction
+            ),
             18 => $query->orderBy('eficacia', $direction),
             default => $query->orderByDesc('consecutivo'),
         };
@@ -242,7 +248,7 @@ final class ServicioClienteDatatableService
             e(DisplayDate::date($caso->fecha_verificacion)),
             e(DisplayDate::date($caso->fecha_plazo_respuesta)),
             e($caso->dias_habiles !== null ? (string) $caso->dias_habiles : '—'),
-            e($this->clip((string) ($caso->proceso ?? ''))),
+            e($this->clip((string) ($caso->proceso?->name ?? ''))),
             e((string) $caso->observaciones_count),
             e($caso->eficaciaLabel()),
         ];

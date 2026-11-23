@@ -10,7 +10,7 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 
 - **Dashboard** — totales, abiertos, en proceso, cerrados, vencidos y promedio de días hábiles; gráficos por tipología, categoría, estado, fuente y recurrencia del mismo cliente.
 - **FO-GI-22** — listado, filtros, alta, edición, observaciones, archivos y eliminación.
-- **Catálogos** — tipología, fuente, responsable y categoría. Solo quien tenga permiso de catálogos.
+- **Catálogos** — tipología, fuente, proceso, responsable y categoría. Solo quien tenga permiso de catálogos.
 
 **En esta versión:**
 
@@ -24,7 +24,7 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 - En FO-GI-22, el icono de historial abre los cambios registrados del tablero.
 - Eliminar un caso lo borra de verdad, pide confirmación y queda registrado en la auditoría.
 - El Excel respeta los filtros activos e incluye una hoja de observaciones.
-- Tipología y fuente ya vienen cargadas. Responsable y categoría se crean en Catálogos antes del primer caso.
+- Tipología y fuente ya vienen cargadas. Los procesos nacen con los del sistema. Responsable y categoría se crean en Catálogos antes del primer caso.
 
 ## Definiciones
 
@@ -35,7 +35,7 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 | Vencido | El plazo ya pasó y el caso no está cerrado. |
 | Recurrencia | El mismo cliente aparece más de una vez en el periodo (mes, trimestre, semestre o año). |
 | Evidencia | Archivo PDF, JPG o PNG del caso. |
-| Proceso | Texto libre con el proceso afectado por el caso (columna **Proceso** del listado). |
+| Proceso | Catálogo con el proceso afectado por el caso (columna **Proceso** del listado). Se mantiene en Catálogos. |
 
 ## Responsabilidades
 
@@ -43,14 +43,14 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 | --- | --- |
 | Consulta (`FO-GI-22: Ver`) | Ve el dashboard y el listado, filtra y exporta. No modifica. |
 | Edición (`FO-GI-22: Editar`) | Crea, edita, comenta, adjunta y elimina casos. |
-| Catálogos | Mantiene tipología, fuente, responsable y categoría. La tabla muestra el id y el nombre del selector. |
+| Catálogos | Mantiene tipología, fuente, proceso, responsable y categoría. La tabla muestra el id y el nombre del selector. |
 | Administrador de usuarios | Asigna el tablero y los permisos. El rol administrador los trae de base; el resto se asigna en Admin. |
 
 ## Desarrollo
 
 1. Entre a **Calidad → Servicio al cliente**.
 2. Si va a registrar casos, cree al menos una **categoría** y un **responsable** en Catálogos.
-3. En **FO-GI-22**, use **Nuevo caso**. Complete recepción, tipo de cliente, ciudad, tipología, fuente, categoría, responsable y los textos.
+3. En **FO-GI-22**, use **Nuevo caso**. Complete recepción, tipo de cliente, ciudad, tipología, fuente, categoría, responsable, proceso y los textos.
 4. Para cerrar, adjunte la evidencia en el mismo formulario o después, en la sección Adjuntos, y pase la eficacia a **Cerrado**.
 5. Agregue observaciones cada vez que haya seguimiento.
 6. Filtre el listado y exporte a Excel si necesita el archivo. Al entrar, el listado muestra los casos **Abiertos**. Los botones de eficacia están debajo de los demás filtros.
@@ -66,4 +66,5 @@ Tablero **Servicio al cliente** en el área **Calidad**, con tres pestañas:
 | 2026-11-06 | El formulario no muestra ejecución ni días hábiles; esos datos quedan en el listado. |
 | 2026-11-06 | Al crear un caso se vuelve al listado. Las observaciones se editan y eliminan con registro en el log. |
 | 2026-11-06 | El dashboard sigue el informe de Gestión Humana. Esos cuatro indicadores abren FO-GI-22 filtrado. |
-| 2026-11-23 | La columna «Resp. seguimiento» pasa a llamarse **Proceso** en el listado, el formulario y el Excel. El dato ya capturado se conserva. |
+| 2026-11-23 | La columna «Resp. seguimiento» pasa a llamarse **Proceso** en el listado, el formulario y el Excel. |
+| 2026-11-23 | **Proceso** deja de ser texto libre: ahora es un selector del catálogo de Procesos, con filtro en el listado y en el dashboard. El catálogo nace con los procesos del sistema. |

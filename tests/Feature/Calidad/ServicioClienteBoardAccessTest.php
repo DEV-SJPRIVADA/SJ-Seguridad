@@ -4,6 +4,7 @@ namespace Tests\Feature\Calidad;
 
 use App\Models\ServicioClienteCategoria;
 use App\Models\ServicioClienteFuente;
+use App\Models\ServicioClienteProceso;
 use App\Models\ServicioClienteResponsable;
 use App\Models\ServicioClienteTipologia;
 use App\Models\User;
@@ -46,6 +47,9 @@ class ServicioClienteBoardAccessTest extends TestCase
         $this->assertSame(5, ServicioClienteFuente::query()->count());
         $this->assertSame(0, ServicioClienteResponsable::query()->count());
         $this->assertSame(0, ServicioClienteCategoria::query()->count());
+        // Procesos: nacen con los procesos que ya existen en el sistema.
+        $this->assertTrue(ServicioClienteProceso::query()->where('code', 'GESTION_HUMANA')->exists());
+        $this->assertGreaterThan(0, ServicioClienteProceso::query()->count());
     }
 
     public function test_guest_routes_are_forbidden_without_permission(): void

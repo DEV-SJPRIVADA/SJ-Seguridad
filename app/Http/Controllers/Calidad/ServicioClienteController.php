@@ -17,6 +17,7 @@ use App\Models\ServicioClienteCasoAdjunto;
 use App\Models\ServicioClienteCasoObservacion;
 use App\Models\ServicioClienteCategoria;
 use App\Models\ServicioClienteFuente;
+use App\Models\ServicioClienteProceso;
 use App\Models\ServicioClienteResponsable;
 use App\Models\ServicioClienteTipologia;
 use App\Services\Access\ServicioClienteAccessService;
@@ -141,7 +142,7 @@ class ServicioClienteController extends Controller
         }
 
         $casos = (clone $query)
-            ->with(['tipologia', 'fuente', 'categoria', 'responsable', 'ciudad'])
+            ->with(['tipologia', 'fuente', 'categoria', 'responsable', 'proceso', 'ciudad'])
             ->orderBy('consecutivo')
             ->get();
 
@@ -197,6 +198,7 @@ class ServicioClienteController extends Controller
         $caso->load([
             'tipologia',
             'fuente',
+            'proceso',
             'categoria',
             'responsable',
             'ciudad',
@@ -495,6 +497,7 @@ class ServicioClienteController extends Controller
             'tipo_cliente' => (string) ($filters['tipo_cliente'] ?? ''),
             'tipologia_id' => (string) ($filters['tipologia_id'] ?? ''),
             'fuente_id' => (string) ($filters['fuente_id'] ?? ''),
+            'proceso_id' => (string) ($filters['proceso_id'] ?? ''),
             'responsable_id' => (string) ($filters['responsable_id'] ?? ''),
             'recepcion_desde' => (string) ($filters['recepcion_desde'] ?? ''),
             'recepcion_hasta' => (string) ($filters['recepcion_hasta'] ?? ''),
@@ -541,6 +544,7 @@ class ServicioClienteController extends Controller
             'recurrencia' => $this->pairOptions(config('servicio_cliente.recurrencia', [])),
             'tipologias' => $this->modelOptions(ServicioClienteTipologia::class),
             'fuentes' => $this->modelOptions(ServicioClienteFuente::class),
+            'procesos' => $this->modelOptions(ServicioClienteProceso::class),
             'responsables' => $this->modelOptions(ServicioClienteResponsable::class),
         ];
     }
@@ -555,6 +559,7 @@ class ServicioClienteController extends Controller
             'eficacia' => $this->pairOptions(config('servicio_cliente.eficacia', [])),
             'tipologias' => $this->modelOptions(ServicioClienteTipologia::class, $caso?->tipologia_id),
             'fuentes' => $this->modelOptions(ServicioClienteFuente::class, $caso?->fuente_id),
+            'procesos' => $this->modelOptions(ServicioClienteProceso::class, $caso?->proceso_id),
             'categorias' => $this->modelOptions(ServicioClienteCategoria::class, $caso?->categoria_id),
             'responsables' => $this->modelOptions(ServicioClienteResponsable::class, $caso?->responsable_id),
             'ciudades' => RequisitionCity::query()

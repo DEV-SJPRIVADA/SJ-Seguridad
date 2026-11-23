@@ -141,7 +141,7 @@
                                     <span class="req-form__section-step">3</span>
                                     <div>
                                         <h4 class="req-form__section-title">Clasificación</h4>
-                                        <p class="req-form__section-desc">Tipología, fuente y categoría salen de Catálogos.</p>
+                                        <p class="req-form__section-desc">Tipología, fuente, categoría y proceso salen de Catálogos.</p>
                                     </div>
                                 </header>
 
@@ -157,6 +157,11 @@
                                     <div class="form-field">
                                         <x-input-label for="categoria_id" value="Categoría *" />
                                         <x-searchable-select id="categoria_id" name="categoria_id" :options="$options['categorias']" :value="old('categoria_id', $caso->categoria_id ?? '')" placeholder="Selecciona" search-placeholder="Buscar categoría…" :disabled="! $canEdit" />
+                                    </div>
+                                    <div class="form-field">
+                                        <x-input-label for="proceso_id" value="Proceso" />
+                                        <x-searchable-select id="proceso_id" name="proceso_id" :options="$options['procesos']" :value="old('proceso_id', $caso->proceso_id ?? '')" placeholder="Selecciona un proceso" search-placeholder="Buscar proceso…" :allow-clear="true" :disabled="! $canEdit" />
+                                        <p class="req-form__hint">Proceso afectado. Si falta, créelo en Catálogos.</p>
                                     </div>
                                 </div>
                             </section>
@@ -182,11 +187,6 @@
                                     <div class="form-field req-form__field-span">
                                         <x-input-label for="accion_realizar" value="Acción a realizar *" />
                                         <textarea id="accion_realizar" name="accion_realizar" class="form-input" rows="3" required @disabled(! $canEdit)>{{ $textValue('accion_realizar') }}</textarea>
-                                    </div>
-                                    <div class="form-field req-form__field-span">
-                                        <x-input-label for="proceso" value="Proceso" />
-                                        <textarea id="proceso" name="proceso" class="form-input" rows="2" @disabled(! $canEdit)>{{ $textValue('proceso') }}</textarea>
-                                        <p class="req-form__hint">Texto libre: indique el proceso afectado.</p>
                                     </div>
                                     @if ($canEdit)
                                         <div class="form-field req-form__field-span">
