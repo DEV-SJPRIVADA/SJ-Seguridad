@@ -91,7 +91,7 @@ Columnas por fila (item):
 | Semana | Numero de semana del mes (`week_of_month`) |
 | Mes | Nombre del mes (`month_label`) |
 
-Filtros: busqueda, mes (por defecto el mes calendario actual al abrir la pagina; «Todos los meses» con valor vacío), semana. PATCH por fila para `received` y `observation` (botón icono guardar). Export Excel: `GET .../historial-consultas/exportar` respeta los mismos filtros (`archivo.view`).
+Filtros: busqueda, mes (por defecto el mes calendario actual al abrir la pagina; «Todos los meses» con valor vacío), semana y **rango de fechas** (`fecha_desde` / `fecha_hasta` sobre `created_at`, inclusivo, extremos opcionales). Si se envia un rango de fechas, el rango manda y se ignora el filtro de mes. `fecha_hasta` debe ser posterior o igual a `fecha_desde` (si no, error de validacion en `fecha_hasta`). PATCH por fila para `received` y `observation` (botón icono guardar), que conserva el rango activo. Export Excel: `GET .../historial-consultas/exportar` respeta los mismos filtros (`archivo.view`) y su titulo refleja el rango («Del dd/mm/aa al dd/mm/aa»).
 
 ## Rutas
 

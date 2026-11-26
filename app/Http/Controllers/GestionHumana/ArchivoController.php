@@ -179,6 +179,7 @@ class ArchivoController extends Controller
     public function consultationHistory(Request $request): View
     {
         $this->authorizeView();
+        $this->validateConsultationHistoryDates($request);
 
         $filters = $this->consultationHistoryFilters($request);
         $items = $this->consultationHistoryQuery($filters)->get();
@@ -199,6 +200,7 @@ class ArchivoController extends Controller
     public function exportConsultationHistory(Request $request): StreamedResponse
     {
         $this->authorizeView();
+        $this->validateConsultationHistoryDates($request);
 
         $filters = $this->consultationHistoryFilters($request);
         $items = $this->consultationHistoryQuery($filters)->get();
@@ -223,6 +225,16 @@ class ArchivoController extends Controller
             ? EmployeeArchiveConsultationItem::monthLabel((int) $filters['month'])
             : 'Todos los meses';
 
+        // Si hay rango de fechas, el título del Excel lo refleja en lugar del mes.
+        $rangeFrom = $filters['fecha_desde'] ?? '';
+        $rangeTo = $filters['fecha_hasta'] ?? '';
+
+        if ($rangeFrom !== '' || $rangeTo !== '') {
+            $rangeFromLabel = $rangeFrom !== '' ? DisplayDate::date($rangeFrom, '') : 'inicio';
+            $rangeToLabel = $rangeTo !== '' ? DisplayDate::date($rangeTo, '') : 'hoy';
+            $monthTitle = 'Del '.$rangeFromLabel.' al '.$rangeToLabel;
+        }
+
         return (new BaseExport(
             $rows,
             [
@@ -246,7 +258,7 @@ class ArchivoController extends Controller
     /**
      * Query string para export / redirecciones. `month` vacío = todos los meses (no reaplicar default).
      *
-     * @param  array{q: string, month: int|null, week: int|null}  $filters
+     * @param  array{q: string, month: int|null, week: int|null, fecha_desde: string, fecha_hasta: string}  $filters
      * @return array<string, int|string>
      */
     private function consultationHistoryQueryParams(array $filters): array
@@ -263,21 +275,54 @@ class ArchivoController extends Controller
             $params['week'] = $filters['week'];
         }
 
+        // Rango de fechas: se conserva en export y redirecciones de fila.
+        if (($filters['fecha_desde'] ?? '') !== '') {
+            $params['fecha_desde'] = $filters['fecha_desde'];
+        }
+
+        if (($filters['fecha_hasta'] ?? '') !== '') {
+            $params['fecha_hasta'] = $filters['fecha_hasta'];
+        }
+
         return $params;
+    }
+
+    /**
+     * Valida el rango de fechas del historial (ambos extremos opcionales).
+     * `after_or_equal` solo se aplica cuando viene "Desde", para permitir filtrar solo por "Hasta".
+     */
+    private function validateConsultationHistoryDates(Request $request): void
+    {
+        $rules = [
+            'fecha_desde' => ['nullable', 'date'],
+            'fecha_hasta' => ['nullable', 'date'],
+        ];
+
+        if ($request->filled('fecha_desde')) {
+            $rules['fecha_hasta'][] = 'after_or_equal:fecha_desde';
+        }
+
+        $request->validate($rules);
     }
 
     /**
      * Filtros del historial. Sin `month` en la URL → mes calendario actual.
      * Con `month` vacío (Todos los meses) → sin filtro de mes.
+     * Si hay rango de fechas, este manda y se descarta el mes (evita choque mes + rango).
      *
-     * @return array{q: string, month: int|null, week: int|null}
+     * @return array{q: string, month: int|null, week: int|null, fecha_desde: string, fecha_hasta: string}
      */
     private function consultationHistoryFilters(Request $request): array
     {
         $q = trim($request->string('q')->toString());
         $week = $request->integer('week') ?: null;
+        $fechaDesde = $request->date('fecha_desde')?->toDateString() ?? '';
+        $fechaHasta = $request->date('fecha_hasta')?->toDateString() ?? '';
+        $hasDateRange = $fechaDesde !== '' || $fechaHasta !== '';
 
-        if ($request->exists('month')) {
+        if ($hasDateRange) {
+            $month = null;
+        } elseif ($request->exists('month')) {
             $month = $request->integer('month') ?: null;
         } else {
             $month = (int) now()->month;
@@ -287,11 +332,13 @@ class ArchivoController extends Controller
             'q' => $q,
             'month' => $month,
             'week' => $week,
+            'fecha_desde' => $fechaDesde,
+            'fecha_hasta' => $fechaHasta,
         ];
     }
 
     /**
-     * @param  array{q: string, month: int|null, week: int|null}  $filters
+     * @param  array{q: string, month: int|null, week: int|null, fecha_desde: string, fecha_hasta: string}  $filters
      * @return Builder<EmployeeArchiveConsultationItem>
      */
     private function consultationHistoryQuery(array $filters): Builder
@@ -299,6 +346,8 @@ class ArchivoController extends Controller
         $q = $filters['q'];
         $month = $filters['month'];
         $week = $filters['week'];
+        $fechaDesde = $filters['fecha_desde'] ?? '';
+        $fechaHasta = $filters['fecha_hasta'] ?? '';
 
         return EmployeeArchiveConsultationItem::query()
             ->with(['consultation.user'])
@@ -312,6 +361,9 @@ class ArchivoController extends Controller
             })
             ->when($month !== null, fn (Builder $query) => $query->where('month_number', $month))
             ->when($week !== null, fn (Builder $query) => $query->where('week_of_month', $week))
+            // Rango inclusivo sobre la fecha de registro del item.
+            ->when($fechaDesde !== '', fn (Builder $query) => $query->whereDate('created_at', '>=', $fechaDesde))
+            ->when($fechaHasta !== '', fn (Builder $query) => $query->whereDate('created_at', '<=', $fechaHasta))
             ->latest('created_at');
     }
 
@@ -413,10 +465,16 @@ class ArchivoController extends Controller
         $redirectQuery = array_filter([
             'q' => $request->string('q')->toString() ?: null,
             'week' => $request->integer('week') ?: null,
+            // Rango de fechas activo: se conserva al guardar la fila.
+            'fecha_desde' => $request->date('fecha_desde')?->toDateString(),
+            'fecha_hasta' => $request->date('fecha_hasta')?->toDateString(),
         ], fn ($value) => $value !== null && $value !== '');
 
         // Conserva mes explícito (incl. vacío = todos); si no vino, vuelve al mes actual.
-        if ($request->exists('month')) {
+        // Con rango de fechas activo el mes no aplica (el rango manda).
+        if (isset($redirectQuery['fecha_desde']) || isset($redirectQuery['fecha_hasta'])) {
+            $redirectQuery['month'] = '';
+        } elseif ($request->exists('month')) {
             $month = $request->integer('month') ?: null;
             if ($month !== null) {
                 $redirectQuery['month'] = $month;

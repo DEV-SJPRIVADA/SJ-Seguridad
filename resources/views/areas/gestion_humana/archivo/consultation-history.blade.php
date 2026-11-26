@@ -14,7 +14,9 @@
                     @php
                         $hasActiveFilters = ($filters['q'] ?? '') !== ''
                             || ($filters['month'] ?? null)
-                            || ($filters['week'] ?? null);
+                            || ($filters['week'] ?? null)
+                            || ($filters['fecha_desde'] ?? '') !== ''
+                            || ($filters['fecha_hasta'] ?? '') !== '';
                     @endphp
                     <details class="req-manage-filters req-manage-filters__panel" @if ($hasActiveFilters) open @endif>
                         <summary class="req-manage-filters__panel-toggle">
@@ -26,7 +28,7 @@
                         <div class="req-manage-filters__panel-body">
                         <form method="GET" class="archivo-consult-history-filters">
                             <div class="archivo-consult-history-filters__row">
-                                <div class="archivo-consult-history-filters__field">
+                                <div class="archivo-consult-history-filters__field archivo-consult-history-filters__field--search">
                                     <label class="req-manage-filters__label" for="archivo-history-search">Buscar</label>
                                     <input
                                         id="archivo-history-search"
@@ -77,6 +79,27 @@
                                         searchPlaceholder="Buscar semana…"
                                     />
                                 </div>
+                                <div class="archivo-consult-history-filters__field archivo-consult-history-filters__field--date">
+                                    <label class="req-manage-filters__label" for="archivo-history-date-from">Desde</label>
+                                    <input
+                                        id="archivo-history-date-from"
+                                        type="date"
+                                        name="fecha_desde"
+                                        class="form-input"
+                                        value="{{ $filters['fecha_desde'] ?? '' }}"
+                                    >
+                                </div>
+                                <div class="archivo-consult-history-filters__field archivo-consult-history-filters__field--date">
+                                    <label class="req-manage-filters__label" for="archivo-history-date-to">Hasta</label>
+                                    <input
+                                        id="archivo-history-date-to"
+                                        type="date"
+                                        name="fecha_hasta"
+                                        class="form-input"
+                                        value="{{ $filters['fecha_hasta'] ?? '' }}"
+                                    >
+                                </div>
+                                {{-- Acciones de filtrado en la misma fila; el Excel vive en el toolbar de la tabla. --}}
                                 <div class="archivo-consult-history-filters__actions">
                                     <button type="submit" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--primary" title="Filtrar" aria-label="Filtrar">
                                         <x-lucide-search width="18" height="18" aria-hidden="true" />
@@ -84,26 +107,35 @@
                                     <a href="{{ route('gestion-humana.archivo.consultation-history.index') }}" class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost" title="Limpiar filtros (mes actual)" aria-label="Limpiar filtros">
                                         <x-lucide-x width="18" height="18" aria-hidden="true" />
                                     </a>
-                                    <x-export-excel
-                                        route="{{ $exportUrl }}"
-                                        label=""
-                                        class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
-                                        title="Exportar Excel"
-                                        aria-label="Exportar Excel"
-                                    />
                                 </div>
                             </div>
                         </form>
                         </div>
                     </details>
 
+                    {{-- Toolbar sobre la tabla: conteo a la izquierda, export Excel a la derecha --}}
+                    <div class="cursos-registros-page__table-toolbar archivo-consult-history-toolbar">
                         <p class="req-manage-filters__meta">
                             <strong>{{ number_format($items->count()) }}</strong>
                             {{ $items->count() === 1 ? 'registro' : 'registros' }}
-                            @if ($filters['month'] ?? null)
+                            @if (($filters['fecha_desde'] ?? '') !== '' || ($filters['fecha_hasta'] ?? '') !== '')
+                                · Del {{ \App\Support\DisplayDate::date($filters['fecha_desde'] ?? null, 'inicio') }}
+                                al {{ \App\Support\DisplayDate::date($filters['fecha_hasta'] ?? null, 'hoy') }}
+                            @elseif ($filters['month'] ?? null)
                                 · {{ \App\Models\EmployeeArchiveConsultationItem::monthLabel((int) $filters['month']) }}
                             @endif
                         </p>
+
+                        <div class="cursos-registros-page__table-actions">
+                            <x-export-excel
+                                route="{{ $exportUrl }}"
+                                label=""
+                                class="req-manage-filters__icon-btn req-manage-filters__icon-btn--ghost"
+                                title="Exportar Excel"
+                                aria-label="Exportar Excel"
+                            />
+                        </div>
+                    </div>
 
                     <div class="data-table-wrap">
                         <table class="data-table js-datatable" data-dt-responsive="false" style="width:100%">
@@ -178,7 +210,9 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="12">No hay consultas registradas{{ ($filters['month'] ?? null) ? ' para el mes seleccionado' : '' }}.</td>
+                                        <td colspan="12">
+                                            No hay consultas registradas{{ ($filters['month'] ?? null) ? ' para el mes seleccionado' : '' }}{{ (($filters['fecha_desde'] ?? '') !== '' || ($filters['fecha_hasta'] ?? '') !== '') ? ' en el rango de fechas seleccionado' : '' }}.
+                                        </td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -198,6 +232,9 @@
                             <input type="hidden" name="q" value="{{ $filters['q'] ?? '' }}">
                             <input type="hidden" name="month" value="{{ $filters['month'] ?? '' }}">
                             <input type="hidden" name="week" value="{{ $filters['week'] ?? '' }}">
+                            {{-- Conserva el rango de fechas al guardar recibida/observación --}}
+                            <input type="hidden" name="fecha_desde" value="{{ $filters['fecha_desde'] ?? '' }}">
+                            <input type="hidden" name="fecha_hasta" value="{{ $filters['fecha_hasta'] ?? '' }}">
                         </form>
                     @endforeach
                 </div>

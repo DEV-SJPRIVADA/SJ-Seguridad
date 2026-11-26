@@ -286,31 +286,121 @@
     margin-bottom: 0.75rem;
 }
 
+/*
+ * Filtros del historial: una sola fila desde portátil (≥821px).
+ * Buscar (flexible) · Mes · Semana · Desde · Hasta · Filtrar/Limpiar.
+ * El Excel vive en el toolbar de la tabla, no aquí.
+ */
 .archivo-consult-history-filters__row {
-    display: grid;
-    grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.75fr) minmax(0, 0.75fr) auto;
-    gap: 0.75rem;
-    align-items: end;
-}
-
-@media (max-width: 900px) {
-    .archivo-consult-history-filters__row {
-        grid-template-columns: 1fr;
-    }
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 0.5rem;
+    width: 100%;
 }
 
 .archivo-consult-history-filters__field {
     min-width: 0;
 }
 
-.archivo-consult-history-filters__field--sm {
-    max-width: 12rem;
+.archivo-consult-history-filters__field .form-input,
+.archivo-consult-history-filters__field .searchable-select-wrap {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
 }
 
+/* Buscar: tope 250px; no se estira con el remanente de la fila. */
+.archivo-consult-history-filters__field--search {
+    flex: 0 1 250px;
+    width: 250px;
+    max-width: 250px;
+    min-width: 0;
+}
+
+/* Mes / Semana: mínimo 150px para que el label del select no se corte. */
+.archivo-consult-history-filters__field--sm {
+    flex: 0 1 150px;
+    width: 150px;
+    min-width: 150px;
+}
+
+/* Desde / Hasta: espacio del date picker; no bajar de ~7.5rem. */
+.archivo-consult-history-filters__field--date {
+    flex: 0 1 9rem;
+    max-width: 9.5rem;
+    min-width: 7.5rem;
+}
+
+/* Filtrar + Limpiar: fijos, misma fila, sin wrap. */
 .archivo-consult-history-filters__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+}
+
+/* Portátiles angostos (~1024–1200): tope más bajo para conservar una fila. */
+@media (max-width: 1200px) {
+    .archivo-consult-history-filters__row {
+        gap: 0.4rem;
+    }
+
+    .archivo-consult-history-filters__field--sm {
+        flex-basis: 150px;
+        width: 150px;
+        min-width: 150px;
+    }
+
+    .archivo-consult-history-filters__field--date {
+        max-width: 8.5rem;
+        min-width: 7.25rem;
+    }
+}
+
+/* Solo móvil / tablet vertical: apila campos; acciones al final en fila. */
+@media (max-width: 820px) {
+    .archivo-consult-history-filters__row {
+        flex-wrap: wrap;
+    }
+
+    .archivo-consult-history-filters__field--search,
+    .archivo-consult-history-filters__field--sm,
+    .archivo-consult-history-filters__field--date {
+        flex: 1 1 calc(50% - 0.5rem);
+        width: auto;
+        min-width: 8rem;
+    }
+
+    .archivo-consult-history-filters__field--sm {
+        min-width: 150px;
+    }
+
+    .archivo-consult-history-filters__field--search {
+        flex-basis: 100%;
+        max-width: none;
+    }
+
+    .archivo-consult-history-filters__actions {
+        margin-left: 0;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+/* Toolbar sobre la tabla: conteo izquierda, Excel derecha (reusa cursos-registros-page__). */
+.archivo-consult-history-toolbar {
     display: flex;
-    gap: 0.5rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
     flex-wrap: wrap;
+    margin: 0.15rem 0 0.55rem;
+}
+
+.archivo-consult-history-toolbar .req-manage-filters__meta {
+    margin: 0;
 }
 
 .archivo-consult-history__received-cell {

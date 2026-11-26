@@ -39,10 +39,11 @@ Registrar donde se guarda fisicamente el expediente de cada empleado (estante y 
 ### Seguimiento en Historial de consultas
 
 1. Abra la pestaña **Historial de consultas**. Por defecto se muestra el **mes actual**; puede cambiar el mes o elegir **Todos los meses**.
-2. Revise columnas Fecha, Concepto, Cédula, Nombre, Estante, Caja, Entregada a, Semana y Mes.
-3. Marque **Recibida** cuando se entregue la historia laboral.
-4. Edite **Observación** si aplica y pulse el icono de **guardar** en la fila.
-5. Use el icono de **Excel** en los filtros para exportar los registros visibles (respeta búsqueda, mes y semana).
+2. Use los campos **Desde** y **Hasta** para filtrar por rango de fechas de registro (puede llenar solo uno de los dos). Si usa el rango, el filtro de **Mes** se ignora.
+3. Revise columnas Fecha, Concepto, Cédula, Nombre, Estante, Caja, Entregada a, Semana y Mes.
+4. Marque **Recibida** cuando se entregue la historia laboral.
+5. Edite **Observación** si aplica y pulse el icono de **guardar** en la fila.
+6. Use el icono de **Excel** en los filtros para exportar los registros visibles (respeta búsqueda, mes, semana y rango de fechas).
 
 ### Registrar o corregir ubicacion
 
@@ -77,6 +78,7 @@ La reimportacion **no modifica** datos de nomina ni otros campos del empleado.
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.12 | 2026-11-26 | Archivo | Historial de consultas: filtro por rango de fechas (Desde / Hasta); el rango manda sobre el mes, se conserva al guardar filas y en el export Excel. |
 | 1.11 | 2026-11-25 | Archivo | Export de Historias laborales: descarga directa con las columnas de la vista y los filtros aplicados (sin modal activos/retirados/todos, que queda solo para la plantilla de importacion). |
 | 1.10 | 2026-11-05 | Archivo | Historias laborales: filtros por cargo, cliente y ciudad. Se aplican al cambiar el select y se conservan al guardar estante o caja. |
 | 1.9 | 2026-10-15 | Agent | Al crear empleado en Ficha (nuevo / Gestionar) se puede capturar estante y caja; aparece en Historias laborales. |

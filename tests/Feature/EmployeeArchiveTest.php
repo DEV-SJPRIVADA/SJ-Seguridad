@@ -623,6 +623,122 @@ class EmployeeArchiveTest extends TestCase
             ->assertSee('OTRO MES ITEM');
     }
 
+    public function test_archivo_consultation_history_filters_by_date_range(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $consultation = EmployeeArchiveConsultation::query()->create([
+            'user_id' => $viewer->id,
+            'document_numbers' => ['2020202020'],
+            'consultation_types' => ['juridico'],
+            'documents_requested' => 1,
+            'documents_matched' => 1,
+            'delivered_to' => 'Gerencia',
+        ]);
+
+        // Dos ítems con fechas de registro distintas (forzadas sobre created_at).
+        $insideRange = EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '1111111111',
+            'full_name' => 'DENTRO DEL RANGO',
+            'concept' => 'Juridico',
+            'received' => false,
+            'week_of_month' => 1,
+            'month_number' => 2,
+            'month_label' => EmployeeArchiveConsultationItem::monthLabel(2),
+        ]);
+        $insideRange->forceFill(['created_at' => '2026-02-10 09:00:00', 'updated_at' => '2026-02-10 09:00:00'])->save();
+
+        $outsideRange = EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '2222222222',
+            'full_name' => 'FUERA DEL RANGO',
+            'concept' => 'Juridico',
+            'received' => false,
+            'week_of_month' => 3,
+            'month_number' => 2,
+            'month_label' => EmployeeArchiveConsultationItem::monthLabel(2),
+        ]);
+        $outsideRange->forceFill(['created_at' => '2026-02-25 09:00:00', 'updated_at' => '2026-02-25 09:00:00'])->save();
+
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.index', [
+                'fecha_desde' => '2026-02-01',
+                'fecha_hasta' => '2026-02-15',
+            ]))
+            ->assertOk()
+            ->assertSee('DENTRO DEL RANGO')
+            ->assertDontSee('FUERA DEL RANGO')
+            ->assertViewHas('filters', fn (array $filters): bool => $filters['fecha_desde'] === '2026-02-01'
+                && $filters['fecha_hasta'] === '2026-02-15'
+                // El rango reemplaza al mes por defecto.
+                && $filters['month'] === null);
+
+        // Solo "desde": trae ambos.
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.index', ['fecha_desde' => '2026-02-01']))
+            ->assertOk()
+            ->assertSee('DENTRO DEL RANGO')
+            ->assertSee('FUERA DEL RANGO');
+
+        // Rango inválido (hasta antes de desde) → error de validación.
+        $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.index', [
+                'fecha_desde' => '2026-02-15',
+                'fecha_hasta' => '2026-02-01',
+            ]))
+            ->assertSessionHasErrors('fecha_hasta');
+    }
+
+    public function test_archivo_consultation_history_export_respects_date_range(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $consultation = EmployeeArchiveConsultation::query()->create([
+            'user_id' => $viewer->id,
+            'document_numbers' => ['2020202020'],
+            'consultation_types' => ['juridico'],
+            'documents_requested' => 1,
+            'documents_matched' => 1,
+            'delivered_to' => 'Gerencia',
+        ]);
+
+        $inRange = EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '3333333333',
+            'full_name' => 'EXPORT DENTRO',
+            'concept' => 'Juridico',
+            'received' => false,
+            'week_of_month' => 1,
+            'month_number' => 2,
+            'month_label' => EmployeeArchiveConsultationItem::monthLabel(2),
+        ]);
+        $inRange->forceFill(['created_at' => '2026-02-10 09:00:00', 'updated_at' => '2026-02-10 09:00:00'])->save();
+
+        $outRange = EmployeeArchiveConsultationItem::query()->create([
+            'employee_archive_consultation_id' => $consultation->id,
+            'document_number' => '4444444444',
+            'full_name' => 'EXPORT FUERA',
+            'concept' => 'Juridico',
+            'received' => false,
+            'week_of_month' => 3,
+            'month_number' => 2,
+            'month_label' => EmployeeArchiveConsultationItem::monthLabel(2),
+        ]);
+        $outRange->forceFill(['created_at' => '2026-02-25 09:00:00', 'updated_at' => '2026-02-25 09:00:00'])->save();
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.consultation-history.export', [
+                'fecha_desde' => '2026-02-01',
+                'fecha_hasta' => '2026-02-15',
+            ]));
+
+        $response->assertOk();
+        $this->assertStringContainsString('spreadsheetml', (string) $response->headers->get('content-type'));
+    }
+
     public function test_archivo_consultation_history_export_excel(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);
