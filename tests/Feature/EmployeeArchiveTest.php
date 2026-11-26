@@ -215,25 +215,106 @@ class EmployeeArchiveTest extends TestCase
         $this->assertContains('2002002002', $allCedulas);
     }
 
-    public function test_archivo_labor_histories_shows_export_scope_choices(): void
+    public function test_archivo_labor_histories_export_button_links_to_filtered_export(): void
     {
         $viewer = User::factory()->create(['must_change_password' => false]);
-        $viewer->givePermissionTo([
-            'archivo.view',
-            'view.board.gestion_humana.archivo',
-            'ficha_empleados.view',
-            'view.board.gestion_humana.ficha_empleados',
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $indexUrl = route('gestion-humana.archivo.labor-histories.index', [
+            'q' => 'ANA',
+            'cargo' => 'VIGILANTE',
+            'cliente' => 'CLIENTE UNO',
+            'ciudad' => 'BOGOTA',
+        ]);
+        $exportUrl = route('gestion-humana.archivo.labor-histories.export', [
+            'q' => 'ANA',
+            'cargo' => 'VIGILANTE',
+            'cliente' => 'CLIENTE UNO',
+            'ciudad' => 'BOGOTA',
         ]);
 
         $this->actingAs($viewer)
-            ->get(route('gestion-humana.archivo.labor-histories.index'))
+            ->get($indexUrl)
             ->assertOk()
-            ->assertSee('Solo activos', false)
-            ->assertSee('Solo retirados', false)
-            ->assertSee('Todos', false)
-            ->assertSee('employment_status=activo', false)
-            ->assertSee('employment_status=desvinculado', false)
-            ->assertSee('employment_status=todos', false);
+            ->assertSee('archivo-export-link', false)
+            ->assertSee($exportUrl)
+            ->assertDontSee('Solo activos', false);
+    }
+
+    public function test_archivo_labor_histories_export_respects_filters_and_uses_view_columns(): void
+    {
+        $viewer = User::factory()->create(['must_change_password' => false]);
+        $viewer->givePermissionTo(['archivo.view', 'view.board.gestion_humana.archivo']);
+
+        $match = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '1111222233',
+            'hired_full_name' => 'Export Filtrado Match',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $match->id,
+            'document_number' => $match->hired_document,
+            'full_name' => $match->hired_full_name,
+            'position_name' => 'VIGILANTE',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+            'archive_shelf' => 'A-01',
+            'archive_box' => 'Caja 1',
+        ]);
+
+        $other = PersonalRequisitionFichaEntry::query()->create([
+            'personal_requisition_id' => null,
+            'hired_document' => '4444555566',
+            'hired_full_name' => 'Export Filtrado Other',
+            'moved_to_ficha_at' => now(),
+            'moved_to_ficha_by' => $viewer->id,
+            'created_by' => $viewer->id,
+        ]);
+
+        EmployeeFichaProfile::query()->create([
+            'personal_requisition_ficha_entry_id' => $other->id,
+            'document_number' => $other->hired_document,
+            'full_name' => $other->hired_full_name,
+            'position_name' => 'AUXILIAR',
+            'employment_status' => EmployeeFichaProfile::STATUS_ACTIVO,
+        ]);
+
+        $response = $this->actingAs($viewer)
+            ->get(route('gestion-humana.archivo.labor-histories.export', [
+                'cargo' => 'VIGILANTE',
+            ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+
+        $tempPath = tempnam(sys_get_temp_dir(), 'archive-export-view-').'.xlsx';
+        file_put_contents($tempPath, $response->streamedContent());
+
+        $sheet = IOFactory::load($tempPath)->getActiveSheet();
+
+        $this->assertSame('Cédula', $sheet->getCell('A2')->getValue());
+        $this->assertSame('Nombre', $sheet->getCell('B2')->getValue());
+        $this->assertSame('Cargo', $sheet->getCell('C2')->getValue());
+        $this->assertSame('Estante', $sheet->getCell('J2')->getValue());
+        $this->assertSame('Caja', $sheet->getCell('K2')->getValue());
+        $this->assertSame('1111222233', trim((string) $sheet->getCell('A3')->getValue()));
+        $this->assertSame('A-01', $sheet->getCell('J3')->getValue());
+        $this->assertSame('Caja 1', $sheet->getCell('K3')->getValue());
+        $this->assertSame(3, $sheet->getHighestRow());
+
+        @unlink($tempPath);
+    }
+
+    public function test_archivo_labor_histories_export_requires_permission(): void
+    {
+        $user = User::factory()->create(['must_change_password' => false]);
+
+        $this->actingAs($user)
+            ->get(route('gestion-humana.archivo.labor-histories.export'))
+            ->assertForbidden();
     }
 
     /**

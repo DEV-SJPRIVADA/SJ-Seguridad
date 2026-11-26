@@ -36,7 +36,7 @@ final class EmployeeArchiveLaborHistoryDatatableService
 
         $recordsTotal = (clone $query)->count();
 
-        $this->applyDatatableSearch($query, $request);
+        $this->applySearch($query, trim($request->string('search.value')->toString()));
 
         $recordsFiltered = (clone $query)->count();
 
@@ -63,12 +63,12 @@ final class EmployeeArchiveLaborHistoryDatatableService
     }
 
     /**
+     * Busqueda global del listado (misma usada por el AJAX de DataTables y por el export).
+     *
      * @param  Builder<PersonalRequisitionFichaEntry>  $query
      */
-    private function applyDatatableSearch(Builder $query, Request $request): void
+    public function applySearch(Builder $query, string $search): void
     {
-        $search = trim($request->string('search.value')->toString());
-
         if ($search === '') {
             return;
         }

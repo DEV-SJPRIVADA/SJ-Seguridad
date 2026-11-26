@@ -17,6 +17,7 @@ use App\Services\Access\ArchivoAccessService;
 use App\Services\GestionHumana\EmployeeArchiveConsultationParser;
 use App\Services\GestionHumana\EmployeeArchiveImportService;
 use App\Services\GestionHumana\EmployeeArchiveLaborHistoryDatatableService;
+use App\Support\DisplayDate;
 use App\Traits\HasArchivoTabs;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Builder;
@@ -108,6 +109,71 @@ class ArchivoController extends Controller
             $filters,
             $this->canManage(),
         );
+    }
+
+    public function exportLaborHistories(Request $request): StreamedResponse|RedirectResponse
+    {
+        abort_unless($this->canExportArchive(), 403);
+
+        $q = trim($request->string('q')->toString());
+        $cargo = trim($request->string('cargo')->toString());
+        $cliente = trim($request->string('cliente')->toString());
+        $ciudad = trim($request->string('ciudad')->toString());
+        $consultationId = $request->integer('consultation') ?: null;
+        $search = trim($request->string('search')->toString());
+        $activeConsultation = $this->resolveActiveConsultation($consultationId);
+
+        $query = $this->laborHistoriesQuery($q, $activeConsultation, $cargo, $cliente, $ciudad)
+            ->with([
+                'profile',
+                'requisition.position',
+                'requisition.client',
+                'requisition.city',
+                'employmentPeriods',
+            ]);
+
+        $this->laborHistoryDatatable->applySearch($query, $search);
+
+        $entries = $query->orderByDesc('moved_to_ficha_at')->get();
+
+        if ($entries->isEmpty()) {
+            return back()->withErrors([
+                'export' => 'No hay empleados en ficha para exportar con los filtros seleccionados.',
+            ]);
+        }
+
+        $rows = $entries->map(fn (PersonalRequisitionFichaEntry $entry): array => [
+            'cedula' => $entry->profile?->document_number ?: $entry->hired_document,
+            'nombre' => $entry->profile?->full_name ?: $entry->hired_full_name,
+            'cargo' => $entry->positionName() ?? '',
+            'cliente' => $entry->clientName() ?? '',
+            'ciudad' => $entry->cityName() ?? '',
+            'fecha_ingreso' => DisplayDate::date($entry->hireDate(), ''),
+            'estado_vinculo' => $entry->employmentStatusLabel() ?? '',
+            'recontratable' => $entry->rehireableLabel() ?? '',
+            'fecha_retiro' => DisplayDate::date($entry->terminationDate(), ''),
+            'estante' => $entry->profile?->archive_shelf ?? '',
+            'caja' => $entry->profile?->archive_box ?? '',
+        ]);
+
+        return (new BaseExport(
+            $rows,
+            [
+                ['key' => 'cedula', 'label' => 'Cédula'],
+                ['key' => 'nombre', 'label' => 'Nombre'],
+                ['key' => 'cargo', 'label' => 'Cargo'],
+                ['key' => 'cliente', 'label' => 'Cliente'],
+                ['key' => 'ciudad', 'label' => 'Ciudad'],
+                ['key' => 'fecha_ingreso', 'label' => 'Fecha ingreso'],
+                ['key' => 'estado_vinculo', 'label' => 'Estado vínculo'],
+                ['key' => 'recontratable', 'label' => 'Recontratable'],
+                ['key' => 'fecha_retiro', 'label' => 'Fecha retiro'],
+                ['key' => 'estante', 'label' => 'Estante'],
+                ['key' => 'caja', 'label' => 'Caja'],
+            ],
+            'historias_laborales_archivo_'.now()->format('Y-m-d').'.xlsx',
+            'Historias laborales — Archivo — '.config('app.name'),
+        ))->download();
     }
 
     public function consultationHistory(Request $request): View

@@ -9,7 +9,8 @@ Gestionar la **ubicacion documental fisica** de empleados ya en ficha: campos **
 - Tablero **Archivo** en sidebar de Gestion Humana (`view.board.gestion_humana.archivo`).
 - Listado de empleados **en ficha** con columnas estantes/cajas.
 - Edicion individual de ubicacion (`archivo.manage`).
-- Export Excel desde **Ficha empleados → Empleados** con el mismo formato que «Exportar datos para actualizar» **mas** columnas `estantes` y `cajas`.
+- Export Excel desde **Archivo → Historias laborales** con las columnas visibles del listado (sin la columna Acciones) y los filtros aplicados.
+- Export Excel desde **Ficha empleados → Empleados** con el mismo formato que «Exportar datos para actualizar» **mas** columnas `estantes` y `cajas` (plantilla para el import).
 - **Fuera de alcance:** import masivo de empleados (nomina) no lee ni escribe estos campos.
 
 ## Importacion masiva de archivo
@@ -101,6 +102,7 @@ Filtros: busqueda, mes (por defecto el mes calendario actual al abrir la pagina;
 | GET | `/gestion-humana/archivo` | `gestion-humana.archivo.index` | `archivo.view` (redirect) |
 | GET | `/gestion-humana/archivo/historias-laborales` | `gestion-humana.archivo.labor-histories.index` | `archivo.view` |
 | GET | `/gestion-humana/archivo/historias-laborales/datatable` | `gestion-humana.archivo.labor-histories.datatable` | `archivo.view` |
+| GET | `/gestion-humana/archivo/historias-laborales/exportar` | `gestion-humana.archivo.labor-histories.export` | export archive (ver arriba) |
 | GET | `/gestion-humana/archivo/historial-consultas` | `gestion-humana.archivo.consultation-history.index` | `archivo.view` |
 | GET | `/gestion-humana/archivo/historial-consultas/exportar` | `gestion-humana.archivo.consultation-history.export` | `archivo.view` |
 | POST | `/gestion-humana/archivo/consultar` | `gestion-humana.archivo.consult` | `archivo.view` |
@@ -112,18 +114,31 @@ Filtros: busqueda, mes (por defecto el mes calendario actual al abrir la pagina;
 
 ## Export Excel archivo
 
+### Historias laborales (boton Exportar archivo)
+
+- Ruta: `GET /gestion-humana/archivo/historias-laborales/exportar` (`gestion-humana.archivo.labor-histories.export`).
+- Clase: `App\Exports\BaseExport` (export directo, sin modal).
+- Columnas: las mismas de la vista, sin Acciones — Cédula, Nombre, Cargo, Cliente, Ciudad, Fecha ingreso, Estado vínculo, Recontratable, Fecha retiro, Estante, Caja.
+- Respeta los filtros de la vista: `q`, `cargo`, `cliente`, `ciudad`, `consultation` y la búsqueda global de DataTables (`search`, la agrega el JS al hacer clic).
+- Mismo orden que el listado por defecto (`moved_to_ficha_at` descendente). Sin filas: redirige con error `export`.
+- Permiso: `ArchivoAccessService::canExportArchiveTemplate()` (mismo usado por el botón).
+
+### Plantilla para importar (modal Importar ubicaciones de archivo)
+
 - Clase: `App\Exports\EmployeeFichaArchiveTemplateExport`
 - Mapper: `EmployeeFichaImportRowMapper::mapRowWithArchive()`
 - Columnas: `config('employee_ficha.import_columns')` + `config('employee_ficha.archive_export_extra_columns')` (`estantes`, `cajas`)
 - Datos desde perfiles de **Ficha empleados** (En ficha).
 - Filtro `employment_status`: `activo` (default si no se envía), `desvinculado` (retirados), `todos`. Opcional: `fecha_desde`/`fecha_hasta` por fecha de ingreso.
-- UI Archivo: modal **Exportar archivo** y bloque en **Importar** con tres botones (Solo activos / Solo retirados / Todos).
+- UI: bloque de tres botones (Solo activos / Solo retirados / Todos) dentro del modal **Importar ubicaciones de archivo**.
 
 ## Controlador
 
 `App\Http\Controllers\GestionHumana\ArchivoController` — `laborHistories()` pinta layout, filtros y tabla vacia. El listado llega por AJAX (`laborHistoriesDatatable()` + `EmployeeArchiveLaborHistoryDatatableService`): paginacion, busqueda y orden en MySQL (mismo patron que Ficha empleados).
 
 Filtros GET de Historias laborales: `q` (cédula, nombre o código de requisición), `cargo`, `cliente` y `ciudad`. Cargo, cliente y ciudad comparan el texto visible de la columna: primero el perfil (`position_name`, `work_center_name`, `residence_city_name`) y, si ese texto está vacío, el catálogo de la requisición (`position`, `client`, `city`). Los selects se arman con esos mismos textos. Cambiar un select recarga la página; la X de **Limpiar filtros** quita `q`, cargo, cliente y ciudad y conserva `consultation`. El PATCH de estante/caja reenvía esos filtros para no perderlos al guardar.
+
+El export de Historias laborales reutiliza `laborHistoriesQuery()` y `EmployeeArchiveLaborHistoryDatatableService::applySearch()` para que el Excel coincida con lo que se ve en la tabla (filtros de página + búsqueda global de DataTables).
 
 Edicion inline de `archive_shelf` / `archive_box` via PATCH por fila (HTML de inputs/formulario en el JSON). Si el empleado no tiene perfil persistido, se crea uno minimo al guardar.
 

@@ -63,11 +63,11 @@ La reimportacion **no modifica** datos de nomina ni otros campos del empleado.
 
 **Desde Archivo → Historias laborales**
 
-1. Pulse **Exportar archivo**.
-2. Elija **Solo activos**, **Solo retirados** o **Todos**.
-3. El Excel incluye las columnas de ficha **mas** **Estantes** y **Cajas**.
+1. Aplique los filtros que necesite (búsqueda, Cargo, Cliente, Ciudad o una consulta activa).
+2. Pulse el icono de **Excel** junto al botón de importar.
+3. El sistema descarga de inmediato un Excel con las columnas visibles de la lista (Cédula, Nombre, Cargo, Cliente, Ciudad, Fecha ingreso, Estado vínculo, Recontratable, Fecha retiro, Estante y Caja), respetando esos filtros y también la búsqueda interna de la tabla.
 
-**Desde Ficha empleados → Empleados** (pestaña En ficha)
+**Desde Ficha empleados → Empleados** (pestaña En ficha, plantilla para importar)
 
 1. Aplique el filtro de estado (Activo / Desvinculado / Todos) si lo necesita.
 2. Pulse **Exportar archivo** (respeta el filtro de estado de la lista).
@@ -77,6 +77,7 @@ La reimportacion **no modifica** datos de nomina ni otros campos del empleado.
 
 | Version | Fecha | Autor | Descripcion del cambio |
 | --- | --- | --- | --- |
+| 1.11 | 2026-11-25 | Archivo | Export de Historias laborales: descarga directa con las columnas de la vista y los filtros aplicados (sin modal activos/retirados/todos, que queda solo para la plantilla de importacion). |
 | 1.10 | 2026-11-05 | Archivo | Historias laborales: filtros por cargo, cliente y ciudad. Se aplican al cambiar el select y se conservan al guardar estante o caja. |
 | 1.9 | 2026-10-15 | Agent | Al crear empleado en Ficha (nuevo / Gestionar) se puede capturar estante y caja; aparece en Historias laborales. |
 | 1.8 | 2026-10-05 | Archivo | Historial de consultas: export Excel, botón Actualizar como icono, filtro mes actual por defecto. |

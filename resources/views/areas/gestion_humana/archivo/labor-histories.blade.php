@@ -166,16 +166,21 @@
 
                             <div class="cursos-registros-page__table-actions archivo-page__filters-actions">
                                 @if ($canExportArchive ?? false)
-                                    <button
-                                        type="button"
+                                    <a
+                                        id="archivo-export-link"
+                                        href="{{ route('gestion-humana.archivo.labor-histories.export', array_filter([
+                                            'q' => $filters['q'] ?? null,
+                                            'cargo' => $filters['cargo'] ?? null,
+                                            'cliente' => $filters['cliente'] ?? null,
+                                            'ciudad' => $filters['ciudad'] ?? null,
+                                            'consultation' => $filters['consultation'] ?? null,
+                                        ])) }}"
                                         class="btn btn--secondary btn--sm archivo-page__icon-btn"
-                                        title="Exportar archivo"
-                                        aria-label="Exportar archivo"
-                                        x-data=""
-                                        x-on:click.prevent="$dispatch('open-modal', 'archivo-export-scope')"
+                                        title="Exportar archivo filtrado"
+                                        aria-label="Exportar archivo filtrado"
                                     >
                                         <x-selfhst-microsoft-excel-2013 width="16" height="16" aria-hidden="true" />
-                                    </button>
+                                    </a>
                                 @endif
                                 @if ($canManage)
                                     <button
@@ -274,12 +279,6 @@
                 'show' => $errors->has('documents') || $errors->has('consultation_types') || $errors->has('consultation_types.*'),
             ])
 
-            @if ($canExportArchive ?? false)
-                @include('areas.gestion_humana.archivo.partials.export-scope-modal', [
-                    'filters' => $filters ?? [],
-                ])
-            @endif
-
             @if ($canManage)
                 @include('areas.gestion_humana.archivo.partials.import-modal', [
                     'canManage' => $canManage,
@@ -358,6 +357,23 @@
                         order: [],
                         columnDefs: columnDefs,
                     });
+
+                    var exportLink = document.getElementById('archivo-export-link');
+
+                    if (exportLink) {
+                        exportLink.addEventListener('click', function (event) {
+                            var search = api.search();
+
+                            if (!search) {
+                                return;
+                            }
+
+                            event.preventDefault();
+                            var url = new URL(exportLink.getAttribute('href'), window.location.origin);
+                            url.searchParams.set('search', search);
+                            window.location.href = url.toString();
+                        });
+                    }
 
                     api.on('xhr.dt', function (_event, _settings, json) {
                         revealArchivoTableWrap();
